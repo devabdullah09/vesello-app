@@ -1,0 +1,199 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Montserrat', Arial, Helvetica, sans-serif;
+  }
+}
+
+/* Custom font styles */
+.font-script {
+  font-family: "Dancing Script", cursive;
+}
+
+.font-serif-display {
+  font-family: "Playfair Display", serif;
+}
+
+@font-face {
+  font-family: 'Sail';
+  src: url('/fonts/Sail (1)/Sail-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+.font-sail {
+  font-family: 'Sail', cursive;
+}
+
+.sail-font {
+  font-family: 'Sail', cursive;
+}
+
+/* Responsive font utilities */
+.text-responsive-xs {
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+}
+
+.text-responsive-sm {
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+}
+
+.text-responsive-base {
+  font-size: clamp(1rem, 3vw, 1.125rem);
+}
+
+.text-responsive-lg {
+  font-size: clamp(1.125rem, 3.5vw, 1.25rem);
+}
+
+.text-responsive-xl {
+  font-size: clamp(1.25rem, 4vw, 1.5rem);
+}
+
+.text-responsive-2xl {
+  font-size: clamp(1.5rem, 5vw, 2rem);
+}
+
+.text-responsive-3xl {
+  font-size: clamp(2rem, 6vw, 2.5rem);
+}
+
+.text-responsive-4xl {
+  font-size: clamp(2.5rem, 7vw, 3rem);
+}
+
+.text-responsive-5xl {
+  font-size: clamp(3rem, 8vw, 4rem);
+}
+
+.text-responsive-6xl {
+  font-size: clamp(4rem, 10vw, 5rem);
+}
+
+/* Responsive Sail font sizes */
+.sail-text-responsive-sm {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+}
+
+.sail-text-responsive-base {
+  font-size: clamp(2rem, 5vw, 2.5rem);
+}
+
+.sail-text-responsive-lg {
+  font-size: clamp(2.5rem, 6vw, 3rem);
+}
+
+.sail-text-responsive-xl {
+  font-size: clamp(3rem, 7vw, 4rem);
+}
+
+.sail-text-responsive-2xl {
+  font-size: clamp(4rem, 9vw, 5rem);
+}
+
+.sail-text-responsive-3xl {
+  font-size: clamp(5rem, 12vw, 6rem);
+}
+
+/* Mobile-first responsive utilities */
+@media (max-width: 640px) {
+  .mobile-text-xs { font-size: 0.75rem; }
+  .mobile-text-sm { font-size: 0.875rem; }
+  .mobile-text-base { font-size: 1rem; }
+  .mobile-text-lg { font-size: 1.125rem; }
+  .mobile-text-xl { font-size: 1.25rem; }
+  .mobile-text-2xl { font-size: 1.5rem; }
+  .mobile-text-3xl { font-size: 1.875rem; }
+  .mobile-text-4xl { font-size: 2.25rem; }
+  
+  .mobile-sail-sm { font-size: 1.5rem; }
+  .mobile-sail-base { font-size: 1.75rem; }
+  .mobile-sail-lg { font-size: 2rem; }
+  .mobile-sail-xl { font-size: 2.25rem; }
+  .mobile-sail-2xl { font-size: 2.5rem; }
+}
+
+/* Responsive decoration utilities */
+.decoration-responsive {
+  width: clamp(200px, 40vw, 350px);
+  height: clamp(250px, 50vw, 450px);
+}
+
+.decoration-responsive-sm {
+  width: clamp(150px, 30vw, 280px);
+  height: clamp(200px, 40vw, 350px);
+}
+
+/* Ensure images scale properly on mobile */
+.img-responsive {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Sail&display=swap');
