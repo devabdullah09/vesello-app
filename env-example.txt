@@ -13,5 +13,8 @@ BUNNY_NET_CDN_URL=https://your-cdn-url.b-cdn.net
 BUNNY_NET_STORAGE_ZONE=your-storage-zone
 BUNNY_NET_STORAGE_ENDPOINT=https://storage.bunnycdn.com
 
+# App Configuration
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
 # Environment
 NODE_ENV=production

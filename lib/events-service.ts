@@ -147,6 +147,13 @@ export const updateEvent = async (eventId: string, updateData: UpdateEventData):
     if (updateData.rsvpEnabled !== undefined) updateFields.rsvp_enabled = updateData.rsvpEnabled
     if (updateData.settings !== undefined) updateFields.settings = updateData.settings
     if (updateData.status !== undefined) updateFields.status = updateData.status
+    if (updateData.sectionVisibility !== undefined) {
+      // Update section visibility in settings field
+      updateFields.settings = {
+        ...updateFields.settings,
+        sectionVisibility: updateData.sectionVisibility
+      }
+    }
 
     const { data, error } = await supabase
       .from('events')
@@ -327,6 +334,19 @@ const mapEventFromDB = (dbEvent: any): Event => ({
   galleryEnabled: dbEvent.gallery_enabled,
   rsvpEnabled: dbEvent.rsvp_enabled,
   settings: dbEvent.settings,
+  sectionVisibility: dbEvent.section_visibility || dbEvent.settings?.sectionVisibility || {
+    heroSection: true,
+    timelineSection: true,
+    ceremonySection: true,
+    ceremonyVenueSection: true,
+    seatingChartSection: true,
+    menuSection: true,
+    wishesAndGiftsSection: true,
+    teamSection: true,
+    accommodationSection: true,
+    transportationSection: true,
+    additionalInfoSection: true,
+  },
   createdAt: dbEvent.created_at,
   updatedAt: dbEvent.updated_at
 })

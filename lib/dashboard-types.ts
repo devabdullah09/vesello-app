@@ -13,6 +13,19 @@ export interface Event {
   galleryEnabled: boolean;
   rsvpEnabled: boolean;
   settings: Record<string, any>;
+  sectionVisibility: {
+    heroSection: boolean;
+    timelineSection: boolean;
+    ceremonySection: boolean;
+    ceremonyVenueSection: boolean;
+    seatingChartSection: boolean;
+    menuSection: boolean;
+    wishesAndGiftsSection: boolean;
+    teamSection: boolean;
+    accommodationSection: boolean;
+    transportationSection: boolean;
+    additionalInfoSection: boolean;
+  };
   createdAt: string;
   updatedAt: string;
 }
@@ -30,6 +43,19 @@ export interface CreateEventData {
 
 export interface UpdateEventData extends Partial<CreateEventData> {
   status?: 'planned' | 'active' | 'completed' | 'cancelled';
+  sectionVisibility?: {
+    heroSection: boolean;
+    timelineSection: boolean;
+    ceremonySection: boolean;
+    ceremonyVenueSection: boolean;
+    seatingChartSection: boolean;
+    menuSection: boolean;
+    wishesAndGiftsSection: boolean;
+    teamSection: boolean;
+    accommodationSection: boolean;
+    transportationSection: boolean;
+    additionalInfoSection: boolean;
+  };
 }
 
 export interface GalleryAlbum {
