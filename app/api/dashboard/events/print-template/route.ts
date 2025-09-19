@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     // Generate PDF content using jsPDF
     const pdfData = await generatePDFTemplate(templateId, eventData, qrCodeDataUrl)
     
-    return new NextResponse(pdfData, {
+    return new NextResponse(new Uint8Array(pdfData), {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${templateId}-${eventData.coupleNames.replace(/\s+/g, '-')}.pdf"`
@@ -59,8 +59,8 @@ async function generatePDFTemplate(templateId: string, eventData: any, qrCodeDat
   // A5 Welcome Sign Template
   if (templateId === 'a5-welcome-qr') {
     // A5 format (148mm x 210mm)
-    doc.internal.pageSize.setWidth(148);
-    doc.internal.pageSize.setHeight(210);
+    doc.internal.pageSize.width = 148;
+    doc.internal.pageSize.height = 210;
     
     // Add decorative border
     doc.setDrawColor(229, 181, 116);
@@ -103,8 +103,8 @@ async function generatePDFTemplate(templateId: string, eventData: any, qrCodeDat
   
   // A5 Photo Booth Template
   else if (templateId === 'a5-photo-booth') {
-    doc.internal.pageSize.setWidth(148);
-    doc.internal.pageSize.setHeight(210);
+    doc.internal.pageSize.width = 148;
+    doc.internal.pageSize.height = 210;
     
     // Add decorative border
     doc.setDrawColor(229, 181, 116);
@@ -137,8 +137,8 @@ async function generatePDFTemplate(templateId: string, eventData: any, qrCodeDat
   
   // A5 Hashtag Sign Template
   else if (templateId === 'a5-hashtag-sign') {
-    doc.internal.pageSize.setWidth(148);
-    doc.internal.pageSize.setHeight(210);
+    doc.internal.pageSize.width = 148;
+    doc.internal.pageSize.height = 210;
     
     // Add decorative border
     doc.setDrawColor(229, 181, 116);
@@ -174,8 +174,8 @@ async function generatePDFTemplate(templateId: string, eventData: any, qrCodeDat
   
   // A5 Thank You Template
   else if (templateId === 'a5-thank-you') {
-    doc.internal.pageSize.setWidth(148);
-    doc.internal.pageSize.setHeight(210);
+    doc.internal.pageSize.width = 148;
+    doc.internal.pageSize.height = 210;
     
     // Add decorative border
     doc.setDrawColor(229, 181, 116);
@@ -205,8 +205,8 @@ async function generatePDFTemplate(templateId: string, eventData: any, qrCodeDat
   
   // A5 Timeline Template
   else if (templateId === 'a5-timeline') {
-    doc.internal.pageSize.setWidth(148);
-    doc.internal.pageSize.setHeight(210);
+    doc.internal.pageSize.width = 148;
+    doc.internal.pageSize.height = 210;
     
     // Add decorative border
     doc.setDrawColor(229, 181, 116);
@@ -240,8 +240,8 @@ async function generatePDFTemplate(templateId: string, eventData: any, qrCodeDat
   // Business Card Table Tent Template
   else if (templateId === 'bc-table-tent') {
     // Business card format (85mm x 55mm)
-    doc.internal.pageSize.setWidth(85);
-    doc.internal.pageSize.setHeight(55);
+    doc.internal.pageSize.width = 85;
+    doc.internal.pageSize.height = 55;
     
     // Add decorative border
     doc.setDrawColor(229, 181, 116);
@@ -271,8 +271,8 @@ async function generatePDFTemplate(templateId: string, eventData: any, qrCodeDat
   
   // Business Card Photo Reminder
   else if (templateId === 'bc-photo-reminder') {
-    doc.internal.pageSize.setWidth(85);
-    doc.internal.pageSize.setHeight(55);
+    doc.internal.pageSize.width = 85;
+    doc.internal.pageSize.height = 55;
     
     // Add decorative border
     doc.setDrawColor(229, 181, 116);
@@ -298,8 +298,8 @@ async function generatePDFTemplate(templateId: string, eventData: any, qrCodeDat
   
   // Business Card Hashtag Template
   else if (templateId === 'bc-hashtag-card') {
-    doc.internal.pageSize.setWidth(85);
-    doc.internal.pageSize.setHeight(55);
+    doc.internal.pageSize.width = 85;
+    doc.internal.pageSize.height = 55;
     
     // Add decorative border
     doc.setDrawColor(229, 181, 116);
@@ -326,8 +326,8 @@ async function generatePDFTemplate(templateId: string, eventData: any, qrCodeDat
   
   // Business Card Simple QR
   else if (templateId === 'bc-qr-simple') {
-    doc.internal.pageSize.setWidth(85);
-    doc.internal.pageSize.setHeight(55);
+    doc.internal.pageSize.width = 85;
+    doc.internal.pageSize.height = 55;
     
     // Add decorative border
     doc.setDrawColor(229, 181, 116);
@@ -349,8 +349,8 @@ async function generatePDFTemplate(templateId: string, eventData: any, qrCodeDat
   
   // Business Card Thank You Mini
   else if (templateId === 'bc-thank-you-mini') {
-    doc.internal.pageSize.setWidth(85);
-    doc.internal.pageSize.setHeight(55);
+    doc.internal.pageSize.width = 85;
+    doc.internal.pageSize.height = 55;
     
     // Add decorative border
     doc.setDrawColor(229, 181, 116);

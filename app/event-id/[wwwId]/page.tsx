@@ -113,6 +113,61 @@ interface EventData {
         description: string;
       }>;
     };
+    teamSection?: {
+      title: string;
+      description?: string;
+      members: Array<{
+        id: string;
+        name: string;
+        role: string;
+        photo: string;
+        bio?: string;
+      }>;
+    };
+    accommodationSection?: {
+      title: string;
+      description?: string;
+      hotels: Array<{
+        id: string;
+        name: string;
+        address: string;
+        phone?: string;
+        website?: string;
+        description?: string;
+        priceRange?: string;
+      }>;
+    };
+    transportationSection?: {
+      title: string;
+      description?: string;
+      options: Array<{
+        id: string;
+        type: string;
+        description: string;
+        details?: string;
+      }>;
+    };
+    wishesAndGiftsSection?: {
+      title: string;
+      description?: string;
+      registryLinks: Array<{
+        id: string;
+        storeName: string;
+        url: string;
+        description?: string;
+      }>;
+      wishesMessage?: string;
+    };
+    seatingChartSection?: {
+      title: string;
+      description?: string;
+      tables: Array<{
+        id: string;
+        tableNumber: string;
+        guests: string[];
+        specialNotes?: string;
+      }>;
+    };
   };
 }
 
@@ -684,35 +739,35 @@ export default function PublicEventPage() {
       <TeamSectionEditor
         isOpen={teamEditorOpen}
         onClose={() => setTeamEditorOpen(false)}
-        data={eventData.sectionContent.teamSection}
+        data={eventData.sectionContent.teamSection || { title: 'Team', description: '', members: [] }}
         onSave={saveTeamSection}
       />
 
       <AccommodationSectionEditor
         isOpen={accommodationEditorOpen}
         onClose={() => setAccommodationEditorOpen(false)}
-        data={eventData.sectionContent.accommodationSection}
+        data={eventData.sectionContent.accommodationSection || { title: 'Accommodation', description: '', hotels: [] }}
         onSave={saveAccommodationSection}
       />
 
       <TransportationSectionEditor
         isOpen={transportationEditorOpen}
         onClose={() => setTransportationEditorOpen(false)}
-        data={eventData.sectionContent.transportationSection}
+        data={eventData.sectionContent.transportationSection || { title: 'Transportation', description: '', options: [] }}
         onSave={saveTransportationSection}
       />
 
       <WishesAndGiftsSectionEditor
         isOpen={wishesAndGiftsEditorOpen}
         onClose={() => setWishesAndGiftsEditorOpen(false)}
-        data={eventData.sectionContent.wishesAndGiftsSection}
+        data={eventData.sectionContent.wishesAndGiftsSection || { title: 'Wishes & Gifts', description: '', registryLinks: [] }}
         onSave={saveWishesAndGiftsSection}
       />
 
       <SeatingChartSectionEditor
         isOpen={seatingChartEditorOpen}
         onClose={() => setSeatingChartEditorOpen(false)}
-        data={eventData.sectionContent.seatingChartSection}
+        data={eventData.sectionContent.seatingChartSection || { title: 'Seating Chart', description: '', tables: [] }}
         onSave={saveSeatingChartSection}
       />
     </main>

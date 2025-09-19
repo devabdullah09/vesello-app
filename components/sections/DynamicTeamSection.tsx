@@ -22,7 +22,7 @@ export default function DynamicTeamSection({
   members 
 }: DynamicTeamSectionProps) {
   // Default members if none provided
-  const defaultMembers = [
+  const defaultMembers: TeamMember[] = [
     { id: '1', role: 'Entertainment Company', name: 'David Harris', photo: '/images/team-placeholder.jpeg' },
     { id: '2', role: 'Culinary & Service Team', name: 'Jessica Palmer', photo: '/images/team-placeholder.jpeg' },
     { id: '3', role: 'Band/DJ', name: 'Kevin Grant', photo: '/images/team-placeholder.jpeg' },

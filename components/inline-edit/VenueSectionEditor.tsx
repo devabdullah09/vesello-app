@@ -10,6 +10,7 @@ interface VenueSectionData {
   address: string;
   description?: string;
   mapUrl?: string;
+  images?: string[];
 }
 
 interface VenueSectionEditorProps {
@@ -41,7 +42,7 @@ export default function VenueSectionEditor({
     }
   };
 
-  const handleInputChange = (field: keyof VenueSectionData, value: string) => {
+  const handleInputChange = (field: keyof VenueSectionData, value: string | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 

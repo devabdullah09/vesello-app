@@ -9,6 +9,7 @@ interface HeroSectionData {
   eventDate: string;
   venue?: string;
   customMessage?: string;
+  backgroundImage?: string;
 }
 
 interface HeroSectionEditorProps {

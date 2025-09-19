@@ -25,6 +25,7 @@ interface Event {
   eventDate: string;
   venue?: string;
   status: string;
+  galleryEnabled: boolean;
 }
 
 export default function QRCodeLinkPage() {
@@ -91,7 +92,7 @@ export default function QRCodeLinkPage() {
         return;
       }
 
-      const response = await fetch(`/api/dashboard/events/gallery-qr?wwwId=${encodeURIComponent(wwwId)}`, {
+      const response = await fetch(`/api/dashboard/events/gallery-qr?wwwId=${encodeURIComponent(wwwId || '')}`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',

@@ -114,7 +114,7 @@ export default function EditAlbumPage() {
       setSelectedEvent(event);
 
       // Get or create gallery content
-      const contentResponse = await fetch(`/api/dashboard/events/gallery-content?wwwId=${encodeURIComponent(wwwId)}`, {
+      const contentResponse = await fetch(`/api/dashboard/events/gallery-content?wwwId=${encodeURIComponent(wwwId || '')}`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
