@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { bunnyNetService } from '@/lib/bunny-net';
+import { testConnection, listFiles } from '@/lib/bunny-net';
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     });
     
     // Now test with authentication
-    const isConnected = await bunnyNetService.testConnection();
+    const isConnected = await testConnection();
     
     if (!isConnected) {
       return NextResponse.json({ 
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 
     // Try to list files from a test directory
     try {
-      const files = await bunnyNetService.listFiles('wedding-day', 'photos');
+      const files = await listFiles('wedding-day', 'photos');
       return NextResponse.json({ 
         success: true, 
         message: 'Successfully connected to Bunny.net',

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { bunnyNetService } from '@/lib/bunny-net';
+import { uploadFiles } from '@/lib/bunny-net';
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     const testFileObj = new File([testBlob], 'test-upload.txt', { type: 'text/plain' });
 
     // Test upload to a test directory
-    const uploadResult = await bunnyNetService.uploadFiles(
+    const uploadResult = await uploadFiles(
       [testFileObj], 
       'wedding-day', 
       'photos'

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { bunnyNetService } from '@/lib/bunny-net';
+import { uploadFiles } from '@/lib/bunny-net';
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     try {
       // Upload to Bunny.net using existing service
-      const uploadResult = await bunnyNetService.uploadFiles(
+      const uploadResult = await uploadFiles(
         [file], 
         'wedding-day', // Use existing album structure
         'photos'

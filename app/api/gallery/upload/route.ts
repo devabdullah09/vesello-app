@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { bunnyNetService } from '@/lib/bunny-net';
+import { uploadFiles } from '@/lib/bunny-net';
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Upload files to Bunny.net
-    const uploadResult = await bunnyNetService.uploadFiles(files, albumType as 'wedding-day' | 'party-day', mediaType as 'photos' | 'videos');
+    const uploadResult = await uploadFiles(files, albumType as 'wedding-day' | 'party-day', mediaType as 'photos' | 'videos');
 
     return NextResponse.json({
       success: true,

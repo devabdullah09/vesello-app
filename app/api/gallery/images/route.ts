@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { bunnyNetService } from '@/lib/bunny-net';
+import { listFiles, getCdnUrl } from '@/lib/bunny-net';
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 
     try {
       // List files from Bunny.net Storage
-      const files = await bunnyNetService.listFiles(albumType, mediaType);
+      const files = await listFiles(albumType, mediaType);
       
       // Filter for image/video files and create CDN URLs
       const mediaFiles = files
@@ -35,8 +35,8 @@ export async function GET(request: NextRequest) {
           }
         })
         .map(file => ({
-          url: bunnyNetService.getCdnUrl(file, albumType, mediaType),
-          cdnUrl: bunnyNetService.getCdnUrl(file, albumType, mediaType),
+          url: getCdnUrl(file, albumType, mediaType),
+          cdnUrl: getCdnUrl(file, albumType, mediaType),
           filename: file,
           uploadedAt: new Date(parseInt(file.split('_')[0])).toISOString()
         }))
