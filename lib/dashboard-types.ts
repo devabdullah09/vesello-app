@@ -26,6 +26,119 @@ export interface Event {
     transportationSection: boolean;
     additionalInfoSection: boolean;
   };
+  sectionContent: {
+    heroSection: {
+      coupleNames: string;
+      eventDate: string;
+      venue?: string;
+      backgroundImage?: string;
+      customMessage?: string;
+    };
+    timelineSection: {
+      title: string;
+      events: Array<{
+        id: string;
+        time: string;
+        title: string;
+        description?: string;
+        icon?: string;
+      }>;
+    };
+    ceremonySection: {
+      title: string;
+      description: string;
+      date: string;
+      time: string;
+      location: string;
+      details?: string;
+    };
+    ceremonyVenueSection: {
+      title: string;
+      venueName: string;
+      address: string;
+      description?: string;
+      mapUrl?: string;
+      images?: string[];
+    };
+    seatingChartSection: {
+      title: string;
+      description?: string;
+      tables: Array<{
+        id: string;
+        tableNumber: string;
+        guests: string[];
+        specialNotes?: string;
+      }>;
+    };
+    menuSection: {
+      title: string;
+      description?: string;
+      courses: Array<{
+        id: string;
+        courseName: string;
+        items: Array<{
+          name: string;
+          description?: string;
+          allergens?: string[];
+        }>;
+      }>;
+    };
+    wishesAndGiftsSection: {
+      title: string;
+      description?: string;
+      registryLinks: Array<{
+        id: string;
+        storeName: string;
+        url: string;
+        description?: string;
+      }>;
+      wishesMessage?: string;
+    };
+    teamSection: {
+      title: string;
+      description?: string;
+      members: Array<{
+        id: string;
+        name: string;
+        role: string;
+        photo?: string;
+        bio?: string;
+      }>;
+    };
+    accommodationSection: {
+      title: string;
+      description?: string;
+      hotels: Array<{
+        id: string;
+        name: string;
+        address: string;
+        phone?: string;
+        website?: string;
+        specialRate?: string;
+        bookingCode?: string;
+      }>;
+    };
+    transportationSection: {
+      title: string;
+      description?: string;
+      options: Array<{
+        id: string;
+        type: string;
+        description: string;
+        details?: string;
+        contactInfo?: string;
+      }>;
+    };
+    additionalInfoSection: {
+      title: string;
+      content: string;
+      items: Array<{
+        id: string;
+        title: string;
+        description: string;
+      }>;
+    };
+  };
   createdAt: string;
   updatedAt: string;
 }

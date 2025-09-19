@@ -38,7 +38,9 @@ export async function GET(
         galleryEnabled: event.galleryEnabled,
         rsvpEnabled: event.rsvpEnabled,
         status: event.status,
-        sectionVisibility: event.sectionVisibility
+        organizerId: event.organizerId,
+        sectionVisibility: event.sectionVisibility,
+        sectionContent: event.sectionContent
       }
     })
   } catch (error) {

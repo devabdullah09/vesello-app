@@ -22,9 +22,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <ProtectedRoute requiredRole="guest">
     <div className="min-h-screen bg-white">
       <DashboardHeader />
-      <div className="flex min-h-[calc(100vh-5rem)] bg-white">
+      <div className="min-h-screen bg-white pt-20">
           <Sidebar role={(userProfile?.role === 'superadmin' ? 'superadmin' : 'organizer')} />
-        <main className="flex-1 p-12 bg-white min-h-full relative">
+        <main className="ml-72 p-12 bg-white min-h-screen relative">
           {children}
         </main>
       </div>

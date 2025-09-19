@@ -258,7 +258,7 @@ export default function EventsDayDetailsPage() {
         </button>
         <div className="flex flex-col items-end space-y-2">
           <button 
-            onClick={() => router.push(`/dashboard/events-edition/section-management?wwwId=${eventDetails.wwwId}`)}
+            onClick={() => router.push(`/dashboard/events-edition/content-editor?wwwId=${eventDetails.wwwId}`)}
             className="bg-gradient-to-r from-[#E5B574] via-[#D59C58] to-[#C18037] text-white font-semibold px-6 py-2 rounded-md shadow-md hover:from-[#D59C58] hover:to-[#E5B574] transition-colors"
           >
             Edit Website

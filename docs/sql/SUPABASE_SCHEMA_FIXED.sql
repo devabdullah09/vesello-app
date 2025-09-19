@@ -33,10 +33,21 @@ CREATE TABLE invitation_rsvps (
   status TEXT NOT NULL CHECK (status IN ('pending', 'confirmed', 'cancelled')) DEFAULT 'pending'
 );
 
+-- Create gallery_content table for custom gallery content
+CREATE TABLE gallery_content (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  event_id TEXT NOT NULL,
+  content JSONB NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(event_id)
+);
+
 -- Create indexes for better performance
 CREATE INDEX idx_invitation_rsvps_event_id ON invitation_rsvps(event_id);
 CREATE INDEX idx_invitation_rsvps_submitted_at ON invitation_rsvps(submitted_at);
 CREATE INDEX idx_user_profiles_email ON user_profiles(email);
+CREATE INDEX idx_gallery_content_event_id ON gallery_content(event_id);
 
 -- Row Level Security Policies
 
@@ -58,6 +69,10 @@ CREATE POLICY "Anyone can read RSVPs" ON invitation_rsvps
   FOR SELECT USING (true);
 
 CREATE POLICY "Service role can manage all RSVPs" ON invitation_rsvps
+  FOR ALL USING (auth.role() = 'service_role');
+
+-- Gallery content policies
+CREATE POLICY "Service role can manage all gallery content" ON gallery_content
   FOR ALL USING (auth.role() = 'service_role');
 
 -- Function to automatically create user profile on signup

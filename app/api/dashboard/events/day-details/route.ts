@@ -83,7 +83,8 @@ export async function GET(request: NextRequest) {
         galleryEnabled: event.galleryEnabled,
         rsvpEnabled: event.rsvpEnabled,
         status: event.status,
-        sectionVisibility: event.sectionVisibility
+        sectionVisibility: event.sectionVisibility,
+        sectionContent: event.sectionContent
       }
     })
   } catch (error) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
 import { getEventByWWWId } from '@/lib/events-service'
+import { listFiles, getCdnUrl } from '@/lib/bunny-net'
 
 // GET /api/event-id/[wwwId]/gallery - Get public gallery images for an event
 export async function GET(
@@ -30,33 +31,46 @@ export async function GET(
       return NextResponse.json({ error: 'Event has been cancelled' }, { status: 410 })
     }
 
-    const supabase = createServerClient()
+    try {
+      // Get images from both wedding-day and party-day folders
+      const [weddingDayImages, partyDayImages] = await Promise.all([
+        listFiles('wedding-day', 'photos', wwwId),
+        listFiles('party-day', 'photos', wwwId)
+      ])
 
-    // Get gallery images for this event
-    const { data: images, error } = await supabase
-      .from('gallery_images')
-      .select('id, url, caption, uploaded_at')
-      .eq('event_id', event.id)
-      .eq('is_public', true)
-      .order('uploaded_at', { ascending: false })
+      // Combine and format all images
+      const allImages = [
+        ...weddingDayImages.map((fileName, index) => ({
+          id: `wedding-${index}-${Date.now()}`,
+          url: getCdnUrl(fileName, 'wedding-day', 'photos', wwwId),
+          caption: `Wedding Day Photo ${index + 1}`,
+          uploadedAt: new Date().toISOString(),
+          albumType: 'wedding-day'
+        })),
+        ...partyDayImages.map((fileName, index) => ({
+          id: `party-${index}-${Date.now()}`,
+          url: getCdnUrl(fileName, 'party-day', 'photos', wwwId),
+          caption: `Party Day Photo ${index + 1}`,
+          uploadedAt: new Date().toISOString(),
+          albumType: 'party-day'
+        }))
+      ]
 
-    if (error) {
-      console.error('Error fetching gallery images:', error)
-      return NextResponse.json({ error: 'Failed to fetch gallery images' }, { status: 500 })
+      // Sort by upload time (newest first)
+      allImages.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
+
+      return NextResponse.json({
+        success: true,
+        data: allImages
+      })
+    } catch (bunnyError) {
+      console.error('Error fetching images from Bunny.net:', bunnyError)
+      // Return empty array if Bunny.net fails
+      return NextResponse.json({
+        success: true,
+        data: []
+      })
     }
-
-    // Format the response
-    const formattedImages = images?.map(image => ({
-      id: image.id,
-      url: image.url,
-      caption: image.caption,
-      uploadedAt: image.uploaded_at
-    })) || []
-
-    return NextResponse.json({
-      success: true,
-      data: formattedImages
-    })
   } catch (error) {
     console.error('Error getting event gallery:', error)
     return NextResponse.json(

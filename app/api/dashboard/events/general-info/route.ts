@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
         coupleNames: event.coupleNames,
         venue: event.venue,
         eventDate: event.eventDate,
-        eventUrl: `www.vasello.com/${event.wwwId}`,
+        eventUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/event-id/${event.wwwId}`,
         eventId: event.id,
         wwwId: event.wwwId,
         title: event.title

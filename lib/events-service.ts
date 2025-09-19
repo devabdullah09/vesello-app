@@ -347,6 +347,80 @@ const mapEventFromDB = (dbEvent: any): Event => ({
     transportationSection: true,
     additionalInfoSection: true,
   },
+  sectionContent: dbEvent.section_content || dbEvent.settings?.sectionContent || {
+    heroSection: {
+      coupleNames: dbEvent.couple_names || '',
+      eventDate: dbEvent.event_date || dbEvent.date || '',
+      venue: dbEvent.venue || '',
+      backgroundImage: '',
+      customMessage: 'WE\'RE GETTING MARRIED!'
+    },
+    timelineSection: {
+      title: 'Wedding Day',
+      events: [
+        { id: '1', time: '11:00 AM', title: 'WELCOME TOAST', description: '', icon: '/images/toast.png' },
+        { id: '2', time: '12:00 PM', title: 'CEREMONY', description: '', icon: '/images/ceremony.png' },
+        { id: '3', time: '01:00 PM', title: 'WEDDING LUNCH', description: '', icon: '/images/lunch.png' },
+        { id: '4', time: '03:00 PM', title: 'CAKE CUTTING', description: '', icon: '/images/cake.png' },
+        { id: '5', time: '04:00 PM', title: 'FIRST DANCE', description: '', icon: '/images/dance.png' },
+        { id: '6', time: '05:00 PM', title: 'COCKTAIL HOUR', description: '', icon: '/images/cocktail.png' },
+        { id: '7', time: '08:00 PM', title: 'BUFFET DINNER', description: '', icon: '/images/dinner.png' },
+        { id: '8', time: '11:30 PM', title: 'FIREWORKS', description: '', icon: '/images/fireworks.png' }
+      ]
+    },
+    ceremonySection: {
+      title: 'Ceremony Details',
+      description: 'Join us as we exchange vows in a beautiful ceremony.',
+      date: dbEvent.event_date || dbEvent.date || '',
+      time: '12:00 PM',
+      location: dbEvent.venue || '',
+      details: ''
+    },
+    ceremonyVenueSection: {
+      title: 'Ceremony Venue',
+      venueName: dbEvent.venue || 'Wedding Venue',
+      address: '',
+      description: 'A beautiful location for our special day.',
+      mapUrl: '',
+      images: []
+    },
+    seatingChartSection: {
+      title: 'Seating Chart',
+      description: 'Find your seat for the reception.',
+      tables: []
+    },
+    menuSection: {
+      title: 'Wedding Menu',
+      description: 'Delicious food prepared specially for our celebration.',
+      courses: []
+    },
+    wishesAndGiftsSection: {
+      title: 'Wishes & Gifts',
+      description: 'Your presence is the greatest gift, but if you wish to honor us with a gift, here are some suggestions.',
+      registryLinks: [],
+      wishesMessage: 'We are so grateful for your love and support!'
+    },
+    teamSection: {
+      title: 'Wedding Team',
+      description: 'Meet the special people who will be part of our big day.',
+      members: []
+    },
+    accommodationSection: {
+      title: 'Accommodation',
+      description: 'Here are some hotel options for out-of-town guests.',
+      hotels: []
+    },
+    transportationSection: {
+      title: 'Transportation',
+      description: 'Information about getting to and from the venue.',
+      options: []
+    },
+    additionalInfoSection: {
+      title: 'Additional Information',
+      content: 'Here you can find any additional details about our wedding day.',
+      items: []
+    }
+  },
   createdAt: dbEvent.created_at,
   updatedAt: dbEvent.updated_at
 })

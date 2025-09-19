@@ -3,7 +3,13 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import TimelineSection from "@/components/sections/TimelineSection";
+import DynamicTimelineSection from "@/components/sections/DynamicTimelineSection";
 import CeremonySection from "@/components/sections/CeremonySection";
+import DynamicCeremonySection from "@/components/sections/DynamicCeremonySection";
+import DynamicCeremonyVenueSection from "@/components/sections/DynamicCeremonyVenueSection";
+import DynamicMenuSection from "@/components/sections/DynamicMenuSection";
+import DynamicTeamSection from "@/components/sections/DynamicTeamSection";
+import DynamicAdditionalInfoSection from "@/components/sections/DynamicAdditionalInfoSection";
 import CeremonyVenueSection from "@/components/sections/CeremonyVenueSection";
 import SeatingChartSection from "@/components/sections/SeatingChartSection";
 import MenuSection from "@/components/sections/MenuSection";
@@ -12,7 +18,21 @@ import TeamSection from "@/components/sections/TeamSection";
 import AccommodationSection from "@/components/sections/AccommodationSection";
 import TransportationSection from "@/components/sections/TransportationSection";
 import AdditionalInfoSection from "@/components/sections/AdditionalInfoSection";
-import DynamicRSVPSection from "@/components/sections/DynamicRSVPSection";
+import { AdminEditProvider } from "@/components/admin-edit-provider";
+import AdminToggle from "@/components/inline-edit/AdminToggle";
+import EventHeader from "@/components/layout/EventHeader";
+import EditableSection from "@/components/inline-edit/EditableSection";
+import HeroSectionEditor from "@/components/inline-edit/HeroSectionEditor";
+import TimelineSectionEditor from "@/components/inline-edit/TimelineSectionEditor";
+import CeremonySectionEditor from "@/components/inline-edit/CeremonySectionEditor";
+import VenueSectionEditor from "@/components/inline-edit/VenueSectionEditor";
+import MenuSectionEditor from "@/components/inline-edit/MenuSectionEditor";
+import AdditionalInfoSectionEditor from "@/components/inline-edit/AdditionalInfoSectionEditor";
+import TeamSectionEditor from "@/components/inline-edit/TeamSectionEditor";
+import AccommodationSectionEditor from "@/components/inline-edit/AccommodationSectionEditor";
+import TransportationSectionEditor from "@/components/inline-edit/TransportationSectionEditor";
+import WishesAndGiftsSectionEditor from "@/components/inline-edit/WishesAndGiftsSectionEditor";
+import SeatingChartSectionEditor from "@/components/inline-edit/SeatingChartSectionEditor";
 
 interface EventData {
   id: string;
@@ -25,6 +45,7 @@ interface EventData {
   galleryEnabled: boolean;
   rsvpEnabled: boolean;
   status: string;
+  organizerId: string;
   sectionVisibility: {
     heroSection: boolean;
     timelineSection: boolean;
@@ -37,6 +58,61 @@ interface EventData {
     accommodationSection: boolean;
     transportationSection: boolean;
     additionalInfoSection: boolean;
+  };
+  sectionContent: {
+    heroSection: {
+      coupleNames: string;
+      eventDate: string;
+      venue?: string;
+      customMessage?: string;
+    };
+    timelineSection: {
+      title: string;
+      events: Array<{
+        id: string;
+        time: string;
+        title: string;
+        description?: string;
+        icon?: string;
+      }>;
+    };
+    ceremonySection: {
+      title: string;
+      description: string;
+      date: string;
+      time: string;
+      location: string;
+      details?: string;
+    };
+    ceremonyVenueSection: {
+      title: string;
+      venueName: string;
+      address: string;
+      description?: string;
+      mapUrl?: string;
+    };
+    menuSection: {
+      title: string;
+      description?: string;
+      courses: Array<{
+        id: string;
+        courseName: string;
+        items: Array<{
+          name: string;
+          description?: string;
+          allergens?: string[];
+        }>;
+      }>;
+    };
+    additionalInfoSection: {
+      title: string;
+      content: string;
+      items: Array<{
+        id: string;
+        title: string;
+        description: string;
+      }>;
+    };
   };
 }
 
@@ -52,6 +128,19 @@ export default function PublicEventPage() {
     minutes: 0,
     seconds: 0,
   });
+  
+  // Inline editing states
+  const [heroEditorOpen, setHeroEditorOpen] = useState(false);
+  const [timelineEditorOpen, setTimelineEditorOpen] = useState(false);
+  const [ceremonyEditorOpen, setCeremonyEditorOpen] = useState(false);
+  const [venueEditorOpen, setVenueEditorOpen] = useState(false);
+  const [menuEditorOpen, setMenuEditorOpen] = useState(false);
+  const [teamEditorOpen, setTeamEditorOpen] = useState(false);
+  const [additionalInfoEditorOpen, setAdditionalInfoEditorOpen] = useState(false);
+  const [accommodationEditorOpen, setAccommodationEditorOpen] = useState(false);
+  const [transportationEditorOpen, setTransportationEditorOpen] = useState(false);
+  const [wishesAndGiftsEditorOpen, setWishesAndGiftsEditorOpen] = useState(false);
+  const [seatingChartEditorOpen, setSeatingChartEditorOpen] = useState(false);
 
   useEffect(() => {
     if (!wwwId) {
@@ -65,8 +154,9 @@ export default function PublicEventPage() {
 
   useEffect(() => {
     if (eventData) {
-      // Calculate countdown to event date
-      const eventDate = new Date(eventData.eventDate);
+      // Calculate countdown to event date - use custom date if available
+      const customEventDate = eventData.sectionContent?.heroSection?.eventDate || eventData.eventDate;
+      const eventDate = new Date(customEventDate);
       const now = new Date();
       const timeDiff = eventDate.getTime() - now.getTime();
 
@@ -81,6 +171,8 @@ export default function PublicEventPage() {
         // Update countdown every second
         const timer = setInterval(() => {
           const now = new Date();
+          const customEventDate = eventData.sectionContent?.heroSection?.eventDate || eventData.eventDate;
+          const eventDate = new Date(customEventDate);
           const timeDiff = eventDate.getTime() - now.getTime();
 
           if (timeDiff > 0) {
@@ -118,11 +210,177 @@ export default function PublicEventPage() {
       }
 
       const result = await response.json();
+      console.log('Event data loaded:', result.data);
       setEventData(result.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load event');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Save functions for inline editing
+  const saveHeroSection = async (heroData: any) => {
+    if (!eventData) return;
+
+    const updatedContent = {
+      ...eventData.sectionContent,
+      heroSection: heroData
+    };
+
+    await updateEventContent(updatedContent);
+    
+    // Force re-fetch to get latest data
+    await fetchEventData();
+  };
+
+  const saveTimelineSection = async (timelineData: any) => {
+    if (!eventData) return;
+
+    const updatedContent = {
+      ...eventData.sectionContent,
+      timelineSection: timelineData
+    };
+
+    await updateEventContent(updatedContent);
+    
+    // Force re-fetch to get latest data
+    await fetchEventData();
+  };
+
+  const saveCeremonySection = async (ceremonyData: any) => {
+    if (!eventData) return;
+
+    const updatedContent = {
+      ...eventData.sectionContent,
+      ceremonySection: ceremonyData
+    };
+
+    await updateEventContent(updatedContent);
+    
+    // Force re-fetch to get latest data
+    await fetchEventData();
+  };
+
+  const saveVenueSection = async (venueData: any) => {
+    if (!eventData) return;
+
+    const updatedContent = {
+      ...eventData.sectionContent,
+      ceremonyVenueSection: venueData
+    };
+
+    await updateEventContent(updatedContent);
+    await fetchEventData();
+  };
+
+  const saveMenuSection = async (menuData: any) => {
+    if (!eventData) return;
+
+    const updatedContent = {
+      ...eventData.sectionContent,
+      menuSection: menuData
+    };
+
+    await updateEventContent(updatedContent);
+    await fetchEventData();
+  };
+
+  const saveTeamSection = async (teamData: any) => {
+    if (!eventData) return;
+
+    const updatedContent = {
+      ...eventData.sectionContent,
+      teamSection: teamData
+    };
+
+    await updateEventContent(updatedContent);
+    await fetchEventData();
+  };
+
+  const saveAdditionalInfoSection = async (additionalInfoData: any) => {
+    if (!eventData) return;
+
+    const updatedContent = {
+      ...eventData.sectionContent,
+      additionalInfoSection: additionalInfoData
+    };
+
+    await updateEventContent(updatedContent);
+    await fetchEventData();
+  };
+
+  const saveAccommodationSection = async (accommodationData: any) => {
+    if (!eventData) return;
+
+    const updatedContent = {
+      ...eventData.sectionContent,
+      accommodationSection: accommodationData
+    };
+
+    await updateEventContent(updatedContent);
+    await fetchEventData();
+  };
+
+  const saveTransportationSection = async (transportationData: any) => {
+    if (!eventData) return;
+
+    const updatedContent = {
+      ...eventData.sectionContent,
+      transportationSection: transportationData
+    };
+
+    await updateEventContent(updatedContent);
+    await fetchEventData();
+  };
+
+  const saveWishesAndGiftsSection = async (wishesAndGiftsData: any) => {
+    if (!eventData) return;
+
+    const updatedContent = {
+      ...eventData.sectionContent,
+      wishesAndGiftsSection: wishesAndGiftsData
+    };
+
+    await updateEventContent(updatedContent);
+    await fetchEventData();
+  };
+
+  const saveSeatingChartSection = async (seatingChartData: any) => {
+    if (!eventData) return;
+
+    const updatedContent = {
+      ...eventData.sectionContent,
+      seatingChartSection: seatingChartData
+    };
+
+    await updateEventContent(updatedContent);
+    await fetchEventData();
+  };
+
+  const updateEventContent = async (sectionContent: any) => {
+    try {
+      const response = await fetch(`/api/event-id/${wwwId}/update-content`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ sectionContent }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update content');
+      }
+
+      // Update local state
+      setEventData(prev => prev ? {
+        ...prev,
+        sectionContent
+      } : null);
+
+    } catch (error) {
+      console.error('Error updating content:', error);
+      throw error;
     }
   };
 
@@ -160,45 +418,25 @@ export default function PublicEventPage() {
   }
 
   return (
-    <main>
-      {/* Google Fonts */}
-      <link href="https://fonts.googleapis.com/css2?family=Sail&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <AdminEditProvider eventOwnerId={eventData.organizerId}>
+      <main>
+        {/* Google Fonts */}
+        <link href="https://fonts.googleapis.com/css2?family=Sail&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       
       {/* Header Navigation */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <img
-                src="/images/logo.png"
-                alt="Vasello"
-                width={40}
-                height={40}
-                className="rounded-full"
-              />
-              <span className="text-xl font-bold text-gray-800">Vasello</span>
-            </div>
-            <div className="flex items-center space-x-6">
-              <Link href="/" className="text-gray-600 hover:text-[#E5B574] transition-colors">
-                Home
-              </Link>
-              {eventData.galleryEnabled && (
-                <Link href={`/event-id/${wwwId}/gallery`} className="text-gray-600 hover:text-[#E5B574] transition-colors">
-                  Gallery
-                </Link>
-              )}
-              {eventData.rsvpEnabled && (
-                <Link href={`/event-id/${wwwId}/rsvp`} className="text-gray-600 hover:text-[#E5B574] transition-colors">
-                  Reply to Invitation
-                </Link>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
+      <EventHeader 
+        eventId={wwwId}
+        galleryEnabled={eventData.galleryEnabled}
+        rsvpEnabled={eventData.rsvpEnabled}
+        currentPage="home"
+      />
 
       {/* Hero Section with Dynamic Data */}
-      <div className="relative w-full overflow-hidden bg-white pt-16">
+      <EditableSection
+        onEdit={() => setHeroEditorOpen(true)}
+        sectionName="Hero Section"
+        className="relative w-full overflow-hidden bg-white pt-16"
+      >
         <div className="flex flex-col md:flex-row h-full min-h-[420px] md:min-h-[420px]">
           {/* Left side content */}
           <div className="flex-1 flex flex-col justify-center items-center px-4 sm:px-8 md:px-16 py-6 sm:py-8 md:py-8 z-20">
@@ -209,7 +447,7 @@ export default function PublicEventPage() {
                    fontSize: 'clamp(1.5rem, 5vw, 2.2rem)', 
                    letterSpacing: '0.02em' 
                  }}>
-              {eventData.coupleNames}
+              {eventData.sectionContent?.heroSection?.coupleNames || eventData.coupleNames}
             </div>
             
             {/* Save The Date */}
@@ -239,7 +477,7 @@ export default function PublicEventPage() {
                    letterSpacing: '0.12em',
                    fontSize: 'clamp(0.875rem, 2.5vw, 1.125rem)'
                  }}>
-                WE'RE GETTING MARRIED!
+                {eventData.sectionContent?.heroSection?.customMessage || "WE'RE GETTING MARRIED!"}
               </p>
             </div>
 
@@ -285,29 +523,199 @@ export default function PublicEventPage() {
             />
           </div>
         </div>
-      </div>
+      </EditableSection>
 
       {/* All the wedding sections - conditionally rendered based on sectionVisibility */}
-      {eventData.sectionVisibility.timelineSection && <TimelineSection />}
-      {eventData.sectionVisibility.ceremonySection && <CeremonySection />}
-      {eventData.sectionVisibility.ceremonyVenueSection && <CeremonyVenueSection />}
-      {eventData.sectionVisibility.seatingChartSection && <SeatingChartSection />}
-      {eventData.sectionVisibility.menuSection && <MenuSection />}
-      {eventData.sectionVisibility.wishesAndGiftsSection && <WishesAndGiftsSection />}
-      {eventData.sectionVisibility.teamSection && <TeamSection />}
-      {eventData.sectionVisibility.accommodationSection && <AccommodationSection />}
-      {eventData.sectionVisibility.transportationSection && <TransportationSection />}
-      {eventData.sectionVisibility.additionalInfoSection && <AdditionalInfoSection />}
-      
-      {/* Dynamic RSVP Section - Only shows if RSVP is enabled */}
-      <DynamicRSVPSection
-        eventId={eventData.id}
-        wwwId={eventData.wwwId}
-        coupleNames={eventData.coupleNames}
-        eventDate={eventData.eventDate}
-        venue={eventData.venue}
-        rsvpEnabled={eventData.rsvpEnabled}
+      {eventData.sectionVisibility.timelineSection && (
+        <EditableSection
+          onEdit={() => setTimelineEditorOpen(true)}
+          sectionName="Timeline Section"
+        >
+          <DynamicTimelineSection 
+            title={eventData.sectionContent?.timelineSection?.title || 'Wedding Day'}
+            events={eventData.sectionContent?.timelineSection?.events || []}
+          />
+        </EditableSection>
+      )}
+      {eventData.sectionVisibility.ceremonySection && (
+        <EditableSection
+          onEdit={() => setCeremonyEditorOpen(true)}
+          sectionName="Ceremony Section"
+        >
+          <DynamicCeremonySection 
+            title={eventData.sectionContent?.ceremonySection?.title || 'Wedding Ceremony'}
+            description={eventData.sectionContent?.ceremonySection?.description || 'We Invite You To Join Us For Our'}
+            date={eventData.sectionContent?.ceremonySection?.date || eventData.eventDate}
+            time={eventData.sectionContent?.ceremonySection?.time || '12:00 PM'}
+            location={eventData.sectionContent?.ceremonySection?.location || eventData.venue || 'Wedding Venue'}
+            details={eventData.sectionContent?.ceremonySection?.details}
+          />
+        </EditableSection>
+      )}
+      {eventData.sectionVisibility.ceremonyVenueSection && (
+        <EditableSection
+          onEdit={() => setVenueEditorOpen(true)}
+          sectionName="Venue Section"
+        >
+          <DynamicCeremonyVenueSection 
+            title={eventData.sectionContent?.ceremonyVenueSection?.title || 'Our Wedding'}
+            venueName={eventData.sectionContent?.ceremonyVenueSection?.venueName || eventData.venue || 'Wedding Venue'}
+            address={eventData.sectionContent?.ceremonyVenueSection?.address || ''}
+            description={eventData.sectionContent?.ceremonyVenueSection?.description}
+            mapUrl={eventData.sectionContent?.ceremonyVenueSection?.mapUrl}
+          />
+        </EditableSection>
+      )}
+      {eventData.sectionVisibility.seatingChartSection && (
+        <EditableSection
+          onEdit={() => setSeatingChartEditorOpen(true)}
+          sectionName="Seating Chart Section"
+        >
+          <SeatingChartSection />
+        </EditableSection>
+      )}
+      {eventData.sectionVisibility.menuSection && (
+        <EditableSection
+          onEdit={() => setMenuEditorOpen(true)}
+          sectionName="Menu Section"
+        >
+          <DynamicMenuSection 
+            title={eventData.sectionContent?.menuSection?.title || 'Menu'}
+            description={eventData.sectionContent?.menuSection?.description}
+            courses={eventData.sectionContent?.menuSection?.courses || []}
+          />
+        </EditableSection>
+      )}
+      {eventData.sectionVisibility.wishesAndGiftsSection && (
+        <EditableSection
+          onEdit={() => setWishesAndGiftsEditorOpen(true)}
+          sectionName="Wishes & Gifts Section"
+        >
+          <WishesAndGiftsSection />
+        </EditableSection>
+      )}
+      {eventData.sectionVisibility.teamSection && (
+        <EditableSection
+          onEdit={() => setTeamEditorOpen(true)}
+          sectionName="Team Section"
+        >
+          <DynamicTeamSection 
+            title={eventData.sectionContent?.teamSection?.title || 'Team'}
+            description={eventData.sectionContent?.teamSection?.description}
+            members={eventData.sectionContent?.teamSection?.members || []}
+          />
+        </EditableSection>
+      )}
+      {eventData.sectionVisibility.accommodationSection && (
+        <EditableSection
+          onEdit={() => setAccommodationEditorOpen(true)}
+          sectionName="Accommodation Section"
+        >
+          <AccommodationSection />
+        </EditableSection>
+      )}
+      {eventData.sectionVisibility.transportationSection && (
+        <EditableSection
+          onEdit={() => setTransportationEditorOpen(true)}
+          sectionName="Transportation Section"
+        >
+          <TransportationSection />
+        </EditableSection>
+      )}
+      {eventData.sectionVisibility.additionalInfoSection && (
+        <EditableSection
+          onEdit={() => setAdditionalInfoEditorOpen(true)}
+          sectionName="Additional Info Section"
+        >
+          <DynamicAdditionalInfoSection 
+            title={eventData.sectionContent?.additionalInfoSection?.title || 'Additional Information'}
+            content={eventData.sectionContent?.additionalInfoSection?.content || ''}
+            items={eventData.sectionContent?.additionalInfoSection?.items || []}
+          />
+        </EditableSection>
+      )}
+
+      {/* Admin Toggle Button */}
+      <AdminToggle />
+
+      {/* Inline Editor Modals */}
+      <HeroSectionEditor
+        isOpen={heroEditorOpen}
+        onClose={() => setHeroEditorOpen(false)}
+        data={eventData.sectionContent.heroSection}
+        onSave={saveHeroSection}
+      />
+
+      <TimelineSectionEditor
+        isOpen={timelineEditorOpen}
+        onClose={() => setTimelineEditorOpen(false)}
+        data={eventData.sectionContent.timelineSection}
+        onSave={saveTimelineSection}
+      />
+
+      <CeremonySectionEditor
+        isOpen={ceremonyEditorOpen}
+        onClose={() => setCeremonyEditorOpen(false)}
+        data={eventData.sectionContent.ceremonySection}
+        onSave={saveCeremonySection}
+      />
+
+      <VenueSectionEditor
+        isOpen={venueEditorOpen}
+        onClose={() => setVenueEditorOpen(false)}
+        data={eventData.sectionContent.ceremonyVenueSection}
+        onSave={saveVenueSection}
+      />
+
+      <MenuSectionEditor
+        isOpen={menuEditorOpen}
+        onClose={() => setMenuEditorOpen(false)}
+        data={eventData.sectionContent.menuSection}
+        onSave={saveMenuSection}
+      />
+
+      <AdditionalInfoSectionEditor
+        isOpen={additionalInfoEditorOpen}
+        onClose={() => setAdditionalInfoEditorOpen(false)}
+        data={eventData.sectionContent.additionalInfoSection}
+        onSave={saveAdditionalInfoSection}
+      />
+
+      <TeamSectionEditor
+        isOpen={teamEditorOpen}
+        onClose={() => setTeamEditorOpen(false)}
+        data={eventData.sectionContent.teamSection}
+        onSave={saveTeamSection}
+      />
+
+      <AccommodationSectionEditor
+        isOpen={accommodationEditorOpen}
+        onClose={() => setAccommodationEditorOpen(false)}
+        data={eventData.sectionContent.accommodationSection}
+        onSave={saveAccommodationSection}
+      />
+
+      <TransportationSectionEditor
+        isOpen={transportationEditorOpen}
+        onClose={() => setTransportationEditorOpen(false)}
+        data={eventData.sectionContent.transportationSection}
+        onSave={saveTransportationSection}
+      />
+
+      <WishesAndGiftsSectionEditor
+        isOpen={wishesAndGiftsEditorOpen}
+        onClose={() => setWishesAndGiftsEditorOpen(false)}
+        data={eventData.sectionContent.wishesAndGiftsSection}
+        onSave={saveWishesAndGiftsSection}
+      />
+
+      <SeatingChartSectionEditor
+        isOpen={seatingChartEditorOpen}
+        onClose={() => setSeatingChartEditorOpen(false)}
+        data={eventData.sectionContent.seatingChartSection}
+        onSave={saveSeatingChartSection}
       />
     </main>
+    </AdminEditProvider>
   );
 }

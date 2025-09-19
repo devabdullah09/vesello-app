@@ -69,7 +69,8 @@ export class BunnyNetService {
   async uploadFiles(
     files: File[],
     albumType: 'wedding-day' | 'party-day',
-    mediaType: 'photos' | 'videos'
+    mediaType: 'photos' | 'videos',
+    eventId?: string
   ): Promise<BunnyNetUploadResponse> {
     // Validate config before proceeding
     this.validateConfig();
@@ -86,11 +87,11 @@ export class BunnyNetService {
         // Validate file before upload
         this.validateFile(file, mediaType);
         
-        const fileName = await this.uploadSingleFile(file, albumType, mediaType);
+        const fileName = await this.uploadSingleFile(file, albumType, mediaType, eventId);
         uploadedFiles.push(fileName);
         
         // Generate CDN URL
-        const cdnUrl = this.getCdnUrl(fileName, albumType, mediaType);
+        const cdnUrl = this.getCdnUrl(fileName, albumType, mediaType, eventId);
         cdnUrls.push(cdnUrl);
       } catch (error) {
         console.error(`Failed to upload ${file.name}:`, error);
@@ -112,7 +113,8 @@ export class BunnyNetService {
   private async uploadSingleFile(
     file: File,
     albumType: string,
-    mediaType: string
+    mediaType: string,
+    eventId?: string
   ): Promise<string> {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
@@ -123,8 +125,9 @@ export class BunnyNetService {
     const fileExtension = file.name.split('.').pop();
     const fileName = `${timestamp}_${randomString}.${fileExtension}`;
     
-    // Bunny.net Storage API endpoint
-    const uploadUrl = `${this.config.storageEndpoint}/${albumType}/${mediaType}/${fileName}`;
+    // Bunny.net Storage API endpoint - use event-specific folder if provided
+    const folderPath = eventId ? `events/${eventId}/${albumType}/${mediaType}` : `${albumType}/${mediaType}`;
+    const uploadUrl = `${this.config.storageEndpoint}/${folderPath}/${fileName}`;
     
     const response = await fetch(uploadUrl, {
       method: 'PUT',
@@ -150,11 +153,13 @@ export class BunnyNetService {
   async deleteFile(
     fileName: string,
     albumType: string,
-    mediaType: string
+    mediaType: string,
+    eventId?: string
   ): Promise<boolean> {
     this.validateConfig();
     
-    const deleteUrl = `${this.config.storageEndpoint}/${albumType}/${mediaType}/${fileName}`;
+    const folderPath = eventId ? `events/${eventId}/${albumType}/${mediaType}` : `${albumType}/${mediaType}`;
+    const deleteUrl = `${this.config.storageEndpoint}/${folderPath}/${fileName}`;
     
     const response = await fetch(deleteUrl, {
       method: 'DELETE',
@@ -171,11 +176,13 @@ export class BunnyNetService {
    */
   async listFiles(
     albumType: string,
-    mediaType: string
+    mediaType: string,
+    eventId?: string
   ): Promise<string[]> {
     this.validateConfig();
     
-    const listUrl = `${this.config.storageEndpoint}/${albumType}/${mediaType}/`;
+    const folderPath = eventId ? `events/${eventId}/${albumType}/${mediaType}` : `${albumType}/${mediaType}`;
+    const listUrl = `${this.config.storageEndpoint}/${folderPath}/`;
     
     const response = await fetch(listUrl, {
       method: 'GET',
@@ -204,8 +211,9 @@ export class BunnyNetService {
   /**
    * Get CDN URL for a file
    */
-  getCdnUrl(fileName: string, albumType: string, mediaType: string): string {
-    return `${this.config.cdnUrl}/${albumType}/${mediaType}/${fileName}`;
+  getCdnUrl(fileName: string, albumType: string, mediaType: string, eventId?: string): string {
+    const folderPath = eventId ? `events/${eventId}/${albumType}/${mediaType}` : `${albumType}/${mediaType}`;
+    return `${this.config.cdnUrl}/${folderPath}/${fileName}`;
   }
 
   /**
@@ -290,14 +298,97 @@ if (typeof window === 'undefined') {
   });
 }
 
-// Validate configuration on import (server-side only)
-if (typeof window === 'undefined') {
-  try {
-    const testService = new BunnyNetService(bunnyNetConfig);
-    console.log('Bunny.net service initialized successfully');
-  } catch (error) {
-    console.error('Bunny.net service initialization failed:', error);
+// Lazy initialization of the service to ensure env vars are loaded
+let _bunnyNetService: BunnyNetService | null = null;
+
+function getBunnyNetService(): BunnyNetService {
+  if (!_bunnyNetService) {
+    // Force reload environment variables if we're on the server
+    if (typeof window === 'undefined') {
+      // Re-import the env-loader to ensure fresh environment variables
+      const { env: freshEnv } = require('./env-loader');
+      
+      // Create a fresh config with the latest environment variables
+      const freshConfig: BunnyNetConfig = {
+        storageZoneName: freshEnv.BUNNY_NET_STORAGE_ZONE || 'wedding-app-storage',
+        storageApiKey: freshEnv.BUNNY_NET_STORAGE_API_KEY || '',
+        storageEndpoint: freshEnv.BUNNY_NET_STORAGE_ENDPOINT || 'https://storage.bunnycdn.com/wedding-app-storage',
+        cdnUrl: freshEnv.BUNNY_NET_CDN_URL || 'https://cdn.vesello.net',
+      };
+      
+      // Debug: Log the configuration to see what's being loaded (server-side only)
+      console.log('Bunny.net Config Debug (Lazy Init):', {
+        storageZoneName: freshConfig.storageZoneName,
+        storageApiKey: freshConfig.storageApiKey ? `SET (${freshConfig.storageApiKey.length} chars)` : 'NOT_SET',
+        storageEndpoint: freshConfig.storageEndpoint,
+        cdnUrl: freshConfig.cdnUrl,
+        envVars: {
+          BUNNY_NET_STORAGE_ZONE: freshEnv.BUNNY_NET_STORAGE_ZONE || 'NOT_SET',
+          BUNNY_NET_STORAGE_API_KEY: freshEnv.BUNNY_NET_STORAGE_API_KEY ? 'SET' : 'NOT_SET',
+          BUNNY_NET_STORAGE_ENDPOINT: freshEnv.BUNNY_NET_STORAGE_ENDPOINT || 'NOT_SET',
+          BUNNY_NET_CDN_URL: freshEnv.BUNNY_NET_CDN_URL || 'NOT_SET',
+        }
+      });
+      
+      try {
+        _bunnyNetService = new BunnyNetService(freshConfig);
+        console.log('Bunny.net service initialized successfully (lazy)');
+      } catch (error) {
+        console.error('Bunny.net service initialization failed (lazy):', error);
+        throw error;
+      }
+    } else {
+      // Client-side: use the original config
+      _bunnyNetService = new BunnyNetService(bunnyNetConfig);
+    }
   }
+  return _bunnyNetService;
 }
 
-export const bunnyNetService = new BunnyNetService(bunnyNetConfig);
+export const bunnyNetService = {
+  get instance() {
+    return getBunnyNetService();
+  }
+};
+
+// Proxy all methods to the lazy instance
+export const uploadFiles = (...args: Parameters<BunnyNetService['uploadFiles']>) => bunnyNetService.instance.uploadFiles(...args);
+export const deleteFile = (...args: Parameters<BunnyNetService['deleteFile']>) => bunnyNetService.instance.deleteFile(...args);
+export const listFiles = (...args: Parameters<BunnyNetService['listFiles']>) => bunnyNetService.instance.listFiles(...args);
+export const getCdnUrl = (...args: Parameters<BunnyNetService['getCdnUrl']>) => bunnyNetService.instance.getCdnUrl(...args);
+export const testConnection = (...args: Parameters<BunnyNetService['testConnection']>) => bunnyNetService.instance.testConnection(...args);
+
+// Helper function for single file upload (exposes the private method)
+export const uploadSingleFile = async (file: File, albumType: string, mediaType: string, eventId?: string): Promise<string> => {
+  const service = getBunnyNetService();
+  // We need to access the private method, so we'll recreate the logic here
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+  
+  // Generate unique filename
+  const timestamp = Date.now();
+  const randomString = Math.random().toString(36).substring(2, 15);
+  const fileExtension = file.name.split('.').pop();
+  const fileName = `${timestamp}_${randomString}.${fileExtension}`;
+  
+  // Bunny.net Storage API endpoint - use event-specific folder if provided
+  const folderPath = eventId ? `events/${eventId}/${albumType}/${mediaType}` : `${albumType}/${mediaType}`;
+  const uploadUrl = `${service['config'].storageEndpoint}/${folderPath}/${fileName}`;
+  
+  const response = await fetch(uploadUrl, {
+    method: 'PUT',
+    headers: {
+      'AccessKey': service['config'].storageApiKey,
+      'Content-Type': file.type || 'application/octet-stream',
+      'Content-Length': buffer.length.toString(),
+    },
+    body: buffer,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Upload failed: ${response.status} ${response.statusText} - ${errorText}`);
+  }
+
+  return fileName;
+};

@@ -90,7 +90,7 @@ export const DashboardHeader = () => {
   };
 
   return (
-    <header className="w-full bg-white shadow-sm flex items-center justify-between px-8 h-20">
+    <header className="w-full bg-white shadow-sm flex items-center justify-between px-8 h-20 fixed top-0 left-0 z-50">
       <div className="flex items-center select-none">
         <img src="/images/logo.png" alt="Vesello Logo" className="h-10 w-auto mr-2" style={{objectFit: 'contain'}} />
     

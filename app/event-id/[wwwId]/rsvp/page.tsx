@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import EventHeader from "@/components/layout/EventHeader";
 
 interface EventData {
   id: string;
@@ -11,6 +12,8 @@ interface EventData {
   coupleNames: string;
   eventDate: string;
   venue?: string;
+  galleryEnabled?: boolean;
+  rsvpEnabled?: boolean;
 }
 
 interface RSVPFormData {
@@ -172,33 +175,12 @@ export default function EventRSVPPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F8F5F0] to-[#E8DCC6]">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm shadow-sm">
-        <div className="max-w-4xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <Link href={`/event-id/${wwwId}`} className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
-              <Image
-                src="/images/logo.png"
-                alt="Vasello"
-                width={40}
-                height={40}
-                className="rounded-full"
-              />
-              <span className="text-xl font-bold text-gray-800">Vasello</span>
-            </Link>
-            <div className="flex items-center space-x-6">
-              <Link href={`/event-id/${wwwId}`} className="text-gray-600 hover:text-[#E5B574] transition-colors">
-                Home
-              </Link>
-              {eventData && (
-                <Link href={`/event-id/${wwwId}/gallery`} className="text-gray-600 hover:text-[#E5B574] transition-colors">
-                  Gallery
-                </Link>
-              )}
-              <span className="text-[#E5B574] font-medium">Reply to Invitation</span>
-            </div>
-          </div>
-        </div>
-      </header>
+      <EventHeader 
+        eventId={wwwId}
+        galleryEnabled={eventData?.galleryEnabled}
+        rsvpEnabled={eventData?.rsvpEnabled}
+        currentPage="rsvp"
+      />
 
       {/* RSVP Header */}
       <section className="py-12 px-6">
@@ -364,7 +346,7 @@ export default function EventRSVPPage() {
       <footer className="py-8 px-6 border-t border-white/30">
         <div className="max-w-4xl mx-auto text-center">
           <p className="text-gray-600">
-            Powered by <span className="font-semibold text-[#E5B574]">Vasello</span> - Wedding Event Management
+            Powered by <span className="font-semibold text-[#E5B574]">Vesello</span> - Wedding Event Management
           </p>
         </div>
       </footer>

@@ -23,6 +23,64 @@ interface EventData {
     transportationSection: boolean;
     additionalInfoSection: boolean;
   };
+  sectionContent: {
+    heroSection: {
+      coupleNames: string;
+      eventDate: string;
+      venue?: string;
+      backgroundImage?: string;
+      customMessage?: string;
+    };
+    timelineSection: {
+      title: string;
+      events: Array<{
+        id: string;
+        time: string;
+        title: string;
+        description?: string;
+        icon?: string;
+      }>;
+    };
+    ceremonySection: {
+      title: string;
+      description: string;
+      date: string;
+      time: string;
+      location: string;
+      details?: string;
+    };
+    ceremonyVenueSection: {
+      title: string;
+      venueName: string;
+      address: string;
+      description?: string;
+      mapUrl?: string;
+      images?: string[];
+    };
+    seatingChartSection: {
+      title: string;
+      description?: string;
+      tables: Array<{
+        id: string;
+        tableNumber: string;
+        guests: string[];
+        specialNotes?: string;
+      }>;
+    };
+    menuSection: {
+      title: string;
+      description?: string;
+      courses: Array<{
+        id: string;
+        courseName: string;
+        items: Array<{
+          name: string;
+          description?: string;
+          allergens?: string[];
+        }>;
+      }>;
+    };
+  };
 }
 
 const sectionConfig = [
