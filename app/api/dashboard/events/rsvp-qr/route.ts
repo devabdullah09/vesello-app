@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Generate the public RSVP URL (goes to invitation flow)
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const rsvpUrl = `${baseUrl}/event-id/${event.wwwId}/invitation`
 
     // Generate QR code as data URL
