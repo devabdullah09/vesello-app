@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import { useInvitation } from '@/components/invitation-context';
+import { useInvitationFlow } from '@/hooks/use-invitation-flow';
 import EventHeader from '@/components/layout/EventHeader';
 
 export default function DynamicAttendancePage() {
@@ -10,8 +11,9 @@ export default function DynamicAttendancePage() {
   const wwwId = params?.wwwId as string;
   const { state, dispatch } = useInvitation();
   const [attendance, setAttendance] = useState<{ [guestName: string]: 'will' | 'cant' }>({});
-  const [eventData, setEventData] = useState<{galleryEnabled: boolean, rsvpEnabled: boolean} | null>(null);
+  const [eventData, setEventData] = useState<{coupleNames: string, eventDate: string, venue: string, galleryEnabled: boolean, rsvpEnabled: boolean} | null>(null);
   const router = useRouter();
+  const { customQuestions, navigateToNextStep } = useInvitationFlow(wwwId || '');
 
   // Fetch event data
   useEffect(() => {
@@ -26,6 +28,9 @@ export default function DynamicAttendancePage() {
       if (response.ok) {
         const result = await response.json();
         setEventData({
+          coupleNames: result.data.coupleNames,
+          eventDate: result.data.eventDate,
+          venue: result.data.venue,
           galleryEnabled: result.data.galleryEnabled,
           rsvpEnabled: result.data.rsvpEnabled
         });
@@ -61,7 +66,8 @@ export default function DynamicAttendancePage() {
   const handleContinue = () => {
     // Save attendance data to context
     dispatch({ type: 'SET_WEDDING_ATTENDANCE', payload: attendance });
-    router.push(`/event-id/${wwwId}/invitation/after-party`);
+    // Use dynamic navigation to include custom questions
+    navigateToNextStep('attendance');
   };
 
   if (guests.length === 0) {
@@ -108,7 +114,12 @@ export default function DynamicAttendancePage() {
               {/* Horizontal Divider */}
               <div className="w-24 h-[2px] bg-[#B7B7B7] mx-auto my-4" />
               <div className="text-base md:text-lg mb-12 tracking-normal" style={{ color: '#08080A', fontWeight: 400, fontFamily: 'Montserrat', letterSpacing: '0.01em' }}>
-                Sunday, May 24, 2026
+                {eventData?.eventDate ? new Date(eventData.eventDate).toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                }) : 'Loading...'}
               </div>
             </div>
 

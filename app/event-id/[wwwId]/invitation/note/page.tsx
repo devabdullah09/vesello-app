@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import { useInvitation } from '@/components/invitation-context';
+import { useInvitationFlow } from '@/hooks/use-invitation-flow';
 import EventHeader from '@/components/layout/EventHeader';
 
 export default function DynamicNotePage() {
@@ -10,7 +11,34 @@ export default function DynamicNotePage() {
   const wwwId = params?.wwwId as string;
   const { state, dispatch } = useInvitation();
   const [notes, setNotes] = useState<{ [guestName: string]: string }>({});
+  const [eventData, setEventData] = useState<{coupleNames: string, eventDate: string, venue: string, galleryEnabled: boolean, rsvpEnabled: boolean} | null>(null);
   const router = useRouter();
+  const { navigateToNextStep } = useInvitationFlow(wwwId || '');
+
+  // Fetch event data
+  useEffect(() => {
+    if (wwwId) {
+      fetchEventData();
+    }
+  }, [wwwId]);
+
+  const fetchEventData = async () => {
+    try {
+      const response = await fetch(`/api/event-id/${wwwId}`);
+      if (response.ok) {
+        const result = await response.json();
+        setEventData({
+          coupleNames: result.data.coupleNames,
+          eventDate: result.data.eventDate,
+          venue: result.data.venue,
+          galleryEnabled: result.data.galleryEnabled,
+          rsvpEnabled: result.data.rsvpEnabled
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching event data:', error);
+    }
+  };
 
   // Memoize guest names to prevent infinite loops
   const guests = useMemo(() => {
@@ -38,13 +66,15 @@ export default function DynamicNotePage() {
   const handleContinue = () => {
     // Save notes data to context
     dispatch({ type: 'SET_NOTES', payload: notes });
-    router.push(`/event-id/${wwwId}/invitation/confirmation`);
+    // Use dynamic navigation to include custom questions
+    navigateToNextStep('note');
   };
 
   const handleSkip = () => {
     // Save notes data to context
     dispatch({ type: 'SET_NOTES', payload: notes });
-    router.push(`/event-id/${wwwId}/invitation/confirmation`);
+    // Use dynamic navigation to include custom questions
+    navigateToNextStep('note');
   };
 
   if (guests.length === 0) {
@@ -68,8 +98,8 @@ export default function DynamicNotePage() {
     <>
       <EventHeader 
         eventId={wwwId}
-        galleryEnabled={true}
-        rsvpEnabled={true}
+        galleryEnabled={eventData?.galleryEnabled || false}
+        rsvpEnabled={eventData?.rsvpEnabled || false}
         currentPage="rsvp"
       />
       <div className="min-h-screen flex flex-col justify-between bg-[#fff] pt-20" style={{ fontFamily: 'Montserrat, Arial, Helvetica, sans-serif' }}>

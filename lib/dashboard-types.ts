@@ -169,6 +169,7 @@ export interface UpdateEventData extends Partial<CreateEventData> {
     transportationSection: boolean;
     additionalInfoSection: boolean;
   };
+  sectionContent?: Event['sectionContent'];
 }
 
 export interface GalleryAlbum {

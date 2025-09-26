@@ -1,36 +1,55 @@
-import { supabase } from './supabase'
+import { createServerClient } from './supabase'
 import { InvitationRSVP, InvitationGuest } from './invitation-types'
 
 // Submit a complete RSVP response
 export const submitInvitationRSVP = async (rsvpData: Omit<InvitationRSVP, 'id' | 'submittedAt' | 'status'>): Promise<string> => {
   try {
+    console.log('=== SUPABASE RSVP SUBMISSION DEBUG ===')
     console.log('submitInvitationRSVP called with data:', JSON.stringify(rsvpData, null, 2))
     
     const rsvpWithMetadata = {
-      ...rsvpData,
+      event_id: rsvpData.eventId,
+      main_guest: rsvpData.mainGuest,
+      additional_guests: rsvpData.additionalGuests,
+      wedding_day_attendance: rsvpData.weddingDayAttendance,
+      after_party_attendance: rsvpData.afterPartyAttendance,
+      food_preferences: rsvpData.foodPreferences,
+      accommodation_needed: rsvpData.accommodationNeeded,
+      transportation_needed: rsvpData.transportationNeeded,
+      notes: rsvpData.notes,
+      custom_responses: rsvpData.customResponses,
+      email: rsvpData.email,
+      send_email_confirmation: rsvpData.sendEmailConfirmation,
       submitted_at: new Date().toISOString(),
       status: 'pending' as const
     }
     
     console.log('RSVP data with metadata:', JSON.stringify(rsvpWithMetadata, null, 2))
+    console.log('About to insert into invitation_rsvps table...')
     
+    const supabase = createServerClient()
     const { data, error } = await supabase
       .from('invitation_rsvps')
       .insert([rsvpWithMetadata])
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('SUPABASE INSERT ERROR:', error)
+      throw error
+    }
     
-    console.log('Document added successfully with ID:', data.id)
+    console.log('✅ Document added successfully with ID:', data.id)
+    console.log('=== END SUPABASE RSVP SUBMISSION DEBUG ===')
     return data.id
   } catch (error) {
-    console.error('Error in submitInvitationRSVP:', error)
+    console.error('❌ Error in submitInvitationRSVP:', error)
     console.error('Error details:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
       name: error instanceof Error ? error.name : 'Unknown error type'
     })
+    console.log('=== END SUPABASE RSVP SUBMISSION DEBUG ===')
     throw error
   }
 }

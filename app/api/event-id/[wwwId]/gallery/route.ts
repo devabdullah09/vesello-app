@@ -1,81 +1,49 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase'
-import { getEventByWWWId } from '@/lib/events-service'
-import { listFiles, getCdnUrl } from '@/lib/bunny-net'
+import { NextRequest, NextResponse } from 'next/server';
+import { listFiles, getCdnUrl } from '@/lib/bunny-net';
 
-// GET /api/event-id/[wwwId]/gallery - Get public gallery images for an event
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ wwwId: string }> }
+  { params }: { params: { wwwId: string } }
 ) {
   try {
-    const { wwwId } = await params
+    const { wwwId } = params;
+    const { searchParams } = new URL(request.url);
+    const albumType = searchParams.get('albumType') || 'wedding-day';
+    const mediaType = searchParams.get('mediaType') || 'photos';
 
     if (!wwwId) {
-      return NextResponse.json({ error: 'Event ID is required' }, { status: 400 })
+      return NextResponse.json({ error: 'Event ID is required' }, { status: 400 });
     }
 
-    const event = await getEventByWWWId(wwwId)
+    // Validate album type and media type
+    if (!['wedding-day', 'party-day'].includes(albumType)) {
+      return NextResponse.json({ error: 'Invalid album type' }, { status: 400 });
+    }
+
+    if (!['photos', 'videos'].includes(mediaType)) {
+      return NextResponse.json({ error: 'Invalid media type' }, { status: 400 });
+    }
+
+    // List files from Bunny.net
+    const files = await listFiles(albumType, mediaType, wwwId);
     
-    if (!event) {
-      return NextResponse.json({ error: 'Event not found' }, { status: 404 })
-    }
+    // Generate CDN URLs for each file
+    const fileUrls = files.map(fileName => ({
+      fileName,
+      url: getCdnUrl(fileName, albumType, mediaType, wwwId)
+    }));
 
-    // Check if gallery is enabled for this event
-    if (!event.galleryEnabled) {
-      return NextResponse.json({ error: 'Gallery not enabled for this event' }, { status: 403 })
-    }
+    return NextResponse.json({
+      success: true,
+      data: fileUrls,
+      count: fileUrls.length
+    });
 
-    // Only return events that are active or planned (not cancelled)
-    if (event.status === 'cancelled') {
-      return NextResponse.json({ error: 'Event has been cancelled' }, { status: 410 })
-    }
-
-    try {
-      // Get images from both wedding-day and party-day folders
-      const [weddingDayImages, partyDayImages] = await Promise.all([
-        listFiles('wedding-day', 'photos', wwwId),
-        listFiles('party-day', 'photos', wwwId)
-      ])
-
-      // Combine and format all images
-      const allImages = [
-        ...weddingDayImages.map((fileName, index) => ({
-          id: `wedding-${index}-${Date.now()}`,
-          url: getCdnUrl(fileName, 'wedding-day', 'photos', wwwId),
-          caption: `Wedding Day Photo ${index + 1}`,
-          uploadedAt: new Date().toISOString(),
-          albumType: 'wedding-day'
-        })),
-        ...partyDayImages.map((fileName, index) => ({
-          id: `party-${index}-${Date.now()}`,
-          url: getCdnUrl(fileName, 'party-day', 'photos', wwwId),
-          caption: `Party Day Photo ${index + 1}`,
-          uploadedAt: new Date().toISOString(),
-          albumType: 'party-day'
-        }))
-      ]
-
-      // Sort by upload time (newest first)
-      allImages.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
-
-      return NextResponse.json({
-        success: true,
-        data: allImages
-      })
-    } catch (bunnyError) {
-      console.error('Error fetching images from Bunny.net:', bunnyError)
-      // Return empty array if Bunny.net fails
-      return NextResponse.json({
-        success: true,
-        data: []
-      })
-    }
   } catch (error) {
-    console.error('Error getting event gallery:', error)
-    return NextResponse.json(
-      { error: 'Failed to get gallery' },
-      { status: 500 }
-    )
+    console.error('Error listing gallery files:', error);
+    return NextResponse.json({ 
+      error: 'Failed to load gallery files',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }

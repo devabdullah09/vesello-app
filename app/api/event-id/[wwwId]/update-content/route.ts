@@ -29,12 +29,9 @@ export async function PUT(
 
     const supabase = createServerClient()
 
-    // Update the event with new section content in settings
+    // Update the event with new section content in section_content field
     const updateData = {
-      settings: {
-        ...event.settings,
-        sectionContent
-      }
+      section_content: sectionContent
     }
     
     console.log('Updating event content from public page:', updateData)

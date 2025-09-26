@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import EditModal from './EditModal';
 import ImageUpload from '@/components/ui/ImageUpload';
 
@@ -25,14 +25,32 @@ interface TeamSectionEditorProps {
   onSave: (data: TeamSectionData) => Promise<void>;
 }
 
+const getDefaultData = () => ({
+    "title": "Wedding Team",
+    "description": "Meet the special people who will be part of our big day.",
+    "members": []
+});
+
 export default function TeamSectionEditor({
   isOpen,
   onClose,
   data,
   onSave,
 }: TeamSectionEditorProps) {
-  const [formData, setFormData] = useState<TeamSectionData>(data);
+  const [formData, setFormData] = useState<TeamSectionData>(() => {
+    if (data && typeof data === 'object') {
+      return { ...getDefaultData(), ...data };
+    }
+    return getDefaultData();
+  });
   const [saving, setSaving] = useState(false);
+
+  // Update formData when data prop changes
+  useEffect(() => {
+    if (data && typeof data === 'object') {
+      setFormData(prev => ({ ...prev, ...data }));
+    }
+  }, [data]);
 
   const handleSave = async () => {
     try {

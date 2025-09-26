@@ -45,6 +45,7 @@ export default function ConfirmationPage() {
         accommodationNeeded: state.accommodationNeeded,
         transportationNeeded: state.transportationNeeded,
         notes: state.notes,
+        customResponses: state.customResponses,
         email: sendEmail ? email : "",
         sendEmailConfirmation: sendEmail,
       };

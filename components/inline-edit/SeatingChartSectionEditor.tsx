@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import EditModal from './EditModal';
 
 interface Table {
@@ -23,14 +23,32 @@ interface SeatingChartSectionEditorProps {
   onSave: (data: SeatingChartSectionData) => Promise<void>;
 }
 
+const getDefaultData = () => ({
+    "title": "Seating Chart",
+    "description": "Find your seat for the reception.",
+    "tables": []
+});
+
 export default function SeatingChartSectionEditor({
   isOpen,
   onClose,
   data,
   onSave,
 }: SeatingChartSectionEditorProps) {
-  const [formData, setFormData] = useState<SeatingChartSectionData>(data);
+  const [formData, setFormData] = useState<SeatingChartSectionData>(() => {
+    if (data && typeof data === 'object') {
+      return { ...getDefaultData(), ...data };
+    }
+    return getDefaultData();
+  });
   const [saving, setSaving] = useState(false);
+
+  // Update formData when data prop changes
+  useEffect(() => {
+    if (data && typeof data === 'object') {
+      setFormData(prev => ({ ...prev, ...data }));
+    }
+  }, [data]);
 
   const handleSave = async () => {
     try {

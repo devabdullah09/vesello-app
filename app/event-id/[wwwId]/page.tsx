@@ -250,6 +250,18 @@ export default function PublicEventPage() {
     }
   }, [eventData]);
 
+  // Handle smooth scrolling to team section when coming from gallery
+  useEffect(() => {
+    if (window.location.hash === '#team-section') {
+      setTimeout(() => {
+        const element = document.getElementById('team-section');
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
+  }, []);
+
   const fetchEventData = async () => {
     try {
       setLoading(true);
@@ -266,6 +278,15 @@ export default function PublicEventPage() {
 
       const result = await response.json();
       console.log('Event data loaded:', result.data);
+      console.log('Section visibility:', result.data.sectionVisibility);
+      console.log('Section content keys:', result.data.sectionContent ? Object.keys(result.data.sectionContent) : 'null');
+      
+      // Ensure sectionVisibility is properly parsed
+      if (result.data.sectionVisibility && typeof result.data.sectionVisibility === 'object') {
+        console.log('Section visibility keys:', Object.keys(result.data.sectionVisibility));
+        console.log('Section visibility values:', Object.values(result.data.sectionVisibility));
+      }
+      
       setEventData(result.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load event');
@@ -273,6 +294,7 @@ export default function PublicEventPage() {
       setLoading(false);
     }
   };
+
 
   // Save functions for inline editing
   const saveHeroSection = async (heroData: any) => {
@@ -284,9 +306,6 @@ export default function PublicEventPage() {
     };
 
     await updateEventContent(updatedContent);
-    
-    // Force re-fetch to get latest data
-    await fetchEventData();
   };
 
   const saveTimelineSection = async (timelineData: any) => {
@@ -298,9 +317,6 @@ export default function PublicEventPage() {
     };
 
     await updateEventContent(updatedContent);
-    
-    // Force re-fetch to get latest data
-    await fetchEventData();
   };
 
   const saveCeremonySection = async (ceremonyData: any) => {
@@ -312,9 +328,6 @@ export default function PublicEventPage() {
     };
 
     await updateEventContent(updatedContent);
-    
-    // Force re-fetch to get latest data
-    await fetchEventData();
   };
 
   const saveVenueSection = async (venueData: any) => {
@@ -326,7 +339,6 @@ export default function PublicEventPage() {
     };
 
     await updateEventContent(updatedContent);
-    await fetchEventData();
   };
 
   const saveMenuSection = async (menuData: any) => {
@@ -338,7 +350,6 @@ export default function PublicEventPage() {
     };
 
     await updateEventContent(updatedContent);
-    await fetchEventData();
   };
 
   const saveTeamSection = async (teamData: any) => {
@@ -350,7 +361,6 @@ export default function PublicEventPage() {
     };
 
     await updateEventContent(updatedContent);
-    await fetchEventData();
   };
 
   const saveAdditionalInfoSection = async (additionalInfoData: any) => {
@@ -362,7 +372,6 @@ export default function PublicEventPage() {
     };
 
     await updateEventContent(updatedContent);
-    await fetchEventData();
   };
 
   const saveAccommodationSection = async (accommodationData: any) => {
@@ -374,7 +383,6 @@ export default function PublicEventPage() {
     };
 
     await updateEventContent(updatedContent);
-    await fetchEventData();
   };
 
   const saveTransportationSection = async (transportationData: any) => {
@@ -386,7 +394,6 @@ export default function PublicEventPage() {
     };
 
     await updateEventContent(updatedContent);
-    await fetchEventData();
   };
 
   const saveWishesAndGiftsSection = async (wishesAndGiftsData: any) => {
@@ -398,7 +405,6 @@ export default function PublicEventPage() {
     };
 
     await updateEventContent(updatedContent);
-    await fetchEventData();
   };
 
   const saveSeatingChartSection = async (seatingChartData: any) => {
@@ -410,7 +416,6 @@ export default function PublicEventPage() {
     };
 
     await updateEventContent(updatedContent);
-    await fetchEventData();
   };
 
   const updateEventContent = async (sectionContent: any) => {
@@ -427,11 +432,13 @@ export default function PublicEventPage() {
         throw new Error('Failed to update content');
       }
 
-      // Update local state
+      // Update local state immediately for real-time UI updates
       setEventData(prev => prev ? {
         ...prev,
         sectionContent
       } : null);
+
+      console.log('Content updated successfully:', sectionContent);
 
     } catch (error) {
       console.error('Error updating content:', error);
@@ -473,7 +480,7 @@ export default function PublicEventPage() {
   }
 
   return (
-    <AdminEditProvider eventOwnerId={eventData.organizerId}>
+    <AdminEditProvider eventOwnerId={eventData.organizerId || undefined}>
       <main>
         {/* Google Fonts */}
         <link href="https://fonts.googleapis.com/css2?family=Sail&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -581,7 +588,7 @@ export default function PublicEventPage() {
       </EditableSection>
 
       {/* All the wedding sections - conditionally rendered based on sectionVisibility */}
-      {eventData.sectionVisibility.timelineSection && (
+      {(eventData.sectionVisibility?.timelineSection ?? true) && (
         <EditableSection
           onEdit={() => setTimelineEditorOpen(true)}
           sectionName="Timeline Section"
@@ -592,7 +599,7 @@ export default function PublicEventPage() {
           />
         </EditableSection>
       )}
-      {eventData.sectionVisibility.ceremonySection && (
+      {(eventData.sectionVisibility?.ceremonySection ?? true) && (
         <EditableSection
           onEdit={() => setCeremonyEditorOpen(true)}
           sectionName="Ceremony Section"
@@ -607,7 +614,7 @@ export default function PublicEventPage() {
           />
         </EditableSection>
       )}
-      {eventData.sectionVisibility.ceremonyVenueSection && (
+      {(eventData.sectionVisibility?.ceremonyVenueSection ?? true) && (
         <EditableSection
           onEdit={() => setVenueEditorOpen(true)}
           sectionName="Venue Section"
@@ -621,15 +628,19 @@ export default function PublicEventPage() {
           />
         </EditableSection>
       )}
-      {eventData.sectionVisibility.seatingChartSection && (
+      {(eventData.sectionVisibility?.seatingChartSection ?? true) && (
         <EditableSection
           onEdit={() => setSeatingChartEditorOpen(true)}
           sectionName="Seating Chart Section"
         >
-          <SeatingChartSection />
+          <SeatingChartSection 
+            title={eventData.sectionContent?.seatingChartSection?.title || 'Seating Chart'}
+            description={eventData.sectionContent?.seatingChartSection?.description || 'Find your seat for the reception.'}
+            tables={eventData.sectionContent?.seatingChartSection?.tables || []}
+          />
         </EditableSection>
       )}
-      {eventData.sectionVisibility.menuSection && (
+      {(eventData.sectionVisibility?.menuSection ?? true) && (
         <EditableSection
           onEdit={() => setMenuEditorOpen(true)}
           sectionName="Menu Section"
@@ -641,43 +652,58 @@ export default function PublicEventPage() {
           />
         </EditableSection>
       )}
-      {eventData.sectionVisibility.wishesAndGiftsSection && (
+      {(eventData.sectionVisibility?.wishesAndGiftsSection ?? true) && (
         <EditableSection
           onEdit={() => setWishesAndGiftsEditorOpen(true)}
           sectionName="Wishes & Gifts Section"
         >
-          <WishesAndGiftsSection />
+          <WishesAndGiftsSection 
+            title={eventData.sectionContent?.wishesAndGiftsSection?.title || 'Wishes & Gifts'}
+            description={eventData.sectionContent?.wishesAndGiftsSection?.description || 'Your presence is the greatest gift, but if you wish to honor us with a gift, here are some suggestions.'}
+            registryLinks={eventData.sectionContent?.wishesAndGiftsSection?.registryLinks || []}
+            wishesMessage={eventData.sectionContent?.wishesAndGiftsSection?.wishesMessage || 'We are so grateful for your love and support!'}
+          />
         </EditableSection>
       )}
-      {eventData.sectionVisibility.teamSection && (
+      {(eventData.sectionVisibility?.teamSection ?? true) && (
         <EditableSection
           onEdit={() => setTeamEditorOpen(true)}
           sectionName="Team Section"
         >
-          <DynamicTeamSection 
-            title={eventData.sectionContent?.teamSection?.title || 'Team'}
-            description={eventData.sectionContent?.teamSection?.description}
-            members={eventData.sectionContent?.teamSection?.members || []}
-          />
+          <div id="team-section">
+            <DynamicTeamSection 
+              title={eventData.sectionContent?.teamSection?.title || 'Team'}
+              description={eventData.sectionContent?.teamSection?.description}
+              members={eventData.sectionContent?.teamSection?.members || []}
+            />
+          </div>
         </EditableSection>
       )}
-      {eventData.sectionVisibility.accommodationSection && (
+      {(eventData.sectionVisibility?.accommodationSection ?? true) && (
         <EditableSection
           onEdit={() => setAccommodationEditorOpen(true)}
           sectionName="Accommodation Section"
         >
-          <AccommodationSection />
+          <AccommodationSection 
+            title={eventData.sectionContent?.accommodationSection?.title || 'Accommodation'}
+            description={eventData.sectionContent?.accommodationSection?.description || 'Here are some hotel options for out-of-town guests.'}
+            hotels={eventData.sectionContent?.accommodationSection?.hotels || []}
+          />
         </EditableSection>
       )}
-      {eventData.sectionVisibility.transportationSection && (
+      {(eventData.sectionVisibility?.transportationSection ?? true) && (
         <EditableSection
           onEdit={() => setTransportationEditorOpen(true)}
           sectionName="Transportation Section"
         >
-          <TransportationSection />
+          <TransportationSection 
+            title={eventData.sectionContent?.transportationSection?.title || 'Transportation'}
+            description={eventData.sectionContent?.transportationSection?.description || 'Information about getting to and from the venue.'}
+            options={eventData.sectionContent?.transportationSection?.options || []}
+          />
         </EditableSection>
       )}
-      {eventData.sectionVisibility.additionalInfoSection && (
+      {(eventData.sectionVisibility?.additionalInfoSection ?? true) && (
         <EditableSection
           onEdit={() => setAdditionalInfoEditorOpen(true)}
           sectionName="Additional Info Section"
@@ -697,77 +723,77 @@ export default function PublicEventPage() {
       <HeroSectionEditor
         isOpen={heroEditorOpen}
         onClose={() => setHeroEditorOpen(false)}
-        data={eventData.sectionContent.heroSection}
+        data={eventData?.sectionContent?.heroSection}
         onSave={saveHeroSection}
       />
 
       <TimelineSectionEditor
         isOpen={timelineEditorOpen}
         onClose={() => setTimelineEditorOpen(false)}
-        data={eventData.sectionContent.timelineSection}
+        data={eventData?.sectionContent?.timelineSection}
         onSave={saveTimelineSection}
       />
 
       <CeremonySectionEditor
         isOpen={ceremonyEditorOpen}
         onClose={() => setCeremonyEditorOpen(false)}
-        data={eventData.sectionContent.ceremonySection}
+        data={eventData?.sectionContent?.ceremonySection}
         onSave={saveCeremonySection}
       />
 
       <VenueSectionEditor
         isOpen={venueEditorOpen}
         onClose={() => setVenueEditorOpen(false)}
-        data={eventData.sectionContent.ceremonyVenueSection}
+        data={eventData?.sectionContent?.ceremonyVenueSection}
         onSave={saveVenueSection}
       />
 
       <MenuSectionEditor
         isOpen={menuEditorOpen}
         onClose={() => setMenuEditorOpen(false)}
-        data={eventData.sectionContent.menuSection}
+        data={eventData?.sectionContent?.menuSection}
         onSave={saveMenuSection}
       />
 
       <AdditionalInfoSectionEditor
         isOpen={additionalInfoEditorOpen}
         onClose={() => setAdditionalInfoEditorOpen(false)}
-        data={eventData.sectionContent.additionalInfoSection}
+        data={eventData?.sectionContent?.additionalInfoSection}
         onSave={saveAdditionalInfoSection}
       />
 
       <TeamSectionEditor
         isOpen={teamEditorOpen}
         onClose={() => setTeamEditorOpen(false)}
-        data={eventData.sectionContent.teamSection || { title: 'Team', description: '', members: [] }}
+        data={eventData?.sectionContent?.teamSection || { title: 'Team', description: '', members: [] }}
         onSave={saveTeamSection}
       />
 
       <AccommodationSectionEditor
         isOpen={accommodationEditorOpen}
         onClose={() => setAccommodationEditorOpen(false)}
-        data={eventData.sectionContent.accommodationSection || { title: 'Accommodation', description: '', hotels: [] }}
+        data={eventData?.sectionContent?.accommodationSection || { title: 'Accommodation', description: '', hotels: [] }}
         onSave={saveAccommodationSection}
       />
 
       <TransportationSectionEditor
         isOpen={transportationEditorOpen}
         onClose={() => setTransportationEditorOpen(false)}
-        data={eventData.sectionContent.transportationSection || { title: 'Transportation', description: '', options: [] }}
+        data={eventData?.sectionContent?.transportationSection || { title: 'Transportation', description: '', options: [] }}
         onSave={saveTransportationSection}
       />
 
       <WishesAndGiftsSectionEditor
         isOpen={wishesAndGiftsEditorOpen}
         onClose={() => setWishesAndGiftsEditorOpen(false)}
-        data={eventData.sectionContent.wishesAndGiftsSection || { title: 'Wishes & Gifts', description: '', registryLinks: [] }}
+        data={eventData?.sectionContent?.wishesAndGiftsSection || { title: 'Wishes & Gifts', description: '', registryLinks: [] }}
         onSave={saveWishesAndGiftsSection}
       />
 
       <SeatingChartSectionEditor
         isOpen={seatingChartEditorOpen}
         onClose={() => setSeatingChartEditorOpen(false)}
-        data={eventData.sectionContent.seatingChartSection || { title: 'Seating Chart', description: '', tables: [] }}
+        data={eventData?.sectionContent?.seatingChartSection || { title: 'Seating Chart', description: '', tables: [] }}
         onSave={saveSeatingChartSection}
       />
     </main>

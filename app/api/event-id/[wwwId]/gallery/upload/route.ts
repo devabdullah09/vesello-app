@@ -1,43 +1,54 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { uploadSingleFile } from '@/lib/bunny-net';
+import { uploadFiles } from '@/lib/bunny-net';
 
-// POST /api/event-id/[wwwId]/gallery/upload - Upload files to event-specific gallery
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ wwwId: string }> }
+  { params }: { params: { wwwId: string } }
 ) {
   try {
-    const { wwwId } = await params;
+    const { wwwId } = params;
     const formData = await request.formData();
-    
     const files = formData.getAll('files') as File[];
-    const album = formData.get('album') as string || 'wedding-day';
-    const type = formData.get('type') as string || 'photos';
-    
-    if (!files || files.length === 0) {
-      return NextResponse.json(
-        { success: false, message: 'No files provided' },
-        { status: 400 }
-      );
+    const albumType = formData.get('albumType') as string || 'wedding-day';
+    const mediaType = formData.get('mediaType') as string || 'photos';
+
+    if (!wwwId) {
+      return NextResponse.json({ error: 'Event ID is required' }, { status: 400 });
     }
-    
-    const uploadPromises = files.map(async (file) => {
-      return await uploadSingleFile(file, album, type, wwwId);
-    });
-    
-    const uploadedFiles = await Promise.all(uploadPromises);
-    
+
+    if (!files || files.length === 0) {
+      return NextResponse.json({ error: 'No files provided' }, { status: 400 });
+    }
+
+    // Validate album type and media type
+    if (!['wedding-day', 'party-day'].includes(albumType)) {
+      return NextResponse.json({ error: 'Invalid album type' }, { status: 400 });
+    }
+
+    if (!['photos', 'videos'].includes(mediaType)) {
+      return NextResponse.json({ error: 'Invalid media type' }, { status: 400 });
+    }
+
+    // Upload files to Bunny.net
+    const uploadResult = await uploadFiles(
+      files, 
+      albumType as 'wedding-day' | 'party-day', 
+      mediaType as 'photos' | 'videos',
+      wwwId
+    );
+
     return NextResponse.json({
       success: true,
-      files: uploadedFiles,
-      count: uploadedFiles.length
+      files: uploadResult.files,
+      cdnUrls: uploadResult.cdnUrls,
+      message: uploadResult.message
     });
-    
+
   } catch (error) {
-    console.error('Error uploading files:', error);
-    return NextResponse.json(
-      { success: false, message: 'Failed to upload files' },
-      { status: 500 }
-    );
+    console.error('Upload error:', error);
+    return NextResponse.json({ 
+      error: 'Upload failed', 
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }

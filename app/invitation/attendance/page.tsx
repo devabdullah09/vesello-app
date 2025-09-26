@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useInvitation } from '@/components/invitation-context';
+import { useInvitationFlow } from '@/hooks/use-invitation-flow';
 
 export default function AttendancePage() {
   const { state, dispatch } = useInvitation();

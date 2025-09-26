@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import EditModal from './EditModal';
 
 interface Hotel {
@@ -26,14 +26,32 @@ interface AccommodationSectionEditorProps {
   onSave: (data: AccommodationSectionData) => Promise<void>;
 }
 
+const getDefaultData = () => ({
+    "title": "Accommodation",
+    "description": "Here are some hotel options for out-of-town guests.",
+    "hotels": []
+});
+
 export default function AccommodationSectionEditor({
   isOpen,
   onClose,
   data,
   onSave,
 }: AccommodationSectionEditorProps) {
-  const [formData, setFormData] = useState<AccommodationSectionData>(data);
+  const [formData, setFormData] = useState<AccommodationSectionData>(() => {
+    if (data && typeof data === 'object') {
+      return { ...getDefaultData(), ...data };
+    }
+    return getDefaultData();
+  });
   const [saving, setSaving] = useState(false);
+
+  // Update formData when data prop changes
+  useEffect(() => {
+    if (data && typeof data === 'object') {
+      setFormData(prev => ({ ...prev, ...data }));
+    }
+  }, [data]);
 
   const handleSave = async () => {
     try {

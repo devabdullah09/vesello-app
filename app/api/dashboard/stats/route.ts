@@ -21,17 +21,27 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Get user role
+    const { data: userProfile } = await supabase
+      .from('user_profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const userRole = userProfile?.role || 'guest'
+
     // Get dashboard statistics
-    const stats = await getDashboardStats(user.id)
+    const stats = await getDashboardStats(user.id, userRole)
     
     // Get recent activity
-    const recentActivity = await getRecentActivity(user.id, 10)
+    const recentActivity = await getRecentActivity(user.id, userRole, 10)
 
     return NextResponse.json({
       success: true,
       data: {
         ...stats,
-        recentActivity
+        recentActivity,
+        timestamp: new Date().toISOString() // Add timestamp to prevent caching
       }
     })
   } catch (error) {

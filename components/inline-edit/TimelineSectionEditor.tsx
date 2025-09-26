@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import EditModal from './EditModal';
 import ImageUpload from '@/components/ui/ImageUpload';
 
@@ -30,8 +30,18 @@ export default function TimelineSectionEditor({
   data,
   onSave,
 }: TimelineSectionEditorProps) {
-  const [formData, setFormData] = useState<TimelineSectionData>(data);
+  const [formData, setFormData] = useState<TimelineSectionData>(data || {
+    title: 'Wedding Day',
+    events: []
+  });
   const [saving, setSaving] = useState(false);
+
+  // Update formData when data prop changes
+  useEffect(() => {
+    if (data && typeof data === 'object') {
+      setFormData(prev => ({ ...prev, ...data }));
+    }
+  }, [data]);
 
   const handleSave = async () => {
     try {

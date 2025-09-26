@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Trash } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { useInvitation } from "@/components/invitation-context";
+import { useInvitationFlow } from '@/hooks/use-invitation-flow';
 import EventHeader from "@/components/layout/EventHeader";
 
 const childAges = [
@@ -31,6 +32,7 @@ export default function DynamicInvitationReplyPage() {
     { name: "", surname: "", isChild: false, age: "" },
   ]);
   const router = useRouter();
+  const { customQuestions, navigateToNextStep } = useInvitationFlow(wwwId || '');
 
   // Load existing data from context on component mount
   useEffect(() => {
@@ -94,12 +96,24 @@ export default function DynamicInvitationReplyPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('DEBUG: Form submitted, saving data to context');
+    
     // Save current state to context
     dispatch({ type: 'SET_MAIN_GUEST', payload: mainGuest });
     dispatch({ type: 'SET_ADDITIONAL_GUESTS', payload: guests });
     
-    // Navigate to next step
-    router.push(`/event-id/${wwwId}/invitation/attendance`);
+    console.log('DEBUG: Data saved to context, navigating to next step');
+    console.log('DEBUG: Main guest:', mainGuest);
+    console.log('DEBUG: Additional guests:', guests);
+    
+    // Use dynamic navigation to include custom questions
+    try {
+      navigateToNextStep('guests');
+    } catch (error) {
+      console.warn('Dynamic navigation failed, using fallback:', error);
+      // Fallback to direct navigation
+      router.push(`/event-id/${wwwId}/invitation/attendance`);
+    }
   };
 
   return (

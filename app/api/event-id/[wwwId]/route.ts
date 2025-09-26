@@ -19,13 +19,20 @@ export async function GET(
       return NextResponse.json({ error: 'Event not found' }, { status: 404 })
     }
 
+    // Debug logging
+    console.log('Event data from database:', {
+      wwwId: event.wwwId,
+      sectionVisibility: event.sectionVisibility,
+      sectionContentKeys: event.sectionContent ? Object.keys(event.sectionContent) : 'null'
+    })
+
     // Only return events that are active or planned (not cancelled)
     if (event.status === 'cancelled') {
       return NextResponse.json({ error: 'Event has been cancelled' }, { status: 410 })
     }
 
     // Return public event data (no sensitive information)
-    return NextResponse.json({
+    const responseData = {
       success: true,
       data: {
         id: event.id,
@@ -39,10 +46,13 @@ export async function GET(
         rsvpEnabled: event.rsvpEnabled,
         status: event.status,
         organizerId: event.organizerId,
-        sectionVisibility: event.sectionVisibility,
-        sectionContent: event.sectionContent
+        sectionVisibility: JSON.parse(JSON.stringify(event.sectionVisibility)),
+        sectionContent: JSON.parse(JSON.stringify(event.sectionContent))
       }
-    })
+    };
+
+    console.log('API Response sectionVisibility:', responseData.data.sectionVisibility);
+    return NextResponse.json(responseData)
   } catch (error) {
     console.error('Error getting public event:', error)
     return NextResponse.json(

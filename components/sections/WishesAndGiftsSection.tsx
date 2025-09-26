@@ -4,9 +4,28 @@ import { useState } from 'react';
 import Image from 'next/image';
 import CollapsibleSection from '../CollapsibleSection';
 
-export default function WishesAndGiftsSection() {
+interface RegistryLink {
+  id: string;
+  storeName: string;
+  url: string;
+  description?: string;
+}
+
+interface WishesAndGiftsSectionProps {
+  title?: string;
+  description?: string;
+  registryLinks?: RegistryLink[];
+  wishesMessage?: string;
+}
+
+export default function WishesAndGiftsSection({ 
+  title = 'Wishes And Gifts',
+  description = 'Your presence is the greatest gift, but if you wish to honor us with a gift, here are some suggestions.',
+  registryLinks = [],
+  wishesMessage = 'We are so grateful for your love and support!'
+}: WishesAndGiftsSectionProps) {
   return (
-    <CollapsibleSection title="Wishes And Gifts">
+    <CollapsibleSection title={title}>
       {/* Header */}
       <div className="text-center mb-6 sm:mb-8 md:mb-10 mt-2">
         <span
@@ -22,9 +41,23 @@ export default function WishesAndGiftsSection() {
             fontSize: 'clamp(2.5rem, 10vw, 4rem)',
           }}
         >
-          Wishes And Gifts
+          {title}
         </span>
       </div>
+      
+      {/* Description */}
+      {description && (
+        <div className="text-center mb-6">
+          <p className="text-gray-700" 
+             style={{ 
+               fontFamily: 'Montserrat',
+               fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
+               lineHeight: 1.5
+             }}>
+            {description}
+          </p>
+        </div>
+      )}
       {/* Two Columns */}
       <div className="flex flex-col md:flex-row justify-center items-start gap-6 sm:gap-8 md:gap-10 mb-8 sm:mb-12 md:mb-16 w-full max-w-4xl mx-auto px-4 sm:px-6">
         {/* Left Column */}
@@ -82,28 +115,69 @@ export default function WishesAndGiftsSection() {
           </ul>
         </div>
       </div>
-      {/* Gifts Section */}
-      <div className="text-center mt-6 sm:mt-8 md:mt-10">
-        <div className="font-bold mb-2" 
-             style={{ 
-               fontFamily: 'Montserrat', 
-               color: '#E5B574',
-               fontSize: 'clamp(1.25rem, 4vw, 1.5rem)'
-             }}>
-          Gifts
+      {/* Registry Links Section */}
+      {registryLinks.length > 0 && (
+        <div className="text-center mt-6 sm:mt-8 md:mt-10">
+          <div className="font-bold mb-4" 
+               style={{ 
+                 fontFamily: 'Montserrat', 
+                 color: '#E5B574',
+                 fontSize: 'clamp(1.25rem, 4vw, 1.5rem)'
+               }}>
+            Gift Registry
+          </div>
+          <div className="space-y-3">
+            {registryLinks.map((link) => (
+              <div key={link.id} className="mb-3">
+                <a 
+                  href={link.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-block bg-[#E5B574] text-white px-6 py-3 rounded-lg hover:bg-[#D59C58] transition-colors"
+                  style={{ 
+                    fontFamily: 'Montserrat',
+                    fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
+                    fontWeight: 500
+                  }}
+                >
+                  {link.storeName}
+                </a>
+                {link.description && (
+                  <p className="mt-2 text-gray-600" 
+                     style={{ 
+                       fontFamily: 'Montserrat',
+                       fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
+                     }}>
+                    {link.description}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="space-y-1 text-black" 
-             style={{ 
-               fontFamily: 'Montserrat',
-               fontSize: 'clamp(0.75rem, 2.5vw, 0.875rem)'
-             }}>
-          <div>Bottle Of Wine Instead Of Flowers</div>
-          <div>Books Instead Of Bouquets</div>
-          <div>Charity Donation Instead Of Gifts</div>
-          <div>Gift Cards Instead Of Wrapped Presents</div>
-          <div>Write A Wish Instead Of Bringing A Gift</div>
+      )}
+
+      {/* Wishes Message */}
+      {wishesMessage && (
+        <div className="text-center mt-6 sm:mt-8 md:mt-10">
+          <div className="font-bold mb-2" 
+               style={{ 
+                 fontFamily: 'Montserrat', 
+                 color: '#E5B574',
+                 fontSize: 'clamp(1.25rem, 4vw, 1.5rem)'
+               }}>
+            Wishes
+          </div>
+          <div className="text-black" 
+               style={{ 
+                 fontFamily: 'Montserrat',
+                 fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
+                 lineHeight: 1.5
+               }}>
+            {wishesMessage}
+          </div>
         </div>
-      </div>
+      )}
     </CollapsibleSection>
   );
 }

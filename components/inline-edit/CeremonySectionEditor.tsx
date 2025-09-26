@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import EditModal from './EditModal';
 
 interface CeremonySectionData {
@@ -25,8 +25,22 @@ export default function CeremonySectionEditor({
   data,
   onSave,
 }: CeremonySectionEditorProps) {
-  const [formData, setFormData] = useState<CeremonySectionData>(data);
+  const [formData, setFormData] = useState<CeremonySectionData>(data || {
+    title: 'Ceremony Details',
+    description: 'Join us as we exchange vows in a beautiful ceremony.',
+    date: '',
+    time: '12:00 PM',
+    location: '',
+    details: ''
+  });
   const [saving, setSaving] = useState(false);
+
+  // Update formData when data prop changes
+  useEffect(() => {
+    if (data && typeof data === 'object') {
+      setFormData(prev => ({ ...prev, ...data }));
+    }
+  }, [data]);
 
   const handleSave = async () => {
     try {

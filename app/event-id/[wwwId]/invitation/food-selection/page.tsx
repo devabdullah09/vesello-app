@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import { useInvitation } from '@/components/invitation-context';
+import { useInvitationFlow } from '@/hooks/use-invitation-flow';
 import EventHeader from '@/components/layout/EventHeader';
 
 const options = ['Regular', 'Vegetarian', 'Vegan'];
@@ -12,7 +13,34 @@ export default function DynamicFoodSelectionPage() {
   const wwwId = params?.wwwId as string;
   const { state, dispatch } = useInvitation();
   const [selections, setSelections] = useState<{ [guestName: string]: 'Regular' | 'Vegetarian' | 'Vegan' }>({});
+  const [eventData, setEventData] = useState<{coupleNames: string, eventDate: string, venue: string, galleryEnabled: boolean, rsvpEnabled: boolean} | null>(null);
   const router = useRouter();
+  const { customQuestions, navigateToNextStep } = useInvitationFlow(wwwId || '');
+
+  // Fetch event data
+  useEffect(() => {
+    if (wwwId) {
+      fetchEventData();
+    }
+  }, [wwwId]);
+
+  const fetchEventData = async () => {
+    try {
+      const response = await fetch(`/api/event-id/${wwwId}`);
+      if (response.ok) {
+        const result = await response.json();
+        setEventData({
+          coupleNames: result.data.coupleNames,
+          eventDate: result.data.eventDate,
+          venue: result.data.venue,
+          galleryEnabled: result.data.galleryEnabled,
+          rsvpEnabled: result.data.rsvpEnabled
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching event data:', error);
+    }
+  };
 
   // Memoize guest names to prevent infinite loops
   const guests = useMemo(() => {
@@ -40,7 +68,8 @@ export default function DynamicFoodSelectionPage() {
   const handleContinue = () => {
     // Save food preferences to context
     dispatch({ type: 'SET_FOOD_PREFERENCES', payload: selections });
-    router.push(`/event-id/${wwwId}/invitation/accommodation`);
+    // Use dynamic navigation to include custom questions
+    navigateToNextStep('food-selection');
   };
 
   if (guests.length === 0) {
@@ -64,8 +93,8 @@ export default function DynamicFoodSelectionPage() {
     <>
       <EventHeader 
         eventId={wwwId}
-        galleryEnabled={true}
-        rsvpEnabled={true}
+        galleryEnabled={eventData?.galleryEnabled || false}
+        rsvpEnabled={eventData?.rsvpEnabled || false}
         currentPage="rsvp"
       />
       <div className="min-h-screen flex flex-col justify-between bg-[#fff] pt-20" style={{ fontFamily: 'Montserrat, Arial, Helvetica, sans-serif' }}>

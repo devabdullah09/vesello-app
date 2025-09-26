@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import EditModal from './EditModal';
 
 interface MenuItem {
@@ -28,14 +28,32 @@ interface MenuSectionEditorProps {
   onSave: (data: MenuSectionData) => Promise<void>;
 }
 
+const getDefaultData = () => ({
+    "title": "Wedding Menu",
+    "description": "Delicious food prepared specially for our celebration.",
+    "courses": []
+});
+
 export default function MenuSectionEditor({
   isOpen,
   onClose,
   data,
   onSave,
 }: MenuSectionEditorProps) {
-  const [formData, setFormData] = useState<MenuSectionData>(data);
+  const [formData, setFormData] = useState<MenuSectionData>(() => {
+    if (data && typeof data === 'object') {
+      return { ...getDefaultData(), ...data };
+    }
+    return getDefaultData();
+  });
   const [saving, setSaving] = useState(false);
+
+  // Update formData when data prop changes
+  useEffect(() => {
+    if (data && typeof data === 'object') {
+      setFormData(prev => ({ ...prev, ...data }));
+    }
+  }, [data]);
 
   const handleSave = async () => {
     try {

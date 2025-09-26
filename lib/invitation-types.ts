@@ -28,6 +28,9 @@ export interface InvitationRSVP {
   notes: {
     [guestName: string]: string;
   };
+  customResponses?: {
+    [questionId: string]: { [guestName: string]: any };
+  };
   email?: string;
   sendEmailConfirmation: boolean;
   submittedAt: Date;

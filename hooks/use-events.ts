@@ -22,11 +22,8 @@ export const useEvents = () => {
 
       let eventsData: Event[];
 
-      if (userProfile?.role === 'superadmin') {
-        // For superadmin, get all events (implement later or use getEventsPaginated)
-        eventsData = await getUserEvents(userProfile.id); // Temporary - will need to create getAllEvents
-      } else if (userProfile?.role === 'organizer') {
-        eventsData = await getUserEvents(userProfile.id);
+      if (userProfile?.role === 'superadmin' || userProfile?.role === 'organizer') {
+        eventsData = await getUserEvents(userProfile.id, userProfile.role);
       } else {
         eventsData = [];
       }

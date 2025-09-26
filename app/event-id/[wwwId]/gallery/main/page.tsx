@@ -16,8 +16,8 @@ export default function DynamicMainGalleryPage() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleCopyLink = () => {
-    // Replace with your actual party link
-    const partyLink = window.location.origin + `/event-id/${wwwId}/gallery/party-day`;
+    // Copy the main event link as requested - works for both localhost and production
+    const partyLink = window.location.origin + `/event-id/${wwwId}`;
     navigator.clipboard.writeText(partyLink);
     setShowCopiedPopup(true);
     if (timerRef.current) clearTimeout(timerRef.current);

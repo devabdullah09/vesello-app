@@ -1,180 +1,169 @@
 "use client";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 
-const guestData = [
-  {
-    confirm: true,
-    name: "Greg",
-    surname: "Smith",
-    rsvpWedding: "Yes",
-    rsvpAfter: "No",
-    isChild: "Yes",
-    childAge: "2",
-    meal: "Vegan",
-    accomodation: "No",
-    transport: "Yes",
-    note: "Test note",
-    email: "gregsmith@gmail.com",
-    confirmer: "Greg Smith",
-    tags: ["Vegetarian"],
-    table: "A1"
-  },
-  {
-    confirm: true,
-    name: "Aneta",
-    surname: "Sting",
-    rsvpWedding: "Yes",
-    rsvpAfter: "No",
-    isChild: "Yes",
-    childAge: "14",
-    meal: "Regular",
-    accomodation: "No",
-    transport: "No",
-    note: "",
-    email: "",
-    confirmer: "",
-    tags: ["Child"],
-    table: "A2"
-  },
-  {
-    confirm: false,
-    name: "Marry",
-    surname: "Jane",
-    rsvpWedding: "No",
-    rsvpAfter: "No",
-    isChild: "No",
-    childAge: "----",
-    meal: "----",
-    accomodation: "No",
-    transport: "No",
-    note: "",
-    email: "",
-    confirmer: "",
-    tags: [],
-    table: "B1"
-  },
-  {
-    confirm: false,
-    name: "Tao",
-    surname: "Sting",
-    rsvpWedding: "No",
-    rsvpAfter: "No",
-    isChild: "No",
-    childAge: "----",
-    meal: "----",
-    accomodation: "No",
-    transport: "No",
-    note: "",
-    email: "",
-    confirmer: "",
-    tags: [],
-    table: "B2"
-  },
-];
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
+
+interface Event {
+  id: string;
+  title: string;
+  coupleNames: string;
+  eventDate: string;
+  venue: string;
+  wwwId: string;
+  status: string;
+  rsvpEnabled: boolean;
+}
 
 export default function ManageGuestsPage() {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const router = useRouter();
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("");
 
-  const handleBack = () => {
-    router.push("/dashboard/events-edition/rsvp");
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      
+      // Get the current session token
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch('/api/dashboard/events', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch events');
+      }
+
+      const data = await response.json();
+      
+      // Filter events that have RSVP enabled
+      const rsvpEnabledEvents = data.data.data.filter((event: any) => event.rsvpEnabled);
+      setEvents(rsvpEnabledEvents);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load events');
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const handleSelectEvent = (event: Event) => {
+    console.log('Selected event:', event); // Debug log
+    if (!event.wwwId) {
+      console.error('Event wwwId is missing:', event);
+      setError('Event ID is missing. Please try again.');
+      return;
+    }
+    router.push(`/dashboard/events-edition/rsvp/manage-guests/${event.wwwId}`);
+  };
+
+  const handleBack = () => {
+    router.push('/dashboard/events-edition/rsvp');
+  };
+
+  if (loading) {
+    return (
+      <div className="flex-1 p-12 bg-gray-100 min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading events...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 p-12 bg-gray-100 min-h-screen flex items-center justify-center">
+        <div className="text-red-600 text-lg">Error: {error}</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex-1 p-4 sm:p-8 md:p-12 bg-white min-h-screen">
-      <div className="flex flex-col sm:flex-row justify-between items-start mb-8 gap-4">
+    <div className="flex-1 p-12 bg-gray-100 min-h-screen">
+      <div className="flex justify-between items-start mb-8">
         <button
           onClick={handleBack}
           className="bg-black text-white px-6 py-2 rounded font-semibold hover:bg-gray-800 transition-colors"
         >
           Back
         </button>
-        <span className="text-black font-medium px-6 py-2 rounded">Logout</span>
       </div>
-      <h1 className="text-2xl sm:text-3xl font-bold text-black mb-8">MANAGE GUEST LISTS</h1>
-      <div className="flex flex-col sm:flex-row flex-wrap justify-between items-center mb-8 gap-4 w-full">
-        <div className="flex flex-col sm:flex-row gap-4 flex-1 min-w-[200px] w-full">
-          <input
-            type="text"
-            placeholder="Find Guests"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="border border-black rounded px-4 py-2 w-full sm:w-60"
-          />
-          <select
-            value={filter}
-            onChange={e => setFilter(e.target.value)}
-            className="border border-black rounded px-4 py-2 w-full sm:w-40"
-          >
-            <option value="">Filter By</option>
-            <option value="child">Child</option>
-            <option value="vegetarian">Vegetarian</option>
-            <option value="confirmed">Confirmed</option>
-          </select>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-          <button className="bg-gradient-to-r from-[#E5B574] via-[#D59C58] to-[#C18037] text-white font-semibold px-8 py-2 rounded-md shadow-md hover:from-[#D59C58] hover:to-[#E5B574] transition-colors w-full sm:w-auto">
-            Download List
-          </button>
-          <button className="bg-gradient-to-r from-[#E5B574] via-[#D59C58] to-[#C18037] text-white font-semibold px-8 py-2 rounded-md shadow-md hover:from-[#D59C58] hover:to-[#E5B574] transition-colors w-full sm:w-auto">
-            Add Guest
-          </button>
-        </div>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full border border-black rounded-lg text-xs sm:text-sm md:text-base">
-          <thead className="bg-[#F5F5F5]">
-            <tr>
-              <th className="px-2 sm:px-4 py-2 sm:py-3 border-b border-black text-left">Confirm</th>
-              <th className="px-2 sm:px-4 py-2 sm:py-3 border-b border-black text-left">Name</th>
-              <th className="px-2 sm:px-4 py-2 sm:py-3 border-b border-black text-left">Surname</th>
-              <th className="px-2 sm:px-4 py-2 sm:py-3 border-b border-black text-left">RSVP Status<br/>(Wedding Day)</th>
-              <th className="px-2 sm:px-4 py-2 sm:py-3 border-b border-black text-left">RSVP Status<br/>(After Party)</th>
-              <th className="px-2 sm:px-4 py-2 sm:py-3 border-b border-black text-left">Is it child?</th>
-              <th className="px-2 sm:px-4 py-2 sm:py-3 border-b border-black text-left">Child’s age</th>
-              <th className="px-2 sm:px-4 py-2 sm:py-3 border-b border-black text-left">Meal Preference</th>
-              <th className="px-2 sm:px-4 py-2 sm:py-3 border-b border-black text-left">Accomodation</th>
-              <th className="px-2 sm:px-4 py-2 sm:py-3 border-b border-black text-left">Transport</th>
-              <th className="px-2 sm:px-4 py-2 sm:py-3 border-b border-black text-left">Note</th>
-              <th className="px-2 sm:px-4 py-2 sm:py-3 border-b border-black text-left">Email</th>
-              <th className="px-2 sm:px-4 py-2 sm:py-3 border-b border-black text-left">Confirmer</th>
-              <th className="px-2 sm:px-4 py-2 sm:py-3 border-b border-black text-left">Edit</th>
-              <th className="px-2 sm:px-4 py-2 sm:py-3 border-b border-black text-left text-red-600">Delete</th>
-            </tr>
-          </thead>
-          <tbody>
-            {guestData.map((guest, idx) => (
-              <tr key={idx} className="border-b border-black last:border-b-0">
-                <td className="px-2 sm:px-4 py-2 border-black text-center"><input type="checkbox" checked={guest.confirm} readOnly /></td>
-                <td className="px-2 sm:px-4 py-2 border-black">{guest.name}</td>
-                <td className="px-2 sm:px-4 py-2 border-black">{guest.surname}</td>
-                <td className="px-2 sm:px-4 py-2 border-black">{guest.rsvpWedding}</td>
-                <td className="px-2 sm:px-4 py-2 border-black">{guest.rsvpAfter}</td>
-                <td className="px-2 sm:px-4 py-2 border-black">{guest.isChild}</td>
-                <td className="px-2 sm:px-4 py-2 border-black">{guest.childAge}</td>
-                <td className="px-2 sm:px-4 py-2 border-black">{guest.meal}</td>
-                <td className="px-2 sm:px-4 py-2 border-black">{guest.accomodation}</td>
-                <td className="px-2 sm:px-4 py-2 border-black">{guest.transport}</td>
-                <td className="px-2 sm:px-4 py-2 border-black">{guest.note}</td>
-                <td className="px-2 sm:px-4 py-2 border-black">{guest.email}</td>
-                <td className="px-2 sm:px-4 py-2 border-black">{guest.confirmer}</td>
-                <td className="px-2 sm:px-4 py-2 border-black text-center">
-                  <button className="text-black hover:text-[#C18037]" title="Edit">
-                    <span role="img" aria-label="edit">✏️</span>
-                  </button>
-                </td>
-                <td className="px-2 sm:px-4 py-2 border-black text-center">
-                  <button className="text-red-600 hover:text-red-800" title="Delete">
-                    <span role="img" aria-label="delete">🗑️</span>
-                  </button>
-                </td>
-              </tr>
+      
+      <h1 className="text-3xl font-bold text-black mb-8">MANAGE GUEST LISTS</h1>
+      
+      <div className="bg-white rounded-lg shadow-sm p-8">
+        <h2 className="text-2xl font-semibold text-black mb-6">Select an Event</h2>
+        <p className="text-gray-600 mb-6">
+          Choose an event to view and manage its guest list and RSVP responses.
+        </p>
+
+        {events.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-600 mb-4">No events with RSVP enabled found.</p>
+            <p className="text-gray-500 text-sm mb-6">
+              To manage guest lists, you need to enable RSVP functionality for your events first.
+            </p>
+            <button
+              onClick={() => router.push('/dashboard/events-list')}
+              className="bg-[#E5B574] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#D59C58] transition-colors"
+            >
+              Manage Events
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {events.map((event) => (
+              <div
+                key={event.id}
+                onClick={() => handleSelectEvent(event)}
+                className="border border-gray-200 rounded-lg p-6 hover:border-[#E5B574] hover:shadow-md transition-all cursor-pointer"
+              >
+                <h3 className="text-lg font-semibold text-black mb-2">{event.title}</h3>
+                <p className="text-[#E5B574] font-medium mb-3">{event.coupleNames}</p>
+                <p className="text-gray-600 text-sm mb-2">
+                  {new Date(event.eventDate).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </p>
+                {event.venue && (
+                  <p className="text-gray-500 text-sm mb-3">{event.venue}</p>
+                )}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      event.status === 'active' ? 'bg-green-100 text-green-800' :
+                      event.status === 'planned' ? 'bg-blue-100 text-blue-800' :
+                      event.status === 'completed' ? 'bg-gray-100 text-gray-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                    </span>
+                    <span className="px-2 py-1 rounded text-xs font-medium bg-[#E5B574] text-white">
+                      RSVP Enabled
+                    </span>
+                  </div>
+                  <span className="text-[#E5B574] text-sm font-medium">Manage Guests →</span>
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+        )}
       </div>
     </div>
   );
-} 
+}

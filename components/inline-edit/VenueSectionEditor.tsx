@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import EditModal from './EditModal';
 import ImageUpload from '@/components/ui/ImageUpload';
 
@@ -20,14 +20,35 @@ interface VenueSectionEditorProps {
   onSave: (data: VenueSectionData) => Promise<void>;
 }
 
+const getDefaultData = () => ({
+    "title": "Ceremony Venue",
+    "venueName": "Wedding Venue",
+    "address": "",
+    "description": "A beautiful location for our special day.",
+    "mapUrl": "",
+    "images": []
+});
+
 export default function VenueSectionEditor({
   isOpen,
   onClose,
   data,
   onSave,
 }: VenueSectionEditorProps) {
-  const [formData, setFormData] = useState<VenueSectionData>(data);
+  const [formData, setFormData] = useState<VenueSectionData>(() => {
+    if (data && typeof data === 'object') {
+      return { ...getDefaultData(), ...data };
+    }
+    return getDefaultData();
+  });
   const [saving, setSaving] = useState(false);
+
+  // Update formData when data prop changes
+  useEffect(() => {
+    if (data && typeof data === 'object') {
+      setFormData(prev => ({ ...prev, ...data }));
+    }
+  }, [data]);
 
   const handleSave = async () => {
     try {

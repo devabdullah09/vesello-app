@@ -4,7 +4,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import UploadingOverlay from '@/components/gallery/UploadingOverlay';
 import UploadSuccessOverlay from '@/components/gallery/UploadSuccessOverlay';
 import { useRouter, useParams } from 'next/navigation';
-import { listFiles, getCdnUrl, uploadSingleFile } from '@/lib/bunny-net';
+// Removed direct bunny-net imports - now using API endpoints
 import EventHeader from '@/components/layout/EventHeader';
 
 const downloadIcon = (
@@ -29,6 +29,7 @@ export default function EventPartyDayGallery() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadTotal, setUploadTotal] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   // Load existing images and event data on component mount
   useEffect(() => {
@@ -55,21 +56,77 @@ export default function EventPartyDayGallery() {
 
   const loadGalleryFiles = async () => {
     try {
-      const files = await listFiles('party-day', 'photos', wwwId);
+      const response = await fetch(`/api/event-id/${wwwId}/gallery?albumType=party-day&mediaType=${tab}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to load gallery files');
+      }
+
+      const result = await response.json();
       
       if (tab === 'photos') {
-        const imageUrls = files.map(fileName => 
-          getCdnUrl(fileName, 'party-day', 'photos', wwwId)
-        );
+        const imageUrls = result.data.map((file: any) => file.url);
         setImages(imageUrls);
       } else {
-        // For videos, we'll use placeholder for now
-        setVideos([]);
+        // Process videos - create video objects with src and thumb
+        const videoUrls = result.data.map((file: any) => ({
+          src: file.url,
+          thumb: file.url // Use the same URL as thumbnail for now
+        }));
+        setVideos(videoUrls);
       }
     } catch (error) {
       console.error('Error loading gallery files:', error);
       setImages([]);
       setVideos([]);
+    }
+  };
+
+  const handleDownloadAll = async () => {
+    setDownloading(true);
+    try {
+      // Get all media URLs based on current tab
+      const mediaUrls = tab === 'photos' ? images : videos.map(v => v.src);
+      
+      if (mediaUrls.length === 0) {
+        alert('No media to download');
+        return;
+      }
+
+      // Download each file
+      for (let i = 0; i < mediaUrls.length; i++) {
+        const url = mediaUrls[i];
+        const response = await fetch(url);
+        const blob = await response.blob();
+        
+        // Create download link
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        
+        // Extract filename from URL or create one
+        const urlParts = url.split('/');
+        const filename = urlParts[urlParts.length - 1] || `media_${i + 1}.${tab === 'photos' ? 'jpg' : 'mp4'}`;
+        link.download = filename;
+        
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up
+        window.URL.revokeObjectURL(downloadUrl);
+        
+        // Small delay between downloads
+        if (i < mediaUrls.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+    } catch (error) {
+      console.error('Error downloading files:', error);
+      alert('Error downloading files. Please try again.');
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -82,14 +139,29 @@ export default function EventPartyDayGallery() {
     setUploading(true);
 
     try {
-      // Upload files to Bunny.net
-      const uploadPromises = Array.from(files).map(async (file) => {
-        const fileName = await uploadSingleFile(file, 'party-day', 'photos', wwwId);
-        setUploadProgress(prev => prev + 1);
-        return fileName;
+      // Create FormData for upload
+      const formData = new FormData();
+      formData.append('albumType', 'party-day');
+      formData.append('mediaType', tab);
+      
+      // Add all files to FormData
+      Array.from(files).forEach(file => {
+        formData.append('files', file);
       });
 
-      await Promise.all(uploadPromises);
+      // Upload files via API endpoint
+      const response = await fetch(`/api/event-id/${wwwId}/gallery/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || 'Upload failed');
+      }
+
+      const result = await response.json();
+      console.log('Upload successful:', result);
       
       // Reload gallery files after successful upload
       await loadGalleryFiles();
@@ -119,7 +191,10 @@ export default function EventPartyDayGallery() {
       {showSuccess && (
         <UploadSuccessOverlay
           onViewGallery={() => router.push(`/event-id/${wwwId}/gallery/main`)}
-          onCountMeIn={() => setShowSuccess(false)}
+          onCountMeIn={() => {
+            setShowSuccess(false);
+            router.push(`/event-id/${wwwId}#team-section`);
+          }}
         />
       )}
       <div className="min-h-screen flex flex-col items-center justify-center bg-white py-10 px-2 md:px-0 relative overflow-x-hidden pt-20" style={{ fontFamily: 'Montserrat, Arial, Helvetica, sans-serif' }}>
@@ -135,7 +210,16 @@ export default function EventPartyDayGallery() {
               <div className="text-2xl md:text-3xl text-[#08080A]" style={{ fontFamily: 'Montserrat', fontWeight: 500 }}>
                 Party Day
               </div>
-              <div className="flex flex-col items-end">
+              <div className="flex flex-col items-end gap-2">
+                <button
+                  onClick={handleDownloadAll}
+                  disabled={downloading || (tab === 'photos' ? images.length === 0 : videos.length === 0)}
+                  className="flex items-center text-sm text-[#C18037] hover:text-[#E5B574] disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+                  style={{ fontFamily: 'Montserrat', fontWeight: 500 }}
+                >
+                  {downloading ? 'Downloading...' : 'DOWNLOAD ALL'}
+                  {downloadIcon}
+                </button>
                 <div className="text-base md:text-lg font-semibold text-[#08080A] flex items-center" style={{ fontFamily: 'Montserrat', fontWeight: 500 }}>
                   UPLOAD PHOTOS/VIDEOS {downloadIcon}
                 </div>

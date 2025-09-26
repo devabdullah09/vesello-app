@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // Generate the public RSVP URL (goes to invitation flow)
+    // Generate the public RSVP URL
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const rsvpUrl = `${baseUrl}/event-id/${event.wwwId}/invitation`
 

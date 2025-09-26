@@ -1,19 +1,22 @@
 "use client";
 
-import { useDashboardStats, useAuth } from '@/hooks/use-dashboard'
+import { useDashboardStats } from '@/hooks/use-dashboard'
+import { useAuth } from '@/components/supabase-auth-provider'
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function DashboardPage() {
   const { stats, loading, error } = useDashboardStats()
-  const { user, loading: authLoading } = useAuth()
+  const { user, userProfile, loading: authLoading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login')
+    } else if (user && userProfile?.role === 'organizer') {
+      router.push('/dashboard/organizer')
     }
-  }, [user, authLoading, router])
+  }, [user, userProfile, authLoading, router])
 
   if (authLoading || loading) {
     return (
@@ -37,6 +40,15 @@ export default function DashboardPage() {
     { label: "Photos Uploaded", value: stats?.totalPhotos || 0, bg: "bg-purple-100", text: "text-purple-900" },
     { label: "RSVP Pending", value: stats?.pendingRSVPs || 0, bg: "bg-yellow-100", text: "text-yellow-900" },
   ];
+
+  // Debug logging
+  console.log('Dashboard stats:', stats);
+  console.log('Dashboard stats values:', {
+    totalEvents: stats?.totalEvents,
+    activeEvents: stats?.activeEvents,
+    totalPhotos: stats?.totalPhotos,
+    pendingRSVPs: stats?.pendingRSVPs
+  });
 
   return (
     <>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import EditModal from './EditModal';
 
 interface RegistryLink {
@@ -24,14 +24,33 @@ interface WishesAndGiftsSectionEditorProps {
   onSave: (data: WishesAndGiftsSectionData) => Promise<void>;
 }
 
+const getDefaultData = () => ({
+    "title": "Wishes & Gifts",
+    "description": "Your presence is the greatest gift, but if you wish to honor us with a gift, here are some suggestions.",
+    "registryLinks": [],
+    "wishesMessage": "We are so grateful for your love and support!"
+});
+
 export default function WishesAndGiftsSectionEditor({
   isOpen,
   onClose,
   data,
   onSave,
 }: WishesAndGiftsSectionEditorProps) {
-  const [formData, setFormData] = useState<WishesAndGiftsSectionData>(data);
+  const [formData, setFormData] = useState<WishesAndGiftsSectionData>(() => {
+    if (data && typeof data === 'object') {
+      return { ...getDefaultData(), ...data };
+    }
+    return getDefaultData();
+  });
   const [saving, setSaving] = useState(false);
+
+  // Update formData when data prop changes
+  useEffect(() => {
+    if (data && typeof data === 'object') {
+      setFormData(prev => ({ ...prev, ...data }));
+    }
+  }, [data]);
 
   const handleSave = async () => {
     try {

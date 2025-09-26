@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     console.log('Request body:', JSON.stringify(body, null, 2));
     
     // Validate required fields
-    const { eventId, mainGuest, additionalGuests, weddingDayAttendance, afterPartyAttendance, foodPreferences, accommodationNeeded, transportationNeeded, notes, email, sendEmailConfirmation } = body;
+    const { eventId, mainGuest, additionalGuests, weddingDayAttendance, afterPartyAttendance, foodPreferences, accommodationNeeded, transportationNeeded, notes, customResponses, email, sendEmailConfirmation } = body;
     
     if (!eventId || !mainGuest || !mainGuest.name || !mainGuest.surname) {
       console.log('Validation failed:', { eventId, mainGuest });
@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
         accommodationNeeded: accommodationNeeded || {},
         transportationNeeded: transportationNeeded || {},
         notes: notes || {},
+        customResponses: customResponses || {},
         email: email || '',
         sendEmailConfirmation: sendEmailConfirmation !== undefined ? sendEmailConfirmation : true,
       });

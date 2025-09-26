@@ -127,6 +127,7 @@ export class BunnyNetService {
     
     // Bunny.net Storage API endpoint - use event-specific folder if provided
     const folderPath = eventId ? `events/${eventId}/${albumType}/${mediaType}` : `${albumType}/${mediaType}`;
+    // The storage endpoint should already include the storage zone, so we just append the folder path
     const uploadUrl = `${this.config.storageEndpoint}/${folderPath}/${fileName}`;
     
     const response = await fetch(uploadUrl, {
@@ -134,7 +135,6 @@ export class BunnyNetService {
       headers: {
         'AccessKey': this.config.storageApiKey,
         'Content-Type': file.type || 'application/octet-stream',
-        'Content-Length': buffer.length.toString(),
       },
       body: buffer,
     });
@@ -360,8 +360,24 @@ export const testConnection = (...args: Parameters<BunnyNetService['testConnecti
 
 // Helper function for single file upload (exposes the private method)
 export const uploadSingleFile = async (file: File, albumType: string, mediaType: string, eventId?: string): Promise<string> => {
-  const service = getBunnyNetService();
-  // We need to access the private method, so we'll recreate the logic here
+  // Get fresh config to ensure we have the latest environment variables
+  const { env: freshEnv } = require('./env-loader');
+  
+  const config: BunnyNetConfig = {
+    storageZoneName: freshEnv.BUNNY_NET_STORAGE_ZONE || 'wedding-app-storage',
+    storageApiKey: freshEnv.BUNNY_NET_STORAGE_API_KEY || '',
+    storageEndpoint: freshEnv.BUNNY_NET_STORAGE_ENDPOINT || 'https://storage.bunnycdn.com/wedding-app-storage',
+    cdnUrl: freshEnv.BUNNY_NET_CDN_URL || 'https://cdn.vesello.net',
+  };
+  
+  // Validate config
+  if (!config.storageApiKey) {
+    throw new Error('BUNNY_NET_STORAGE_API_KEY is not set');
+  }
+  if (!config.storageEndpoint) {
+    throw new Error('BUNNY_NET_STORAGE_ENDPOINT is not set');
+  }
+  
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
   
@@ -373,20 +389,30 @@ export const uploadSingleFile = async (file: File, albumType: string, mediaType:
   
   // Bunny.net Storage API endpoint - use event-specific folder if provided
   const folderPath = eventId ? `events/${eventId}/${albumType}/${mediaType}` : `${albumType}/${mediaType}`;
-  const uploadUrl = `${service['config'].storageEndpoint}/${folderPath}/${fileName}`;
+  // The storage endpoint should already include the storage zone, so we just append the folder path
+  const uploadUrl = `${config.storageEndpoint}/${folderPath}/${fileName}`;
+  
+  console.log('Uploading to:', uploadUrl);
+  console.log('Using API Key length:', config.storageApiKey.length);
   
   const response = await fetch(uploadUrl, {
     method: 'PUT',
     headers: {
-      'AccessKey': service['config'].storageApiKey,
+      'AccessKey': config.storageApiKey,
       'Content-Type': file.type || 'application/octet-stream',
-      'Content-Length': buffer.length.toString(),
     },
     body: buffer,
   });
 
   if (!response.ok) {
     const errorText = await response.text();
+    console.error('Upload failed:', {
+      status: response.status,
+      statusText: response.statusText,
+      errorText,
+      uploadUrl,
+      apiKeyLength: config.storageApiKey.length
+    });
     throw new Error(`Upload failed: ${response.status} ${response.statusText} - ${errorText}`);
   }
 

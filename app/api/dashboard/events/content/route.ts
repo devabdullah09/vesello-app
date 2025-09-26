@@ -57,12 +57,9 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // Update the event with new section content in settings
+    // Update the event with new section content in section_content field
     const updateData = {
-      settings: {
-        ...event.settings,
-        sectionContent
-      }
+      section_content: sectionContent
     }
     
     console.log('Updating event with content:', updateData)

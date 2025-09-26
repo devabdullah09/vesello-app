@@ -11,6 +11,7 @@ interface InvitationState {
   accommodationNeeded: { [guestName: string]: 'Yes' | 'No' };
   transportationNeeded: { [guestName: string]: 'Yes' | 'No' };
   notes: { [guestName: string]: string };
+  customResponses: { [questionId: string]: { [guestName: string]: any } };
   email: string;
   sendEmailConfirmation: boolean;
 }
@@ -24,6 +25,7 @@ type InvitationAction =
   | { type: 'SET_ACCOMMODATION_NEEDED'; payload: { [guestName: string]: 'Yes' | 'No' } }
   | { type: 'SET_TRANSPORTATION_NEEDED'; payload: { [guestName: string]: 'Yes' | 'No' } }
   | { type: 'SET_NOTES'; payload: { [guestName: string]: string } }
+  | { type: 'SET_CUSTOM_RESPONSES'; payload: { [questionId: string]: { [guestName: string]: any } } }
   | { type: 'SET_EMAIL'; payload: string }
   | { type: 'SET_EMAIL_CONFIRMATION'; payload: boolean }
   | { type: 'RESET_STATE' };
@@ -37,6 +39,7 @@ const initialState: InvitationState = {
   accommodationNeeded: {},
   transportationNeeded: {},
   notes: {},
+  customResponses: {},
   email: '',
   sendEmailConfirmation: true,
 };
@@ -59,6 +62,8 @@ function invitationReducer(state: InvitationState, action: InvitationAction): In
       return { ...state, transportationNeeded: action.payload };
     case 'SET_NOTES':
       return { ...state, notes: action.payload };
+    case 'SET_CUSTOM_RESPONSES':
+      return { ...state, customResponses: action.payload };
     case 'SET_EMAIL':
       return { ...state, email: action.payload };
     case 'SET_EMAIL_CONFIRMATION':

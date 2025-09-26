@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import EditModal from './EditModal';
 
 interface InfoItem {
@@ -22,14 +22,32 @@ interface AdditionalInfoSectionEditorProps {
   onSave: (data: AdditionalInfoSectionData) => Promise<void>;
 }
 
+const getDefaultData = () => ({
+    "title": "Additional Information",
+    "content": "Here you can find any additional details about our wedding day.",
+    "items": []
+});
+
 export default function AdditionalInfoSectionEditor({
   isOpen,
   onClose,
   data,
   onSave,
 }: AdditionalInfoSectionEditorProps) {
-  const [formData, setFormData] = useState<AdditionalInfoSectionData>(data);
+  const [formData, setFormData] = useState<AdditionalInfoSectionData>(() => {
+    if (data && typeof data === 'object') {
+      return { ...getDefaultData(), ...data };
+    }
+    return getDefaultData();
+  });
   const [saving, setSaving] = useState(false);
+
+  // Update formData when data prop changes
+  useEffect(() => {
+    if (data && typeof data === 'object') {
+      setFormData(prev => ({ ...prev, ...data }));
+    }
+  }, [data]);
 
   const handleSave = async () => {
     try {

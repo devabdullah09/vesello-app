@@ -106,6 +106,10 @@ export default function EventsListPage() {
           galleryEnabled: form.galleryEnabled,
           rsvpEnabled: form.rsvpEnabled,
         })
+        
+        // Trigger storage event to notify other tabs about new event
+        localStorage.setItem('event-created', Date.now().toString())
+        localStorage.removeItem('event-created') // Remove immediately to trigger storage event
       }
       setShowModal(false)
       resetForm()
@@ -190,7 +194,13 @@ export default function EventsListPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button 
-                      className="text-blue-600 font-semibold mr-4"
+                      className="text-green-600 font-semibold mr-2"
+                      onClick={() => router.push(`/dashboard/events-edition/day-details?wwwId=${event.wwwId}`)}
+                    >
+                      Manage
+                    </button>
+                    <button 
+                      className="text-blue-600 font-semibold mr-2"
                       onClick={() => openEditModal(event)}
                     >
                       Edit

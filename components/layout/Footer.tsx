@@ -25,7 +25,7 @@ const Footer: React.FC = () => {
           <div style={{ fontSize: '1.6rem', fontWeight: 400, marginBottom: '0.5rem' }}>
             © 2025 Anna Kowalska & Piotr Nowak
           </div>
-          <div style={{ fontSize: '1.2rem', color: '#e0e0e0' }}>
+          <div style={{ fontSize: '1.2rem', color: '#e0e0e0', marginBottom: '0.5rem'  }}>
             Powered by Vesello
           </div>
         </div>
@@ -47,6 +47,20 @@ const Footer: React.FC = () => {
           LOGIN
         </button>
       </div>
+
+      <div className="border-t border-gray-800 pt-2 text-right">
+          <p className="text-gray-500 text-xs">
+            Designed by{' '}
+            <a 
+              href="https://www.abdullahshafiq.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="underline"
+            >
+              Abdullah
+            </a>
+          </p>
+        </div>
     </footer>
   );
 };

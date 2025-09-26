@@ -13,6 +13,8 @@ export default function DynamicConfirmationPage() {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [eventId, setEventId] = useState<string | null>(null);
+  const [eventData, setEventData] = useState<{coupleNames: string, eventDate: string, venue: string, galleryEnabled: boolean, rsvpEnabled: boolean} | null>(null);
   const router = useRouter();
 
   // Load existing email data from context
@@ -21,6 +23,45 @@ export default function DynamicConfirmationPage() {
     setSendEmail(state.sendEmailConfirmation);
   }, [state.email, state.sendEmailConfirmation]);
 
+  // Fetch the actual event ID and event data from the database
+  useEffect(() => {
+    const fetchEventData = async () => {
+      if (!wwwId) return;
+      
+      console.log('DEBUG: Fetching event data for wwwId:', wwwId);
+      
+      try {
+        const response = await fetch(`/api/event-id/${wwwId}`);
+        console.log('DEBUG: Event response status:', response.status);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('DEBUG: Event data:', data);
+          
+          if (data.success && data.data) {
+            console.log('DEBUG: Setting eventId to:', data.data.id);
+            setEventId(data.data.id);
+            setEventData({
+              coupleNames: data.data.coupleNames,
+              eventDate: data.data.eventDate,
+              venue: data.data.venue,
+              galleryEnabled: data.data.galleryEnabled,
+              rsvpEnabled: data.data.rsvpEnabled
+            });
+          } else {
+            console.error('DEBUG: No event data in response');
+          }
+        } else {
+          console.error('DEBUG: Failed to fetch event data:', response.status);
+        }
+      } catch (error) {
+        console.error('Error fetching event data:', error);
+      }
+    };
+
+    fetchEventData();
+  }, [wwwId]);
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -28,6 +69,17 @@ export default function DynamicConfirmationPage() {
       setError("Please enter your email address");
       return;
     }
+
+    // Temporarily use wwwId directly for testing
+    const testEventId = eventId || wwwId;
+    
+    if (!testEventId) {
+      console.error('DEBUG: No eventId or wwwId available, cannot submit RSVP');
+      setError("Loading event details, please try again in a moment");
+      return;
+    }
+
+    console.log('DEBUG: Starting RSVP submission with eventId:', testEventId, 'wwwId:', wwwId);
 
     setIsSubmitting(true);
     setError("");
@@ -39,7 +91,7 @@ export default function DynamicConfirmationPage() {
 
       // Prepare RSVP data for submission
       const rsvpData = {
-        eventId: wwwId,
+        eventId: testEventId,
         mainGuest: state.mainGuest,
         additionalGuests: state.additionalGuests.filter(guest => guest.name.trim() !== ''),
         weddingDayAttendance: state.weddingDayAttendance,
@@ -48,14 +100,17 @@ export default function DynamicConfirmationPage() {
         accommodationNeeded: state.accommodationNeeded,
         transportationNeeded: state.transportationNeeded,
         notes: state.notes,
+        customResponses: state.customResponses,
         email: sendEmail ? email : "",
         sendEmailConfirmation: sendEmail,
       };
 
-      console.log('Sending RSVP data:', JSON.stringify(rsvpData, null, 2));
+      console.log('DEBUG: Invitation context state:', JSON.stringify(state, null, 2));
+      console.log('DEBUG: Sending RSVP data:', JSON.stringify(rsvpData, null, 2));
+      console.log('DEBUG: About to submit RSVP to /api/invitation/rsvp');
 
       // Submit RSVP to backend
-      const response = await fetch(`/api/event-id/${wwwId}/invitation/rsvp`, {
+      const response = await fetch('/api/invitation/rsvp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -73,10 +128,16 @@ export default function DynamicConfirmationPage() {
       }
 
       const result = await response.json();
-      console.log('RSVP submission result:', result);
+      console.log('DEBUG: RSVP submission result:', result);
       
-      // Redirect to response summary page
-      router.push(`/event-id/${wwwId}/invitation/response`);
+      if (result.success) {
+        console.log('DEBUG: RSVP submitted successfully, redirecting...');
+        // Redirect to response summary page
+        router.push(`/event-id/${wwwId}/invitation/response`);
+      } else {
+        console.error('DEBUG: RSVP submission failed:', result);
+        setError(result.error || 'Failed to submit RSVP');
+      }
       
     } catch (error) {
       console.error('Error submitting RSVP:', error);
@@ -90,8 +151,8 @@ export default function DynamicConfirmationPage() {
     <>
       <EventHeader 
         eventId={wwwId}
-        galleryEnabled={true}
-        rsvpEnabled={true}
+        galleryEnabled={eventData?.galleryEnabled || false}
+        rsvpEnabled={eventData?.rsvpEnabled || false}
         currentPage="rsvp"
       />
       <div className="min-h-screen flex flex-col justify-between bg-[#fff] pt-20" style={{ fontFamily: 'Montserrat, Arial, Helvetica, sans-serif' }}>
@@ -110,7 +171,7 @@ export default function DynamicConfirmationPage() {
               <span className="text-3xl sm:text-4xl md:text-5xl" style={{ fontFamily: 'Sail, cursive', fontWeight: 400, color: '#08080A', letterSpacing: '0.5px', lineHeight: 1.1 }}>Last Step!</span>
               <div className="w-full flex flex-col items-center mt-2">
                 <span className="text-sm sm:text-base md:text-lg mt-2 mb-2 tracking-normal" style={{ color: '#08080A', fontWeight: 400, fontFamily: 'Montserrat', letterSpacing: '0.01em' }}>
-                  Send Your RSVP To Lucas & Mia's Wedding
+                  Send Your RSVP To {eventData?.coupleNames || 'Loading...'}'s Wedding
                 </span>
                 <div className="w-24 h-[2px] bg-[#B7B7B7] mx-auto my-2" />
               </div>
@@ -149,13 +210,13 @@ export default function DynamicConfirmationPage() {
               <div className="w-full flex flex-col gap-4">
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !eventId}
                   className="w-full bg-[#08080A] text-white py-4 sm:py-5 rounded-md text-base sm:text-lg hover:bg-[#222] transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ fontFamily: 'Montserrat' }}
                 >
-                  {isSubmitting ? 'Submitting...' : 'Send RSVP'}
+                  {isSubmitting ? 'Submitting...' : !eventId ? 'Loading...' : 'Send RSVP'}
                 </button>
-                <button
+                {/* <button
                   type="button"
                   onClick={() => {
                     // Save email data to context even when skipping
@@ -168,7 +229,7 @@ export default function DynamicConfirmationPage() {
                   style={{ fontFamily: 'Montserrat' }}
                 >
                   Skip & Continue
-                </button>
+                </button> */}
               </div>
             </form>
             <div className="w-full flex flex-col items-center mt-8">

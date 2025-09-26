@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import { useInvitation } from '@/components/invitation-context';
+import { useInvitationFlow } from '@/hooks/use-invitation-flow';
 import EventHeader from '@/components/layout/EventHeader';
 
 export default function DynamicAccommodationPage() {
@@ -10,7 +11,34 @@ export default function DynamicAccommodationPage() {
   const wwwId = params?.wwwId as string;
   const { state, dispatch } = useInvitation();
   const [accommodation, setAccommodation] = useState<{ [guestName: string]: 'Yes' | 'No' }>({});
+  const [eventData, setEventData] = useState<{coupleNames: string, eventDate: string, venue: string, galleryEnabled: boolean, rsvpEnabled: boolean} | null>(null);
   const router = useRouter();
+  const { customQuestions, navigateToNextStep } = useInvitationFlow(wwwId || '');
+
+  // Fetch event data
+  useEffect(() => {
+    if (wwwId) {
+      fetchEventData();
+    }
+  }, [wwwId]);
+
+  const fetchEventData = async () => {
+    try {
+      const response = await fetch(`/api/event-id/${wwwId}`);
+      if (response.ok) {
+        const result = await response.json();
+        setEventData({
+          coupleNames: result.data.coupleNames,
+          eventDate: result.data.eventDate,
+          venue: result.data.venue,
+          galleryEnabled: result.data.galleryEnabled,
+          rsvpEnabled: result.data.rsvpEnabled
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching event data:', error);
+    }
+  };
 
   // Memoize guest names to prevent infinite loops
   const guests = useMemo(() => {
@@ -38,7 +66,8 @@ export default function DynamicAccommodationPage() {
   const handleContinue = () => {
     // Save accommodation data to context
     dispatch({ type: 'SET_ACCOMMODATION_NEEDED', payload: accommodation });
-    router.push(`/event-id/${wwwId}/invitation/transportation`);
+    // Use dynamic navigation to include custom questions
+    navigateToNextStep('accommodation');
   };
 
   if (guests.length === 0) {
@@ -62,8 +91,8 @@ export default function DynamicAccommodationPage() {
     <>
       <EventHeader 
         eventId={wwwId}
-        galleryEnabled={true}
-        rsvpEnabled={true}
+        galleryEnabled={eventData?.galleryEnabled || false}
+        rsvpEnabled={eventData?.rsvpEnabled || false}
         currentPage="rsvp"
       />
       <div className="min-h-screen flex flex-col justify-between bg-[#fff] pt-20" style={{ fontFamily: 'Montserrat, Arial, Helvetica, sans-serif' }}>

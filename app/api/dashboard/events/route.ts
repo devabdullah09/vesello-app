@@ -37,8 +37,19 @@ export async function GET(request: NextRequest) {
     if (dateTo) filters.dateTo = dateTo
     if (search) filters.search = search
 
-    // Get events
-    const result = await getEventsPaginated(user.id, page, limit, filters)
+    // Get user role
+    const { data: userProfile } = await supabase
+      .from('user_profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (!userProfile) {
+      return NextResponse.json({ error: 'User profile not found' }, { status: 404 })
+    }
+
+    // Get events with role-based filtering
+    const result = await getEventsPaginated(user.id, userProfile.role, page, limit, filters)
 
     return NextResponse.json({
       success: true,
@@ -85,6 +96,9 @@ export async function POST(request: NextRequest) {
 
     // Create event
     const event = await createEvent(eventData, user.id)
+
+    // Note: Storage events for cross-tab communication would need to be handled
+    // on the frontend side when the event creation response is received
 
     return NextResponse.json({
       success: true,
