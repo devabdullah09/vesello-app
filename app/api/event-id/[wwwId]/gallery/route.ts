@@ -3,10 +3,10 @@ import { listFiles, getCdnUrl } from '@/lib/bunny-net';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { wwwId: string } }
+  { params }: { params: Promise<{ wwwId: string }> }
 ) {
   try {
-    const { wwwId } = params;
+    const { wwwId } = await params;
     const { searchParams } = new URL(request.url);
     const albumType = searchParams.get('albumType') || 'wedding-day';
     const mediaType = searchParams.get('mediaType') || 'photos';

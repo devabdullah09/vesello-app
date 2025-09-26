@@ -173,6 +173,28 @@ export default function EventGuestListPage() {
   };
 
   const handleViewGuest = (guest: Guest) => {
+    // Convert Guest to IndividualGuest format
+    const individualGuest: IndividualGuest = {
+      id: guest.id,
+      rsvpId: guest.id, // Using guest.id as rsvpId
+      name: guest.main_guest.name,
+      surname: guest.main_guest.surname,
+      email: guest.email,
+      wedding_day_attendance: guest.wedding_day_attendance[guest.main_guest.name] || '',
+      after_party_attendance: guest.after_party_attendance[guest.main_guest.name] || '',
+      food_preference: guest.food_preferences[guest.main_guest.name] || '',
+      accommodation_needed: guest.accommodation_needed[guest.main_guest.name] || '',
+      transportation_needed: guest.transportation_needed[guest.main_guest.name] || '',
+      notes: guest.notes[guest.main_guest.name] || '',
+      custom_responses: guest.custom_responses || {},
+      submitted_at: guest.submitted_at || '',
+      status: guest.status || 'pending'
+    };
+    setSelectedGuest(individualGuest);
+    setShowGuestModal(true);
+  };
+
+  const handleViewIndividualGuest = (guest: IndividualGuest) => {
     setSelectedGuest(guest);
     setShowGuestModal(true);
   };
@@ -595,7 +617,7 @@ export default function EventGuestListPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">
                           <button 
-                            onClick={() => handleViewGuest(guest)}
+                            onClick={() => handleViewIndividualGuest(guest)}
                             className="text-[#E5B574] hover:text-[#D59C58]"
                             title="View Details"
                           >
@@ -755,7 +777,7 @@ export default function EventGuestListPage() {
                               typeof selectedGuest.custom_responses[question.id] === 'object' ? (
                                 Object.entries(selectedGuest.custom_responses[question.id]).map(([guest, answer]) => (
                                   <p key={guest} className="text-sm text-gray-600 ml-2">
-                                    <span className="font-medium">{guest}:</span> {answer}
+                                    <span className="font-medium">{guest}:</span> {String(answer)}
                                   </p>
                                 ))
                               ) : (

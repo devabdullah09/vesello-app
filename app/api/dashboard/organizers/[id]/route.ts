@@ -4,9 +4,10 @@ import { createServerClient } from '@/lib/supabase'
 // GET /api/dashboard/organizers/[id] - Get specific organizer details
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = createServerClient()
     
     // Get the authorization header
@@ -45,12 +46,12 @@ export async function GET(
         created_at,
         last_login
       `)
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('role', 'organizer')
       .single()
 
     // Get event details if organizer has an assigned event
-    let organizerWithEvent = organizer
+    let organizerWithEvent: any = organizer
     if (organizer && organizer.event_id) {
       const { data: event } = await supabase
         .from('events')
@@ -84,9 +85,10 @@ export async function GET(
 // PUT /api/dashboard/organizers/[id] - Update organizer details
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = createServerClient()
     
     // Get the authorization header
@@ -121,7 +123,7 @@ export async function PUT(
     const { data: existingOrganizer, error: fetchError } = await supabase
       .from('user_profiles')
       .select('id, event_id')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('role', 'organizer')
       .single()
 
@@ -142,7 +144,7 @@ export async function PUT(
       const { error: profileError } = await supabase
         .from('user_profiles')
         .update(updateData)
-        .eq('id', params.id)
+        .eq('id', id)
 
       if (profileError) throw profileError
     }
@@ -150,7 +152,7 @@ export async function PUT(
     // Update password if provided
     if (password) {
       const { error: passwordError } = await supabase.auth.admin.updateUserById(
-        params.id,
+        id,
         { password }
       )
       if (passwordError) throw passwordError
@@ -176,14 +178,14 @@ export async function PUT(
       const { error: removeError } = await supabase
         .from('events')
         .update({ organizer_id: null })
-        .eq('organizer_id', params.id)
+        .eq('organizer_id', id)
 
       if (removeError) throw removeError
 
       // Assign organizer to new event
       const { error: assignError } = await supabase
         .from('events')
-        .update({ organizer_id: params.id })
+        .update({ organizer_id: id })
         .eq('www_id', eventId)
 
       if (assignError) throw assignError
@@ -205,9 +207,10 @@ export async function PUT(
 // DELETE /api/dashboard/organizers/[id] - Delete organizer account
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = createServerClient()
     
     // Get the authorization header
@@ -239,7 +242,7 @@ export async function DELETE(
     const { data: existingOrganizer, error: fetchError } = await supabase
       .from('user_profiles')
       .select('id, event_id')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('role', 'organizer')
       .single()
 
@@ -254,12 +257,12 @@ export async function DELETE(
     const { error: removeError } = await supabase
       .from('events')
       .update({ organizer_id: null })
-      .eq('organizer_id', params.id)
+      .eq('organizer_id', id)
 
     if (removeError) throw removeError
 
     // Delete auth user (this will cascade delete the user profile)
-    const { error: deleteError } = await supabase.auth.admin.deleteUser(params.id)
+    const { error: deleteError } = await supabase.auth.admin.deleteUser(id)
     if (deleteError) throw deleteError
 
     return NextResponse.json({

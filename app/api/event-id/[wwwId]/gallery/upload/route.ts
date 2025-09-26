@@ -3,10 +3,10 @@ import { uploadFiles } from '@/lib/bunny-net';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { wwwId: string } }
+  { params }: { params: Promise<{ wwwId: string }> }
 ) {
   try {
-    const { wwwId } = params;
+    const { wwwId } = await params;
     const formData = await request.formData();
     const files = formData.getAll('files') as File[];
     const albumType = formData.get('albumType') as string || 'wedding-day';

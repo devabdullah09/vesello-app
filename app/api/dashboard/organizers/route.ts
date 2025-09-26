@@ -45,6 +45,13 @@ export async function GET(request: NextRequest) {
       .eq('role', 'organizer')
       .order('created_at', { ascending: false })
 
+    if (error || !organizers) {
+      return NextResponse.json(
+        { error: 'Failed to fetch organizers' },
+        { status: 500 }
+      )
+    }
+
     // Get events for each organizer
     const organizersWithEvents = await Promise.all(
       organizers.map(async (organizer) => {

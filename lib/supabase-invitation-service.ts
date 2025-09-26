@@ -57,6 +57,7 @@ export const submitInvitationRSVP = async (rsvpData: Omit<InvitationRSVP, 'id' |
 // Get RSVP by ID
 export const getInvitationRSVP = async (rsvpId: string): Promise<InvitationRSVP | null> => {
   try {
+    const supabase = createServerClient()
     const { data, error } = await supabase
       .from('invitation_rsvps')
       .select('*')
@@ -96,6 +97,7 @@ export const getInvitationRSVP = async (rsvpId: string): Promise<InvitationRSVP 
 // Get all RSVPs for an event
 export const getInvitationRSVPsByEvent = async (eventId: string): Promise<InvitationRSVP[]> => {
   try {
+    const supabase = createServerClient()
     const { data, error } = await supabase
       .from('invitation_rsvps')
       .select('*')
@@ -129,6 +131,7 @@ export const getInvitationRSVPsByEvent = async (eventId: string): Promise<Invita
 // Update RSVP status
 export const updateInvitationRSVPStatus = async (rsvpId: string, status: 'pending' | 'confirmed' | 'cancelled'): Promise<void> => {
   try {
+    const supabase = createServerClient()
     const { error } = await supabase
       .from('invitation_rsvps')
       .update({ status })

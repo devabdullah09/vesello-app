@@ -92,6 +92,14 @@ async function generateWeddingCardPDF(templateType: string, eventData: any, qrCo
     doc.rect(5, 5, pageWidth - 10, pageHeight - 10)
   }
 
+  // Format the event date
+  const formattedDate = new Date(eventData.eventDate).toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+
   // Template-specific layouts
   switch (templateType) {
     case 'elegant-classic':
@@ -110,12 +118,6 @@ async function generateWeddingCardPDF(templateType: string, eventData: any, qrCo
       addText(eventData.coupleNames, pageWidth/2, 50, pageWidth - 20, 22, '#2F1B14', 'center')
       
       // Date
-      const formattedDate = new Date(eventData.eventDate).toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })
       addText(formattedDate, pageWidth/2, 65, pageWidth - 20, 14, '#8B4513', 'center')
       
       // Venue

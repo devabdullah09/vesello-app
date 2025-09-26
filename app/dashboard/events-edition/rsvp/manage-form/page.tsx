@@ -99,11 +99,17 @@ export default function ManageFormPage() {
   const [editingQuestion, setEditingQuestion] = useState<FormQuestion | null>(null);
 
   // New question form state
-  const [newQuestion, setNewQuestion] = useState({
-    questionType: 'yes_no' as const,
+  const [newQuestion, setNewQuestion] = useState<{
+    questionType: 'yes_no' | 'multiple_choice' | 'text' | 'attendance' | 'food_preference';
+    title: string;
+    description: string;
+    options: string[];
+    required: boolean;
+  }>({
+    questionType: 'yes_no',
     title: '',
     description: '',
-    options: [''] as string[],
+    options: [''],
     required: true
   });
 
@@ -486,7 +492,7 @@ export default function ManageFormPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-gray-500">#{index + 1}</span>
-                    <Eye className="w-4 h-4 text-green-600" title="Always Active" />
+                    <Eye className="w-4 h-4 text-green-600" />
                   </div>
                 </div>
               </div>
@@ -584,7 +590,7 @@ export default function ManageFormPage() {
                   value={newQuestion.questionType}
                   onChange={(e) => setNewQuestion(prev => ({ 
                     ...prev, 
-                    questionType: e.target.value as any,
+                    questionType: e.target.value as 'yes_no' | 'multiple_choice' | 'text' | 'attendance' | 'food_preference',
                     options: e.target.value === 'multiple_choice' ? ['', ''] : ['']
                   }))}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E5B574]"

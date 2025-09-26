@@ -4,9 +4,10 @@ import { createServerClient } from '@/lib/supabase'
 // GET /api/dashboard/organizers/[id]/password - Get organizer password (superadmin only)
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = createServerClient()
     
     // Get the authorization header
@@ -38,7 +39,7 @@ export async function GET(
     const { data: organizer, error: fetchError } = await supabase
       .from('user_profiles')
       .select('id, email, display_name, event_id')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('role', 'organizer')
       .single()
 
@@ -72,9 +73,10 @@ export async function GET(
 // POST /api/dashboard/organizers/[id]/password - Generate new password for organizer
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = createServerClient()
     
     // Get the authorization header
@@ -106,7 +108,7 @@ export async function POST(
     const { data: organizer, error: fetchError } = await supabase
       .from('user_profiles')
       .select('id, email, display_name')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('role', 'organizer')
       .single()
 
@@ -122,7 +124,7 @@ export async function POST(
     
     // Update the organizer's password
     const { error: passwordError } = await supabase.auth.admin.updateUserById(
-      params.id,
+      id,
       { password: newPassword }
     )
 
