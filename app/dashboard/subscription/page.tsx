@@ -10,18 +10,16 @@ import { useSubscription } from '@/hooks/use-subscription'
 import { subscriptionService } from '@/lib/subscription-service'
 import SubscriptionStatusCard from '@/components/subscription/SubscriptionStatusCard'
 
-interface SubscriptionData {
-  plan: 'basic' | 'premium' | 'luxury'
-  status: 'active' | 'trial' | 'cancelled' | 'past_due'
-  currentPeriodEnd: string
-  trialEnd?: string
+// Mock data for demonstration - in real app, this would come from subscription service
+const mockSubscriptionData = {
+  amount: 29.99,
   usage: {
-    guests: { used: number; limit: number }
-    storage: { used: number; limit: number }
-    photos: { used: number; limit: number }
-  }
-  nextBillingDate: string
-  amount: number
+    guests: { used: 45, limit: 200 },
+    storage: { used: 2.5, limit: 10 },
+    photos: { used: 150, limit: 1000 }
+  },
+  nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+  trialEnd: null
 }
 
 const SubscriptionDashboard = () => {
@@ -36,28 +34,27 @@ const SubscriptionDashboard = () => {
       name: 'Basic',
       icon: <Zap className="w-6 h-6" />,
       color: 'from-blue-500 to-blue-600',
-      features: ['RSVP System', 'Photo Gallery', 'Basic Customization', 'Email Support']
+      features: ['Event Info Page', 'Basic Customization', 'Email Support']
+    },
+    gold: {
+      name: 'Gold',
+      icon: <Star className="w-6 h-6" />,
+      color: 'from-amber-500 to-amber-600',
+      features: ['Event Info Page', 'Photo Gallery', 'Basic Customization', 'Email Support']
     },
     premium: {
       name: 'Premium',
-      icon: <Star className="w-6 h-6" />,
-      color: 'from-amber-500 to-amber-600',
-      features: ['All Basic Features', 'Video Gallery', 'Timeline', 'Menu Management', 'Seating Chart', 'QR Codes']
-    },
-    luxury: {
-      name: 'Luxury',
       icon: <Crown className="w-6 h-6" />,
       color: 'from-purple-500 to-purple-600',
-      features: ['All Premium Features', 'Custom Domain', 'White Label', 'Analytics', 'API Access', 'Dedicated Support']
+      features: ['Event Info Page', 'Photo Gallery', 'RSVP System', 'Advanced Customization', 'Priority Support']
     }
   }
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-green-100 text-green-800'
-      case 'trial': return 'bg-blue-100 text-blue-800'
       case 'cancelled': return 'bg-red-100 text-red-800'
-      case 'past_due': return 'bg-yellow-100 text-yellow-800'
+      case 'expired': return 'bg-yellow-100 text-yellow-800'
       default: return 'bg-gray-100 text-gray-800'
     }
   }
@@ -65,14 +62,40 @@ const SubscriptionDashboard = () => {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'active': return 'Active'
-      case 'trial': return 'Trial'
       case 'cancelled': return 'Cancelled'
-      case 'past_due': return 'Payment Required'
+      case 'expired': return 'Expired'
       default: return 'Unknown'
     }
   }
 
-  const currentPlan = planDetails[subscriptionData.plan]
+  // Handle loading and error states
+  if (subscriptionLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-amber-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading subscription data...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !subscription) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-amber-50 flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">No Subscription Found</h2>
+          <p className="text-gray-600 mb-4">You don't have an active subscription.</p>
+          <Button className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white">
+            Choose a Plan
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  const currentPlan = planDetails[subscription.planName]
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-amber-50">
@@ -98,12 +121,12 @@ const SubscriptionDashboard = () => {
                     <div>
                       <CardTitle className="text-white text-xl">{currentPlan.name} Plan</CardTitle>
                       <CardDescription className="text-amber-100">
-                        ${subscriptionData.amount}/month
+                        ${mockSubscriptionData.amount}/month
                       </CardDescription>
                     </div>
                   </div>
-                  <Badge className={getStatusColor(subscriptionData.status)}>
-                    {getStatusText(subscriptionData.status)}
+                  <Badge className={getStatusColor(subscription.status)}>
+                    {getStatusText(subscription.status)}
                   </Badge>
                 </div>
               </CardHeader>
@@ -129,25 +152,25 @@ const SubscriptionDashboard = () => {
                       <div>
                         <p className="text-sm text-gray-600">Next Billing Date</p>
                         <p className="font-medium text-gray-900">
-                          {new Date(subscriptionData.nextBillingDate).toLocaleDateString()}
+                          {new Date(mockSubscriptionData.nextBillingDate).toLocaleDateString()}
                         </p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-600">Amount</p>
-                        <p className="font-medium text-gray-900">${subscriptionData.amount}/month</p>
+                        <p className="font-medium text-gray-900">${mockSubscriptionData.amount}/month</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Trial Information */}
-                  {subscriptionData.status === 'trial' && subscriptionData.trialEnd && (
+                  {mockSubscriptionData.trialEnd && (
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                       <div className="flex items-center space-x-2">
                         <AlertCircle className="w-5 h-5 text-blue-600" />
                         <div>
                           <p className="font-medium text-blue-900">Free Trial Active</p>
                           <p className="text-sm text-blue-700">
-                            Your trial ends on {new Date(subscriptionData.trialEnd).toLocaleDateString()}
+                            Your trial ends on {new Date(mockSubscriptionData.trialEnd).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
@@ -174,11 +197,11 @@ const SubscriptionDashboard = () => {
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-gray-600">Guests</span>
                     <span className="text-gray-900">
-                      {subscriptionData.usage.guests.used}/{subscriptionData.usage.guests.limit === -1 ? '∞' : subscriptionData.usage.guests.limit}
+                      {mockSubscriptionData.usage.guests.used}/{mockSubscriptionData.usage.guests.limit === -1 ? '∞' : mockSubscriptionData.usage.guests.limit}
                     </span>
                   </div>
                   <Progress 
-                    value={(subscriptionData.usage.guests.used / subscriptionData.usage.guests.limit) * 100} 
+                    value={(mockSubscriptionData.usage.guests.used / mockSubscriptionData.usage.guests.limit) * 100} 
                     className="h-2"
                   />
                 </div>
@@ -188,11 +211,11 @@ const SubscriptionDashboard = () => {
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-gray-600">Storage</span>
                     <span className="text-gray-900">
-                      {subscriptionData.usage.storage.used}GB/{subscriptionData.usage.storage.limit === -1 ? '∞' : `${subscriptionData.usage.storage.limit}GB`}
+                      {mockSubscriptionData.usage.storage.used}GB/{mockSubscriptionData.usage.storage.limit === -1 ? '∞' : `${mockSubscriptionData.usage.storage.limit}GB`}
                     </span>
                   </div>
                   <Progress 
-                    value={(subscriptionData.usage.storage.used / subscriptionData.usage.storage.limit) * 100} 
+                    value={(mockSubscriptionData.usage.storage.used / mockSubscriptionData.usage.storage.limit) * 100} 
                     className="h-2"
                   />
                 </div>
@@ -202,11 +225,11 @@ const SubscriptionDashboard = () => {
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-gray-600">Photos</span>
                     <span className="text-gray-900">
-                      {subscriptionData.usage.photos.used}/{subscriptionData.usage.photos.limit === -1 ? '∞' : subscriptionData.usage.photos.limit}
+                      {mockSubscriptionData.usage.photos.used}/{mockSubscriptionData.usage.photos.limit === -1 ? '∞' : mockSubscriptionData.usage.photos.limit}
                     </span>
                   </div>
                   <Progress 
-                    value={(subscriptionData.usage.photos.used / subscriptionData.usage.photos.limit) * 100} 
+                    value={(mockSubscriptionData.usage.photos.used / mockSubscriptionData.usage.photos.limit) * 100} 
                     className="h-2"
                   />
                 </div>
@@ -247,13 +270,13 @@ const SubscriptionDashboard = () => {
                 <Button 
                   variant="destructive" 
                   className="w-full"
-                  disabled={subscriptionData.status === 'trial'}
+                  disabled={subscription.status === 'cancelled'}
                 >
                   Cancel Subscription
                 </Button>
-                {subscriptionData.status === 'trial' && (
+                {subscription.status === 'cancelled' && (
                   <p className="text-xs text-gray-500 mt-2 text-center">
-                    Cannot cancel during trial period
+                    Subscription already cancelled
                   </p>
                 )}
               </CardContent>
@@ -273,7 +296,7 @@ const SubscriptionDashboard = () => {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {Object.entries(planDetails).map(([planId, plan]) => {
-                  if (planId === subscriptionData.plan) return null
+                  if (planId === subscription.planName) return null
                   
                   return (
                     <div key={planId} className="text-center p-6 border border-gray-200 rounded-lg">
@@ -289,7 +312,7 @@ const SubscriptionDashboard = () => {
                         className="w-full"
                         size="sm"
                       >
-                        {planId === 'luxury' ? 'Upgrade to Luxury' : `Switch to ${plan.name}`}
+                        {planId === 'premium' ? 'Upgrade to Premium' : `Switch to ${plan.name}`}
                       </Button>
                     </div>
                   )

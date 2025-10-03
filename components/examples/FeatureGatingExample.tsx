@@ -1,7 +1,7 @@
 "use client"
 
 import React from 'react'
-import { useAuth } from '@/lib/supabase-auth' // Assuming you have this
+import { useAuth } from '@/components/supabase-auth-provider'
 import { FeatureGate } from '@/components/subscription'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
