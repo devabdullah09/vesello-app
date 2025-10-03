@@ -107,7 +107,6 @@ export default function EventDetailsPage() {
         })
       }
     } catch (error) {
-      console.error('Error fetching event details:', error)
       toast({
         title: "Error",
         description: "Failed to load event details",
@@ -147,7 +146,6 @@ export default function EventDetailsPage() {
         description: "Event details updated successfully",
       })
     } catch (error) {
-      console.error('Error saving event details:', error)
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to save details",

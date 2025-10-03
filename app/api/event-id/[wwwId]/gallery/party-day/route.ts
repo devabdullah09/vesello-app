@@ -49,7 +49,6 @@ export async function GET(
         data: formattedImages
       })
     } catch (bunnyError) {
-      console.error('Error fetching party day images from Bunny.net:', bunnyError)
       // Return empty array if Bunny.net fails
       return NextResponse.json({
         success: true,
@@ -57,7 +56,6 @@ export async function GET(
       })
     }
   } catch (error) {
-    console.error('Error getting party day gallery:', error)
     return NextResponse.json(
       { error: 'Failed to get party day gallery' },
       { status: 500 }

@@ -34,7 +34,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Test upload error:', error);
     return NextResponse.json({ 
       error: 'Test upload failed', 
       details: error instanceof Error ? error.message : 'Unknown error'

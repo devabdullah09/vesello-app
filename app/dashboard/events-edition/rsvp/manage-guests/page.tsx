@@ -54,7 +54,6 @@ export default function ManageGuestsPage() {
       const rsvpEnabledEvents = data.data.data.filter((event: any) => event.rsvpEnabled);
       setEvents(rsvpEnabledEvents);
     } catch (error) {
-      console.error('Error fetching events:', error);
       setError(error instanceof Error ? error.message : 'Failed to load events');
     } finally {
       setLoading(false);
@@ -62,9 +61,7 @@ export default function ManageGuestsPage() {
   };
 
   const handleSelectEvent = (event: Event) => {
-    console.log('Selected event:', event); // Debug log
     if (!event.wwwId) {
-      console.error('Event wwwId is missing:', event);
       setError('Event ID is missing. Please try again.');
       return;
     }

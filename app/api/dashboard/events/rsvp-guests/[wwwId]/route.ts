@@ -25,7 +25,6 @@ export async function GET(
       .single()
 
     if (eventError || !event) {
-      console.error('Event not found for wwwId:', wwwId, 'Error:', eventError)
       return NextResponse.json({ error: 'Event not found' }, { status: 404 })
     }
 
@@ -63,7 +62,6 @@ export async function GET(
 
     // If no RSVPs found with event.id, try with wwwId
     if ((!rsvps || rsvps.length === 0) && !rsvpError) {
-      console.log('DEBUG: No RSVPs found with event.id, trying with wwwId:', wwwId);
       const { data: rsvpsByWwwId, error: rsvpErrorByWwwId } = await supabase
         .from('invitation_rsvps')
         .select(`
@@ -88,21 +86,13 @@ export async function GET(
       
       if (rsvpsByWwwId && rsvpsByWwwId.length > 0) {
         rsvps = rsvpsByWwwId;
-        console.log('DEBUG: Found RSVPs with wwwId:', rsvps.length);
       }
     }
 
     if (rsvpError) {
-      console.error('Error fetching RSVPs:', rsvpError)
       return NextResponse.json({ error: 'Failed to fetch RSVP data' }, { status: 500 })
     }
 
-    console.log('=== MANAGE GUESTS DEBUG ===')
-    console.log('Event ID:', event.id)
-    console.log('Event wwwId:', event.www_id)
-    console.log('Found RSVPs count:', rsvps?.length || 0)
-    console.log('RSVPs data:', JSON.stringify(rsvps, null, 2))
-    console.log('=== END MANAGE GUESTS DEBUG ===')
 
     // Get custom questions for this event to understand the structure
     const { data: customQuestions } = await supabase
@@ -127,7 +117,6 @@ export async function GET(
     })
 
   } catch (error) {
-    console.error('Error getting RSVP guests:', error)
     return NextResponse.json({ error: 'Failed to get RSVP guests' }, { status: 500 })
   }
 }

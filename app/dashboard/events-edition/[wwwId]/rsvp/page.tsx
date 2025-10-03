@@ -71,7 +71,6 @@ export default function EventRSVPPage() {
         .single()
 
       if (!eventData) {
-        console.error('Event not found for wwwId:', wwwId)
         return
       }
 
@@ -85,7 +84,6 @@ export default function EventRSVPPage() {
 
       setRsvps(rsvpData || [])
     } catch (error) {
-      console.error('Error fetching RSVPs:', error)
       toast({
         title: "Error",
         description: "Failed to load RSVP responses",

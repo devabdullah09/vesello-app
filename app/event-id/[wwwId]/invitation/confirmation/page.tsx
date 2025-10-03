@@ -28,18 +28,13 @@ export default function DynamicConfirmationPage() {
     const fetchEventData = async () => {
       if (!wwwId) return;
       
-      console.log('DEBUG: Fetching event data for wwwId:', wwwId);
-      
       try {
         const response = await fetch(`/api/event-id/${wwwId}`);
-        console.log('DEBUG: Event response status:', response.status);
         
         if (response.ok) {
           const data = await response.json();
-          console.log('DEBUG: Event data:', data);
           
           if (data.success && data.data) {
-            console.log('DEBUG: Setting eventId to:', data.data.id);
             setEventId(data.data.id);
             setEventData({
               coupleNames: data.data.coupleNames,
@@ -48,14 +43,10 @@ export default function DynamicConfirmationPage() {
               galleryEnabled: data.data.galleryEnabled,
               rsvpEnabled: data.data.rsvpEnabled
             });
-          } else {
-            console.error('DEBUG: No event data in response');
           }
-        } else {
-          console.error('DEBUG: Failed to fetch event data:', response.status);
         }
       } catch (error) {
-        console.error('Error fetching event data:', error);
+        // Error fetching event data
       }
     };
 
@@ -74,12 +65,9 @@ export default function DynamicConfirmationPage() {
     const testEventId = eventId || wwwId;
     
     if (!testEventId) {
-      console.error('DEBUG: No eventId or wwwId available, cannot submit RSVP');
       setError("Loading event details, please try again in a moment");
       return;
     }
-
-    console.log('DEBUG: Starting RSVP submission with eventId:', testEventId, 'wwwId:', wwwId);
 
     setIsSubmitting(true);
     setError("");
@@ -105,10 +93,6 @@ export default function DynamicConfirmationPage() {
         sendEmailConfirmation: sendEmail,
       };
 
-      console.log('DEBUG: Invitation context state:', JSON.stringify(state, null, 2));
-      console.log('DEBUG: Sending RSVP data:', JSON.stringify(rsvpData, null, 2));
-      console.log('DEBUG: About to submit RSVP to /api/invitation/rsvp');
-
       // Submit RSVP to backend
       const response = await fetch('/api/invitation/rsvp', {
         method: 'POST',
@@ -118,29 +102,21 @@ export default function DynamicConfirmationPage() {
         body: JSON.stringify(rsvpData),
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Response error text:', errorText);
         throw new Error(`Failed to submit RSVP: ${response.status} ${response.statusText}`);
       }
 
       const result = await response.json();
-      console.log('DEBUG: RSVP submission result:', result);
       
       if (result.success) {
-        console.log('DEBUG: RSVP submitted successfully, redirecting...');
         // Redirect to response summary page
         router.push(`/event-id/${wwwId}/invitation/response`);
       } else {
-        console.error('DEBUG: RSVP submission failed:', result);
         setError(result.error || 'Failed to submit RSVP');
       }
       
     } catch (error) {
-      console.error('Error submitting RSVP:', error);
       setError(error instanceof Error ? error.message : 'Failed to submit RSVP. Please try again.');
     } finally {
       setIsSubmitting(false);

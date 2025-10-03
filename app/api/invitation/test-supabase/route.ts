@@ -3,9 +3,6 @@ import { supabase } from '@/lib/supabase';
 
 export async function GET() {
   try {
-    console.log('Testing Supabase connection...');
-    console.log('Supabase client object:', supabase);
-    
     // Test basic connection by trying to get the current user (should be null if not authenticated)
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
@@ -25,8 +22,6 @@ export async function GET() {
     });
     
   } catch (error) {
-    console.error('Supabase test failed:', error);
-    
     return NextResponse.json({ 
       error: 'Supabase connection failed',
       details: error instanceof Error ? error.message : 'Unknown error',

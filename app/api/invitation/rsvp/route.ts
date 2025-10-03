@@ -15,23 +15,17 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('RSVP API endpoint called');
-    
     const body = await request.json();
-    console.log('Request body:', JSON.stringify(body, null, 2));
     
     // Validate required fields
     const { eventId, mainGuest, additionalGuests, weddingDayAttendance, afterPartyAttendance, foodPreferences, accommodationNeeded, transportationNeeded, notes, customResponses, email, sendEmailConfirmation } = body;
     
     if (!eventId || !mainGuest || !mainGuest.name || !mainGuest.surname) {
-      console.log('Validation failed:', { eventId, mainGuest });
       return NextResponse.json(
         { error: 'Missing required fields: eventId, mainGuest name and surname are required' },
         { status: 400 }
       );
     }
-
-    console.log('Validation passed, attempting Supabase submission...');
 
     try {
       // Try Supabase first
@@ -50,8 +44,6 @@ export async function POST(request: NextRequest) {
         sendEmailConfirmation: sendEmailConfirmation !== undefined ? sendEmailConfirmation : true,
       });
 
-      console.log('RSVP submitted successfully to Supabase with ID:', rsvpId);
-
       return NextResponse.json({ 
         success: true, 
         rsvpId,
@@ -60,7 +52,6 @@ export async function POST(request: NextRequest) {
       });
 
     } catch (supabaseError) {
-      console.log('Supabase submission failed, falling back to local storage:', supabaseError);
       
       // Fallback to local storage
       const localRSVP = {
@@ -82,7 +73,6 @@ export async function POST(request: NextRequest) {
       };
 
       localRSVPs.push(localRSVP);
-      console.log('RSVP stored locally. Total local RSVPs:', localRSVPs.length);
 
       return NextResponse.json({ 
         success: true, 
@@ -94,7 +84,6 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Error in RSVP API endpoint:', error);
     
     // Return more detailed error information
     return NextResponse.json(

@@ -37,9 +37,6 @@ export async function POST(request: NextRequest) {
       status: 'pending'
     };
 
-    console.log('=== TEST RSVP INSERT DEBUG ===');
-    console.log('Event ID:', event.id);
-    console.log('Test RSVP data:', JSON.stringify(testRSVP, null, 2));
 
     const { data: insertedRSVP, error: insertError } = await supabase
       .from('invitation_rsvps')
@@ -48,15 +45,12 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (insertError) {
-      console.error('Insert error:', insertError);
       return NextResponse.json({ 
         error: 'Failed to insert test RSVP',
         insertError 
       });
     }
 
-    console.log('✅ Test RSVP inserted successfully:', insertedRSVP);
-    console.log('=== END TEST RSVP INSERT DEBUG ===');
 
     return NextResponse.json({
       success: true,
@@ -66,7 +60,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Test RSVP error:', error);
     return NextResponse.json({ 
       error: 'Test RSVP failed',
       details: error instanceof Error ? error.message : 'Unknown error'

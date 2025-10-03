@@ -56,7 +56,6 @@ export async function GET(request: NextRequest) {
       data: albums
     })
   } catch (error) {
-    console.error('Error getting albums:', error)
     return NextResponse.json(
       { error: 'Failed to get albums' },
       { status: 500 }
@@ -117,7 +116,6 @@ export async function POST(request: NextRequest) {
       data: album
     }, { status: 201 })
   } catch (error) {
-    console.error('Error creating album:', error)
     return NextResponse.json(
       { error: 'Failed to create album' },
       { status: 500 }

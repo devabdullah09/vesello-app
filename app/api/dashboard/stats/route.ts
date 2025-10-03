@@ -45,7 +45,6 @@ export async function GET(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error('Error getting dashboard stats:', error)
     return NextResponse.json(
       { error: 'Failed to get dashboard statistics' },
       { status: 500 }

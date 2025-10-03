@@ -21,7 +21,6 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    console.log('Content update request:', body)
     
     const { wwwId, sectionContent } = body as {
       wwwId: string
@@ -62,8 +61,6 @@ export async function PUT(request: NextRequest) {
       section_content: sectionContent
     }
     
-    console.log('Updating event with content:', updateData)
-    
     const { data: updatedEvent, error: updateError } = await supabase
       .from('events')
       .update(updateData)
@@ -72,11 +69,8 @@ export async function PUT(request: NextRequest) {
       .single()
 
     if (updateError) {
-      console.error('Database update error:', updateError)
       return NextResponse.json({ error: 'Failed to update section content' }, { status: 500 })
     }
-    
-    console.log('Successfully updated event content:', updatedEvent)
 
     return NextResponse.json({
       success: true,
@@ -87,7 +81,6 @@ export async function PUT(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error('Error updating section content:', error)
     return NextResponse.json({ error: 'Failed to update section content' }, { status: 500 })
   }
 }

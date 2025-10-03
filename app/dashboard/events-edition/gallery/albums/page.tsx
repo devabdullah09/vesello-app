@@ -135,7 +135,7 @@ export default function AlbumsManagementPage() {
         }
       }
     } catch (err) {
-      console.error('Error fetching album files:', err);
+      // Error fetching album files
     } finally {
       setLoading(false);
     }
@@ -247,7 +247,6 @@ export default function AlbumsManagementPage() {
     setDraggedIndex(null);
     
     // TODO: Save new order to backend
-    console.log('New file order:', newFiles.map(f => f.name));
   };
 
   if (loading) {

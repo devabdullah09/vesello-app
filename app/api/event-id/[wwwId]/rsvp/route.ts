@@ -94,7 +94,6 @@ export async function POST(
         .single()
 
       if (error) {
-        console.error('Error updating RSVP:', error)
         return NextResponse.json({ error: 'Failed to update RSVP' }, { status: 500 })
       }
 
@@ -123,7 +122,6 @@ export async function POST(
         .single()
 
       if (error) {
-        console.error('Error creating RSVP:', error)
         return NextResponse.json({ error: 'Failed to create RSVP' }, { status: 500 })
       }
 
@@ -134,7 +132,6 @@ export async function POST(
       })
     }
   } catch (error) {
-    console.error('Error processing RSVP:', error)
     return NextResponse.json(
       { error: 'Failed to process RSVP' },
       { status: 500 }

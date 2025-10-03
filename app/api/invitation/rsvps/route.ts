@@ -13,13 +13,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log('Fetching RSVPs for event:', eventId);
-
     try {
       // Try Supabase first
       const rsvps = await getInvitationRSVPsByEvent(eventId);
-      
-      console.log(`Found ${rsvps.length} RSVPs for event ${eventId}`);
 
       return NextResponse.json({ 
         success: true,
@@ -29,7 +25,6 @@ export async function GET(request: NextRequest) {
       });
 
     } catch (supabaseError) {
-      console.log('Supabase fetch failed:', supabaseError);
       
       // Fallback: return empty array with error message
       return NextResponse.json({ 
@@ -43,8 +38,6 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Error in RSVPs API endpoint:', error);
-    
     return NextResponse.json(
       { 
         error: 'Failed to fetch RSVPs',

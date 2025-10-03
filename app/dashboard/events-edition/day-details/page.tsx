@@ -126,7 +126,7 @@ export default function EventsDayDetailsPage() {
         // You could add a toast notification here
         alert('Link copied to clipboard!');
       } catch (err) {
-        console.error('Failed to copy to clipboard:', err);
+        // Failed to copy to clipboard
       }
     }
   };

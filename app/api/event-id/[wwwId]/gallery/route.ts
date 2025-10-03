@@ -40,7 +40,6 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Error listing gallery files:', error);
     return NextResponse.json({ 
       error: 'Failed to load gallery files',
       details: error instanceof Error ? error.message : 'Unknown error'

@@ -74,7 +74,6 @@ export async function GET(
       data: organizerWithEvent
     })
   } catch (error) {
-    console.error('Error getting organizer:', error)
     return NextResponse.json(
       { error: 'Failed to get organizer' },
       { status: 500 }
@@ -196,7 +195,6 @@ export async function PUT(
       message: 'Organizer updated successfully'
     })
   } catch (error) {
-    console.error('Error updating organizer:', error)
     return NextResponse.json(
       { error: 'Failed to update organizer' },
       { status: 500 }
@@ -270,7 +268,6 @@ export async function DELETE(
       message: 'Organizer deleted successfully'
     })
   } catch (error) {
-    console.error('Error deleting organizer:', error)
     return NextResponse.json(
       { error: 'Failed to delete organizer' },
       { status: 500 }

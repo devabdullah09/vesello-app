@@ -151,7 +151,6 @@ export default function EventGuestListPage() {
       const transformedGuests = transformGuestsToIndividual(data.guests);
       setIndividualGuests(transformedGuests);
     } catch (error) {
-      console.error('Error fetching guest data:', error);
       setError(error instanceof Error ? error.message : 'Failed to load guest data');
     } finally {
       setLoading(false);

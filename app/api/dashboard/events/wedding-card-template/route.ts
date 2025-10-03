@@ -23,7 +23,6 @@ export async function POST(request: NextRequest) {
         }
       })
     } catch (qrError) {
-      console.error('Error generating QR code:', qrError)
       qrCodeDataUrl = ''
     }
 
@@ -38,7 +37,6 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error generating wedding card template:', error)
     return NextResponse.json({ error: 'Failed to generate wedding card template' }, { status: 500 })
   }
 }

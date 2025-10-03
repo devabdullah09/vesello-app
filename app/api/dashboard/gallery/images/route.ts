@@ -71,7 +71,6 @@ export async function GET(request: NextRequest) {
       data: result
     })
   } catch (error) {
-    console.error('Error getting images:', error)
     return NextResponse.json(
       { error: 'Failed to get images' },
       { status: 500 }
@@ -147,7 +146,6 @@ export async function POST(request: NextRequest) {
       data: image
     }, { status: 201 })
   } catch (error) {
-    console.error('Error uploading image:', error)
     return NextResponse.json(
       { error: 'Failed to upload image' },
       { status: 500 }

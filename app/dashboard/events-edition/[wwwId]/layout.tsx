@@ -77,7 +77,7 @@ export default function EventEditionLayout({
         })
       }
     } catch (error) {
-      console.error('Error fetching event data:', error)
+      // Error fetching event data
     } finally {
       setLoading(false)
     }

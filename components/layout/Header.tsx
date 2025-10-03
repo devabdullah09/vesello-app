@@ -11,9 +11,11 @@ const Header = () => {
   const navigationItems = [
     { name: 'Home', href: '/' },
     { name: 'Gallery', href: '/gallery' },
+    // { name: 'Shop', href: '/pricing' },
     { name: 'Reply to Invitation', href: '/invitation' },
   ]
 
+  
   return (
     <header className="w-full bg-white fixed top-0 left-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-6 py-2">

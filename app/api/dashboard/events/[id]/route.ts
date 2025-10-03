@@ -42,7 +42,6 @@ export async function GET(
       data: event
     })
   } catch (error) {
-    console.error('Error getting event:', error)
     return NextResponse.json(
       { error: 'Failed to get event' },
       { status: 500 }
@@ -95,7 +94,6 @@ export async function PUT(
       data: updatedEvent
     })
   } catch (error) {
-    console.error('Error updating event:', error)
     return NextResponse.json(
       { error: 'Failed to update event' },
       { status: 500 }
@@ -145,7 +143,6 @@ export async function DELETE(
       message: 'Event deleted successfully'
     })
   } catch (error) {
-    console.error('Error deleting event:', error)
     return NextResponse.json(
       { error: 'Failed to delete event' },
       { status: 500 }

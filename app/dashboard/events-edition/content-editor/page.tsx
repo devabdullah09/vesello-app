@@ -122,7 +122,6 @@ export default function ContentEditorPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('API Error:', errorData);
         throw new Error(errorData.error || 'Failed to update section visibility');
       }
 
@@ -132,7 +131,6 @@ export default function ContentEditorPage() {
       } : null);
 
     } catch (err) {
-      console.error('Error updating section visibility:', err);
       alert('Failed to update section. Please try again.');
     } finally {
       setSaving(false);

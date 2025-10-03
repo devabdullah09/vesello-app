@@ -62,7 +62,6 @@ export async function GET(
       }
     })
   } catch (error) {
-    console.error('Error getting organizer password info:', error)
     return NextResponse.json(
       { error: 'Failed to get organizer password info' },
       { status: 500 }
@@ -141,7 +140,6 @@ export async function POST(
       }
     })
   } catch (error) {
-    console.error('Error generating organizer password:', error)
     return NextResponse.json(
       { error: 'Failed to generate organizer password' },
       { status: 500 }

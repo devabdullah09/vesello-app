@@ -73,7 +73,6 @@ export async function GET(request: NextRequest) {
         }
       })
     } catch (qrError) {
-      console.error('Error generating QR code:', qrError)
       qrCodeDataUrl = ''
     }
 
@@ -93,7 +92,6 @@ export async function GET(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error('Error getting RSVP QR code:', error)
     return NextResponse.json({ error: 'Failed to get RSVP QR code' }, { status: 500 })
   }
 }

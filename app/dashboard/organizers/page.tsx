@@ -132,27 +132,20 @@ export default function OrganizersPage() {
       const { data: { session } } = await supabase.auth.getSession()
       const token = session?.access_token || ''
       
-      console.log('Fetching organizers with token:', token ? 'present' : 'missing')
-      
       const response = await fetch('/api/dashboard/organizers', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       })
 
-      console.log('Organizers response status:', response.status)
-
       if (!response.ok) {
         const errorText = await response.text()
-        console.error('Failed to fetch organizers:', errorText)
         throw new Error(`Failed to fetch organizers: ${response.status}`)
       }
 
       const result = await response.json()
-      console.log('Organizers result:', result)
       setOrganizers(result.data || [])
     } catch (error) {
-      console.error('Error fetching organizers:', error)
       toast({
         title: "Error",
         description: "Failed to fetch organizers. Check console for details.",

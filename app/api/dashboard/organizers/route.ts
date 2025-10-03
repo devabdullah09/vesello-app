@@ -75,7 +75,6 @@ export async function GET(request: NextRequest) {
       data: organizersWithEvents
     })
   } catch (error) {
-    console.error('Error getting organizers:', error)
     return NextResponse.json(
       { error: 'Failed to get organizers' },
       { status: 500 }
@@ -198,7 +197,6 @@ export async function POST(request: NextRequest) {
       }
     }, { status: 201 })
   } catch (error) {
-    console.error('Error creating organizer:', error)
     return NextResponse.json(
       { error: 'Failed to create organizer' },
       { status: 500 }

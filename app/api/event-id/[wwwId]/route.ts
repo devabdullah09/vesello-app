@@ -19,12 +19,6 @@ export async function GET(
       return NextResponse.json({ error: 'Event not found' }, { status: 404 })
     }
 
-    // Debug logging
-    console.log('Event data from database:', {
-      wwwId: event.wwwId,
-      sectionVisibility: event.sectionVisibility,
-      sectionContentKeys: event.sectionContent ? Object.keys(event.sectionContent) : 'null'
-    })
 
     // Only return events that are active or planned (not cancelled)
     if (event.status === 'cancelled') {
@@ -51,10 +45,8 @@ export async function GET(
       }
     };
 
-    console.log('API Response sectionVisibility:', responseData.data.sectionVisibility);
     return NextResponse.json(responseData)
   } catch (error) {
-    console.error('Error getting public event:', error)
     return NextResponse.json(
       { error: 'Failed to get event' },
       { status: 500 }

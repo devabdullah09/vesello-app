@@ -277,15 +277,6 @@ export default function PublicEventPage() {
       }
 
       const result = await response.json();
-      console.log('Event data loaded:', result.data);
-      console.log('Section visibility:', result.data.sectionVisibility);
-      console.log('Section content keys:', result.data.sectionContent ? Object.keys(result.data.sectionContent) : 'null');
-      
-      // Ensure sectionVisibility is properly parsed
-      if (result.data.sectionVisibility && typeof result.data.sectionVisibility === 'object') {
-        console.log('Section visibility keys:', Object.keys(result.data.sectionVisibility));
-        console.log('Section visibility values:', Object.values(result.data.sectionVisibility));
-      }
       
       setEventData(result.data);
     } catch (err) {
@@ -438,10 +429,7 @@ export default function PublicEventPage() {
         sectionContent
       } : null);
 
-      console.log('Content updated successfully:', sectionContent);
-
     } catch (error) {
-      console.error('Error updating content:', error);
       throw error;
     }
   };

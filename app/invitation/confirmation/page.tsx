@@ -50,8 +50,6 @@ export default function ConfirmationPage() {
         sendEmailConfirmation: sendEmail,
       };
 
-      console.log('Sending RSVP data:', JSON.stringify(rsvpData, null, 2));
-
       // Submit RSVP to backend
       const response = await fetch('/api/invitation/rsvp', {
         method: 'POST',
@@ -61,23 +59,17 @@ export default function ConfirmationPage() {
         body: JSON.stringify(rsvpData),
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Response error text:', errorText);
         throw new Error(`Failed to submit RSVP: ${response.status} ${response.statusText}`);
       }
 
       const result = await response.json();
-      console.log('RSVP submission result:', result);
       
       // Redirect to response summary page
       router.push("/invitation/response");
       
     } catch (error) {
-      console.error('Error submitting RSVP:', error);
       setError(error instanceof Error ? error.message : 'Failed to submit RSVP. Please try again.');
     } finally {
       setIsSubmitting(false);

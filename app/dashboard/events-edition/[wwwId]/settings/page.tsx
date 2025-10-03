@@ -84,7 +84,6 @@ export default function EventSettingsPage() {
         })
       }
     } catch (error) {
-      console.error('Error fetching event settings:', error)
       toast({
         title: "Error",
         description: "Failed to load event settings",
@@ -152,7 +151,6 @@ export default function EventSettingsPage() {
         description: "Event settings updated successfully",
       })
     } catch (error) {
-      console.error('Error saving event settings:', error)
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to save settings",

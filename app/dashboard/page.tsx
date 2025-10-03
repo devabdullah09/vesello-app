@@ -41,14 +41,6 @@ export default function DashboardPage() {
     { label: "RSVP Pending", value: stats?.pendingRSVPs || 0, bg: "bg-yellow-100", text: "text-yellow-900" },
   ];
 
-  // Debug logging
-  console.log('Dashboard stats:', stats);
-  console.log('Dashboard stats values:', {
-    totalEvents: stats?.totalEvents,
-    activeEvents: stats?.activeEvents,
-    totalPhotos: stats?.totalPhotos,
-    pendingRSVPs: stats?.pendingRSVPs
-  });
 
   return (
     <>

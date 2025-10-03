@@ -27,7 +27,6 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error creating Canva design:', error)
     return NextResponse.json({ error: 'Failed to create Canva design' }, { status: 500 })
   }
 }
@@ -74,7 +73,6 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error generating Canva URL:', error)
     return NextResponse.json({ error: 'Failed to generate Canva URL' }, { status: 500 })
   }
 }

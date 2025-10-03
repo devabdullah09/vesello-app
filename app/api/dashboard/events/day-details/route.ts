@@ -65,7 +65,6 @@ export async function GET(request: NextRequest) {
         }
       })
     } catch (qrError) {
-      console.error('Error generating QR code:', qrError)
       qrCodeDataUrl = ''
     }
 
@@ -88,7 +87,6 @@ export async function GET(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error('Error getting event day details:', error)
     return NextResponse.json({ error: 'Failed to get event day details' }, { status: 500 })
   }
 }

@@ -68,7 +68,6 @@ export async function GET(request: NextRequest) {
       .order('order_index', { ascending: true })
 
     if (questionsError) {
-      console.error('Error fetching form questions:', questionsError)
       return NextResponse.json({ error: 'Failed to fetch form questions' }, { status: 500 })
     }
 
@@ -83,7 +82,6 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error getting RSVP form questions:', error)
     return NextResponse.json({ error: 'Failed to get RSVP form questions' }, { status: 500 })
   }
 }
@@ -174,7 +172,6 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (createError) {
-      console.error('Error creating form question:', createError)
       return NextResponse.json({ error: 'Failed to create form question' }, { status: 500 })
     }
 
@@ -184,7 +181,6 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error creating RSVP form question:', error)
     return NextResponse.json({ error: 'Failed to create RSVP form question' }, { status: 500 })
   }
 }
@@ -257,7 +253,6 @@ export async function PUT(request: NextRequest) {
       .single()
 
     if (updateError) {
-      console.error('Error updating form question:', updateError)
       return NextResponse.json({ error: 'Failed to update form question' }, { status: 500 })
     }
 
@@ -267,7 +262,6 @@ export async function PUT(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error updating RSVP form question:', error)
     return NextResponse.json({ error: 'Failed to update RSVP form question' }, { status: 500 })
   }
 }
@@ -333,7 +327,6 @@ export async function DELETE(request: NextRequest) {
       .eq('event_id', event.id)
 
     if (deleteError) {
-      console.error('Error deleting form question:', deleteError)
       return NextResponse.json({ error: 'Failed to delete form question' }, { status: 500 })
     }
 
@@ -343,7 +336,6 @@ export async function DELETE(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error deleting RSVP form question:', error)
     return NextResponse.json({ error: 'Failed to delete RSVP form question' }, { status: 500 })
   }
 }

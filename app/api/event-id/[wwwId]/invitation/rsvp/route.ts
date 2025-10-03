@@ -24,7 +24,6 @@ export async function POST(
       rsvpId: rsvpId
     });
   } catch (error) {
-    console.error('Error in RSVP API:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }
@@ -47,7 +46,6 @@ export async function GET(
       eventId: wwwId
     });
   } catch (error) {
-    console.error('Error getting RSVP info:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }

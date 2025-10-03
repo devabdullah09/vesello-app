@@ -54,21 +54,14 @@ export default function ClientsListPage() {
         }
       });
 
-      console.log('Clients response status:', response.status);
-
       if (!response.ok) {
         const errorText = await response.text()
-        console.error('Failed to fetch clients:', errorText)
         throw new Error(`Failed to fetch clients: ${response.status}`)
       }
 
       const result = await response.json();
-      console.log('API response:', result);
-
-      console.log('Clients data:', result.data);
       setClients(result.data || []);
     } catch (error) {
-      console.error('Error fetching clients:', error);
     } finally {
       setLoading(false);
     }

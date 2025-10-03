@@ -56,7 +56,6 @@ export async function GET(request: NextRequest) {
       .single()
 
     if (contentError && contentError.code !== 'PGRST116') {
-      console.error('Error fetching gallery content:', contentError)
       return NextResponse.json({ error: 'Failed to fetch gallery content' }, { status: 500 })
     }
 
@@ -65,7 +64,6 @@ export async function GET(request: NextRequest) {
       data: galleryContent ? galleryContent.content : null
     })
   } catch (error) {
-    console.error('Error getting gallery content:', error)
     return NextResponse.json({ error: 'Failed to get gallery content' }, { status: 500 })
   }
 }
@@ -128,8 +126,6 @@ export async function PUT(request: NextRequest) {
       .select()
 
     if (upsertError) {
-      console.error('Error saving gallery content:', upsertError)
-      
       // Check if table doesn't exist
       if (upsertError.message?.includes('relation "gallery_content" does not exist')) {
         return NextResponse.json({ 
@@ -151,7 +147,6 @@ export async function PUT(request: NextRequest) {
       data: data?.[0]
     })
   } catch (error) {
-    console.error('Error saving gallery content:', error)
     return NextResponse.json({ error: 'Failed to save gallery content' }, { status: 500 })
   }
 }

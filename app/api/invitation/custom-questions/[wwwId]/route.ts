@@ -42,7 +42,6 @@ export async function GET(
       .order('order_index', { ascending: true })
 
     if (questionsError) {
-      console.error('Error fetching custom questions:', questionsError)
       return NextResponse.json({ error: 'Failed to fetch custom questions' }, { status: 500 })
     }
 
@@ -57,7 +56,6 @@ export async function GET(
     })
 
   } catch (error) {
-    console.error('Error getting custom questions:', error)
     return NextResponse.json({ error: 'Failed to get custom questions' }, { status: 500 })
   }
 }

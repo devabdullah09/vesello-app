@@ -54,7 +54,6 @@ export async function GET(request: NextRequest) {
       data: events
     })
   } catch (error) {
-    console.error('Error getting available events:', error)
     return NextResponse.json(
       { error: 'Failed to get available events' },
       { status: 500 }

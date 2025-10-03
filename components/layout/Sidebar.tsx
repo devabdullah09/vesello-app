@@ -19,6 +19,14 @@ const sidebarNav: Record<"superadmin" | "organizer", { label: string; href: stri
     { label: "CLIENTS LIST", href: "/dashboard/clients-list" },
     { label: "MODULES LIST", href: "/dashboard/modules-list" },
     { label: "WEBHOOKS LIST", href: "/dashboard/webhooks-list" },
+    {
+      label: "SUBSCRIPTION",
+      href: "/dashboard/subscription",
+      subNav: [
+        { label: "MANAGE SUBSCRIPTION", href: "/dashboard/subscription" },
+        { label: "BILLING HISTORY", href: "/dashboard/billing" },
+      ],
+    },
   ],
   organizer: [
     { label: "DASHBOARD", href: "/dashboard/organizer" },
@@ -30,6 +38,14 @@ const sidebarNav: Record<"superadmin" | "organizer", { label: string; href: stri
         { label: "DAY DETAILS", href: "/dashboard/events-edition/day-details" },
         { label: "GALLERY", href: "/dashboard/events-edition/gallery" },
         { label: "RSVP", href: "/dashboard/events-edition/rsvp" },
+      ],
+    },
+    {
+      label: "SUBSCRIPTION",
+      href: "/dashboard/subscription",
+      subNav: [
+        { label: "MANAGE SUBSCRIPTION", href: "/dashboard/subscription" },
+        { label: "BILLING HISTORY", href: "/dashboard/billing" },
       ],
     },
   ],

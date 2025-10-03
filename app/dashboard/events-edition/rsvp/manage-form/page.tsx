@@ -148,7 +148,6 @@ export default function ManageFormPage() {
         setError('Failed to load events');
       }
     } catch (error) {
-      console.error('Error fetching events:', error);
       setError('Failed to load events');
     } finally {
       setLoading(false);
@@ -174,11 +173,9 @@ export default function ManageFormPage() {
         const data = await response.json();
         setQuestions(data.data.questions || []);
       } else {
-        console.error('Failed to fetch questions');
         setQuestions([]);
       }
     } catch (error) {
-      console.error('Error fetching questions:', error);
       setQuestions([]);
     }
   };
@@ -237,7 +234,6 @@ export default function ManageFormPage() {
         setError(errorData.error || 'Failed to add question');
       }
     } catch (error) {
-      console.error('Error adding question:', error);
       setError('Failed to add question');
     }
   };
@@ -269,7 +265,6 @@ export default function ManageFormPage() {
         setError(errorData.error || 'Failed to delete question');
       }
     } catch (error) {
-      console.error('Error deleting question:', error);
       setError('Failed to delete question');
     }
   };
@@ -310,7 +305,6 @@ export default function ManageFormPage() {
         setError(errorData.error || 'Failed to update question');
       }
     } catch (error) {
-      console.error('Error updating question:', error);
       setError('Failed to update question');
     }
   };

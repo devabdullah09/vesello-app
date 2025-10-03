@@ -87,7 +87,6 @@ export default function EventGalleryUploadPage() {
         
         // Here you would implement actual file upload logic
         // For example, upload to Bunny.net, AWS S3, or your preferred storage
-        console.log(`Uploading file ${i + 1}/${totalFiles}:`, file.name);
         
         // Simulate upload delay
         await new Promise(resolve => setTimeout(resolve, 1000));

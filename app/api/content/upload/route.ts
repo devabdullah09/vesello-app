@@ -43,8 +43,6 @@ export async function POST(request: NextRequest) {
       }
 
     } catch (bunnyError) {
-      console.error('Bunny.net upload error:', bunnyError);
-      
       // Fallback: Return a placeholder or handle gracefully
       return NextResponse.json({
         success: false,
@@ -54,7 +52,6 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Upload error:', error);
     return NextResponse.json({ 
       error: 'Upload failed', 
       details: error instanceof Error ? error.message : 'Unknown error'

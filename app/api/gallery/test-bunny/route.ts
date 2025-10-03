@@ -4,17 +4,10 @@ import { testConnection, listFiles } from '@/lib/bunny-net';
 export async function GET(request: NextRequest) {
   try {
     // Test connection to Bunny.net with detailed logging
-    console.log('Testing Bunny.net connection...');
     
     // First, let's test the basic endpoint without authentication
     const baseResponse = await fetch('https://storage.bunnycdn.com/wedding-app-storage/', {
       method: 'GET',
-    });
-    
-    console.log('Base endpoint test:', {
-      status: baseResponse.status,
-      statusText: baseResponse.statusText,
-      url: baseResponse.url
     });
     
     // Now test with authentication
@@ -55,7 +48,6 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Bunny.net test error:', error);
     return NextResponse.json({ 
       success: false, 
       error: 'Bunny.net test failed',

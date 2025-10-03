@@ -57,7 +57,6 @@ export async function GET(request: NextRequest) {
       .single()
 
     if (eventError) {
-      console.error('Error fetching organizer event:', eventError)
       return NextResponse.json({ 
         success: false,
         error: 'Failed to fetch event'
@@ -78,7 +77,6 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error getting organizer event:', error)
     return NextResponse.json(
       { error: 'Failed to get organizer event' },
       { status: 500 }

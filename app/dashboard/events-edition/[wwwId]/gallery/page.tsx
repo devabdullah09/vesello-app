@@ -72,7 +72,6 @@ export default function EventGalleryPage() {
         setImages(galleryImages)
       }
     } catch (error) {
-      console.error('Error fetching gallery images:', error)
       toast({
         title: "Error",
         description: "Failed to load gallery images",
@@ -116,7 +115,6 @@ export default function EventGalleryPage() {
       }
 
       const result = await response.json()
-      console.log('Upload successful:', result)
       
       // Refresh gallery images
       await fetchGalleryImages()
@@ -126,7 +124,6 @@ export default function EventGalleryPage() {
         description: `${files.length} image(s) uploaded successfully`,
       })
     } catch (error) {
-      console.error('Upload error:', error)
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Upload failed",
@@ -169,7 +166,6 @@ export default function EventGalleryPage() {
         }
       }
     } catch (error) {
-      console.error('Error downloading images:', error)
       toast({
         title: "Error",
         description: "Failed to download images",
@@ -188,7 +184,6 @@ export default function EventGalleryPage() {
         description: "Image deletion will be implemented in the next update",
       })
     } catch (error) {
-      console.error('Error deleting image:', error)
       toast({
         title: "Error",
         description: "Failed to delete image",

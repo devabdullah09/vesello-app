@@ -35,7 +35,6 @@ export async function GET(
       .single()
 
     if (contentError && contentError.code !== 'PGRST116') {
-      console.error('Error fetching gallery content:', contentError)
       return NextResponse.json({ error: 'Failed to fetch gallery content' }, { status: 500 })
     }
 
@@ -52,7 +51,6 @@ export async function GET(
       }
     })
   } catch (error) {
-    console.error('Error getting gallery content:', error)
     return NextResponse.json(
       { error: 'Failed to get gallery content' },
       { status: 500 }

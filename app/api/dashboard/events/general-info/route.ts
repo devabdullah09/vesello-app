@@ -61,7 +61,6 @@ export async function GET(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error('Error getting event general info:', error)
     return NextResponse.json({ error: 'Failed to get event general info' }, { status: 500 })
   }
 }
@@ -137,7 +136,6 @@ export async function PUT(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error('Error updating event general info:', error)
     return NextResponse.json({ error: 'Failed to update event general info' }, { status: 500 })
   }
 }

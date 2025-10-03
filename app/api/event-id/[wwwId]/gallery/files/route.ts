@@ -27,7 +27,6 @@ export async function GET(
     });
     
   } catch (error) {
-    console.error('Error fetching gallery files:', error);
     return NextResponse.json(
       { success: false, message: 'Failed to fetch gallery files' },
       { status: 500 }

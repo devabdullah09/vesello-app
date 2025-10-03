@@ -96,15 +96,9 @@ export default function DynamicInvitationReplyPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('DEBUG: Form submitted, saving data to context');
-    
     // Save current state to context
     dispatch({ type: 'SET_MAIN_GUEST', payload: mainGuest });
     dispatch({ type: 'SET_ADDITIONAL_GUESTS', payload: guests });
-    
-    console.log('DEBUG: Data saved to context, navigating to next step');
-    console.log('DEBUG: Main guest:', mainGuest);
-    console.log('DEBUG: Additional guests:', guests);
     
     // Use dynamic navigation to include custom questions
     try {

@@ -49,7 +49,6 @@ export async function GET(request: NextRequest) {
       });
 
     } catch (bunnyError) {
-      console.error('Error fetching from Bunny.net:', bunnyError);
       // Return empty result if Bunny.net is not accessible
       return NextResponse.json({ 
         success: true, 
@@ -59,7 +58,6 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Error fetching images:', error);
     return NextResponse.json({ error: 'Failed to fetch images' }, { status: 500 });
   }
 } 
