@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
 
 // Package mapping - this is what your client mentioned
-const PACKAGE_MAPPING = {
+const PACKAGE_MAPPING: Record<string, { plan: string; features: string[] }> = {
   // Try different possible package names from systeme.io
   'BASIC': { plan: 'basic', features: ['event_info'] },
   'GOLD': { plan: 'gold', features: ['event_info', 'gallery'] },
