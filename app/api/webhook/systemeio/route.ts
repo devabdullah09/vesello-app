@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
+import { randomUUID } from 'crypto'
 
 // Package mapping based on client's requirements
 const PACKAGE_MAPPING = {
@@ -108,9 +109,9 @@ async function createOrUpdateSubscription(customerEmail: string, customerName: s
         return { success: false, error: 'Failed to update user' }
       }
     } else {
-      // For webhook purchases, we'll create a temporary user ID
+      // For webhook purchases, we'll create a proper UUID
       // The user will set up proper auth when they first log in
-      const tempUserId = `webhook-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      const tempUserId = randomUUID()
       
       const { data: newUser, error: createError } = await supabase
         .from('user_profiles')
