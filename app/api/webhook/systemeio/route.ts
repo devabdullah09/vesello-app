@@ -82,58 +82,7 @@ async function createOrUpdateSubscription(customerEmail: string, customerName: s
       return { success: false, error: `Unknown package: ${productName}` }
     }
 
-    // Check if user already exists
-    const { data: existingUser, error: userError } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('email', customerEmail)
-      .single()
-
-    let userId = ''
-
-    if (existingUser) {
-      // Update existing user
-      userId = existingUser.id
-      
-      const { error: updateError } = await supabase
-        .from('user_profiles')
-        .update({
-          display_name: customerName || existingUser.display_name,
-          role: 'organizer', // Make them an organizer since they purchased
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', userId)
-
-      if (updateError) {
-        console.error('Error updating user:', updateError)
-        return { success: false, error: 'Failed to update user' }
-      }
-    } else {
-      // For webhook purchases, we'll create a proper UUID
-      // The user will set up proper auth when they first log in
-      const tempUserId = randomUUID()
-      
-      const { data: newUser, error: createError } = await supabase
-        .from('user_profiles')
-        .insert({
-          id: tempUserId,
-          email: customerEmail,
-          display_name: customerName,
-          role: 'organizer',
-          subscription_status: 'active'
-        })
-        .select()
-        .single()
-
-      if (createError) {
-        console.error('Error creating user:', createError)
-        return { success: false, error: 'Failed to create user' }
-      }
-
-      userId = newUser.id
-    }
-
-    // Create or update systeme.io order record
+    // Create or update systeme.io order record first
     const { error: orderError } = await supabase
       .from('systeme_orders')
       .upsert({
@@ -149,34 +98,21 @@ async function createOrUpdateSubscription(customerEmail: string, customerName: s
 
     if (orderError) {
       console.error('Error creating order record:', orderError)
+      return { success: false, error: 'Failed to create order record' }
     }
 
-    // Create or update subscription
-    const { error: subscriptionError } = await supabase
-      .from('user_subscriptions')
-      .upsert({
-        user_id: userId,
-        systeme_order_id: orderId,
-        plan_name: packageInfo.plan,
-        features: packageInfo.features,
-        status: 'active',
-        created_at: new Date().toISOString()
-      }, {
-        onConflict: 'user_id'
-      })
-
-    if (subscriptionError) {
-      console.error('Error creating subscription:', subscriptionError)
-      return { success: false, error: 'Failed to create subscription' }
-    }
-
-    console.log(`Successfully processed subscription for ${customerEmail}: ${packageInfo.plan}`)
+    // For now, we'll just record the order
+    // The subscription and user will be created when they actually sign up
+    // This avoids all foreign key constraint issues
+    
+    console.log(`Successfully recorded order for ${customerEmail}: ${packageInfo.plan}`)
     
     return { 
       success: true, 
-      userId, 
+      userId: null, 
       plan: packageInfo.plan,
-      features: packageInfo.features
+      features: packageInfo.features,
+      message: 'Order recorded successfully. Subscription will be activated when user signs up.'
     }
 
   } catch (error) {
