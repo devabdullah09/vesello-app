@@ -18,6 +18,22 @@ const PACKAGE_MAPPING = {
     plan: 'premium',
     features: ['event_info', 'gallery', 'rsvp'],
     description: 'Event info page + Gallery + RSVP'
+  },
+  // Support for current systeme.io product names
+  'PL-BASIC': {
+    plan: 'basic',
+    features: ['event_info'],
+    description: 'Event info page only'
+  },
+  'PL-GOLD': {
+    plan: 'gold', 
+    features: ['event_info', 'gallery'],
+    description: 'Event info page + Gallery'
+  },
+  'PL-PREMIUM': {
+    plan: 'premium',
+    features: ['event_info', 'gallery', 'rsvp'],
+    description: 'Event info page + Gallery + RSVP'
   }
 }
 
