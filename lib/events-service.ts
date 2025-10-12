@@ -62,7 +62,8 @@ export const createEvent = async (eventData: CreateEventData, userId: string): P
         date: eventData.eventDate || '',
         time: '12:00 PM',
         location: eventData.venue || '',
-        details: ''
+        details: '',
+        mapUrl: ''
       },
       ceremonyVenueSection: {
         title: 'Ceremony Venue',
@@ -85,8 +86,10 @@ export const createEvent = async (eventData: CreateEventData, userId: string): P
       wishesAndGiftsSection: {
         title: 'Wishes & Gifts',
         description: 'Your presence is the greatest gift, but if you wish to honor us with a gift, here are some suggestions.',
-        registryLinks: [],
-        wishesMessage: 'We are so grateful for your love and support!'
+        wishesMessage: 'We are so grateful for your love and support!',
+        place: 'At the church',
+        when: 'After ceremony next to church',
+        giftSuggestions: 'flowers, bottle of wine, lottery coupon'
       },
       teamSection: {
         title: 'Wedding Team',
@@ -640,7 +643,8 @@ const mapEventFromDB = (dbEvent: any): Event => {
         date: dbEvent.event_date || dbEvent.date || '',
         time: '12:00 PM',
         location: dbEvent.venue || '',
-        details: ''
+        details: '',
+        mapUrl: ''
       },
       ceremonyVenueSection: {
         title: 'Ceremony Venue',
@@ -663,8 +667,10 @@ const mapEventFromDB = (dbEvent: any): Event => {
       wishesAndGiftsSection: {
         title: 'Wishes & Gifts',
         description: 'Your presence is the greatest gift, but if you wish to honor us with a gift, here are some suggestions.',
-        registryLinks: [],
-        wishesMessage: 'We are so grateful for your love and support!'
+        wishesMessage: 'We are so grateful for your love and support!',
+        place: 'At the church',
+        when: 'After ceremony next to church',
+        giftSuggestions: 'flowers, bottle of wine, lottery coupon'
       },
       teamSection: {
         title: 'Wedding Team',

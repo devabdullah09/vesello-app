@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import EventHeader from '@/components/layout/EventHeader';
 import { fetchGalleryContent, GalleryContent, defaultGalleryContent } from '@/lib/gallery-content';
+import { useEvent } from '@/components/event-context';
 
 function isAdmin() {
   if (typeof window === 'undefined') return false;
@@ -14,6 +15,7 @@ function isAdmin() {
 export default function DynamicGalleryPage() {
   const params = useParams();
   const wwwId = params?.wwwId as string;
+  const { setCoupleNames } = useEvent();
   const [visible, setVisible] = useState(true);
   const [admin, setAdmin] = useState(false);
   const [eventData, setEventData] = useState<{coupleNames: string, galleryEnabled: boolean, rsvpEnabled: boolean} | null>(null);
@@ -41,6 +43,9 @@ export default function DynamicGalleryPage() {
           galleryEnabled: result.eventData.galleryEnabled,
           rsvpEnabled: result.eventData.rsvpEnabled
         });
+        
+        // Set couple names in context for footer
+        setCoupleNames(result.eventData.coupleNames);
         
         // Set gallery content (custom or default)
         if (result.data) {
@@ -128,9 +133,11 @@ export default function DynamicGalleryPage() {
             </div>
 
             {/* Count Me In Button */}
-            <button className="bg-black text-white font-bold rounded px-8 py-2 shadow hover:bg-gray-800 transition" style={{ fontFamily: 'Montserrat', fontWeight: 700, fontSize: '1rem', minWidth: 180 }}>
-              {galleryContent.countMeInButtonText}
-            </button>
+            <Link href={`/event-id/${wwwId}#team-section`}>
+              <button className="bg-black text-white font-bold rounded px-8 py-2 shadow hover:bg-gray-800 transition" style={{ fontFamily: 'Montserrat', fontWeight: 700, fontSize: '1rem', minWidth: 180 }}>
+                {galleryContent.countMeInButtonText}
+              </button>
+            </Link>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-full min-h-[400px]">

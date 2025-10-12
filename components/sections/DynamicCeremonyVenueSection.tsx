@@ -82,16 +82,34 @@ export default function DynamicCeremonyVenueSection({
               </div>
             </div>
           )}
-          <div className="flex items-center text-[#E5B574] cursor-pointer hover:text-[#D59C58] transition-colors">
-            <MapPin size={16} className="mr-2" />
-            <span style={{ 
-              fontFamily: 'Montserrat', 
-              fontWeight: 500, 
-              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' 
-            }}>
-              View on Map
-            </span>
-          </div>
+          {mapUrl ? (
+            <a 
+              href={mapUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center text-[#E5B574] cursor-pointer hover:text-[#D59C58] transition-colors"
+            >
+              <MapPin size={16} className="mr-2" />
+              <span style={{ 
+                fontFamily: 'Montserrat', 
+                fontWeight: 500, 
+                fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' 
+              }}>
+                View on Map
+              </span>
+            </a>
+          ) : (
+            <div className="flex items-center text-[#E5B574] cursor-pointer hover:text-[#D59C58] transition-colors">
+              <MapPin size={16} className="mr-2" />
+              <span style={{ 
+                fontFamily: 'Montserrat', 
+                fontWeight: 500, 
+                fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' 
+              }}>
+                View on Map
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </CollapsibleSection>

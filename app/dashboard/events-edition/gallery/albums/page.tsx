@@ -49,6 +49,7 @@ export default function AlbumsManagementPage() {
   const [albumFiles, setAlbumFiles] = useState<AlbumFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
@@ -121,21 +122,46 @@ export default function AlbumsManagementPage() {
     
     try {
       setLoading(true);
-      const response = await fetch(`/api/event-id/${wwwId}/gallery/files?album=${albumId}&type=photos`);
       
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success) {
-          setAlbumFiles(result.files.map((file: any) => ({
+      // Fetch both photos and videos
+      const [photosResponse, videosResponse] = await Promise.all([
+        fetch(`/api/event-id/${wwwId}/gallery/files?album=${albumId}&type=photos`),
+        fetch(`/api/event-id/${wwwId}/gallery/files?album=${albumId}&type=videos`)
+      ]);
+      
+      const allFiles: AlbumFile[] = [];
+      
+      // Process photos
+      if (photosResponse.ok) {
+        const photosResult = await photosResponse.json();
+        if (photosResult.success) {
+          const photoFiles = photosResult.files.map((file: any) => ({
             name: file.name,
             url: file.url || file.cdnUrl,
             type: 'photo' as const,
             uploadedAt: file.uploadedAt
-          })));
+          }));
+          allFiles.push(...photoFiles);
         }
       }
+      
+      // Process videos
+      if (videosResponse.ok) {
+        const videosResult = await videosResponse.json();
+        if (videosResult.success) {
+          const videoFiles = videosResult.files.map((file: any) => ({
+            name: file.name,
+            url: file.url || file.cdnUrl,
+            type: 'video' as const,
+            uploadedAt: file.uploadedAt
+          }));
+          allFiles.push(...videoFiles);
+        }
+      }
+      
+      setAlbumFiles(allFiles);
     } catch (err) {
-      // Error fetching album files
+      console.error('Error fetching album files:', err);
     } finally {
       setLoading(false);
     }
@@ -165,24 +191,54 @@ export default function AlbumsManagementPage() {
 
     setUploading(true);
     try {
-      const formData = new FormData();
-      Array.from(files).forEach(file => {
-        formData.append('files', file);
-      });
-      formData.append('album', selectedAlbum);
-      formData.append('type', 'photos');
+      const filesArray = Array.from(files);
+      
+      // Separate photos and videos
+      const photoFiles = filesArray.filter(file => file.type.startsWith('image/'));
+      const videoFiles = filesArray.filter(file => file.type.startsWith('video/'));
+      
+      // Upload photos if any
+      if (photoFiles.length > 0) {
+        const photoFormData = new FormData();
+        photoFiles.forEach(file => {
+          photoFormData.append('files', file);
+        });
+        photoFormData.append('albumType', selectedAlbum);
+        photoFormData.append('mediaType', 'photos');
 
-      const response = await fetch(`/api/event-id/${selectedEvent.wwwId}/gallery/upload`, {
-        method: 'POST',
-        body: formData,
-      });
+        const photoResponse = await fetch(`/api/event-id/${selectedEvent.wwwId}/gallery/upload`, {
+          method: 'POST',
+          body: photoFormData,
+        });
 
-      if (response.ok) {
-        await fetchAlbumFiles(); // Refresh the file list
-        alert('Files uploaded successfully!');
-      } else {
-        throw new Error('Upload failed');
+        if (!photoResponse.ok) {
+          throw new Error('Photo upload failed');
+        }
       }
+      
+      // Upload videos if any
+      if (videoFiles.length > 0) {
+        const videoFormData = new FormData();
+        videoFiles.forEach(file => {
+          videoFormData.append('files', file);
+        });
+        videoFormData.append('albumType', selectedAlbum);
+        videoFormData.append('mediaType', 'videos');
+
+        const videoResponse = await fetch(`/api/event-id/${selectedEvent.wwwId}/gallery/upload`, {
+          method: 'POST',
+          body: videoFormData,
+        });
+
+        if (!videoResponse.ok) {
+          throw new Error('Video upload failed');
+        }
+      }
+
+      await fetchAlbumFiles(); // Refresh the file list
+      
+      const uploadedCount = photoFiles.length + videoFiles.length;
+      alert(`${uploadedCount} file(s) uploaded successfully!`);
     } catch (err) {
       alert('Upload failed. Please try again.');
     } finally {
@@ -216,6 +272,52 @@ export default function AlbumsManagementPage() {
       }
     } catch (err) {
       alert('Delete failed. Please try again.');
+    }
+  };
+
+  // Download all files functionality
+  const handleDownloadAll = async () => {
+    if (albumFiles.length === 0) {
+      alert('No files to download');
+      return;
+    }
+
+    setDownloading(true);
+    try {
+      // Download each file
+      for (let i = 0; i < albumFiles.length; i++) {
+        const file = albumFiles[i];
+        const response = await fetch(file.url);
+        const blob = await response.blob();
+        
+        // Create download link
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        
+        // Extract filename from URL or create one
+        const urlParts = file.url.split('/');
+        const filename = urlParts[urlParts.length - 1] || `${file.name}_${i + 1}.${file.type === 'photo' ? 'jpg' : 'mp4'}`;
+        link.download = filename;
+        
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up
+        window.URL.revokeObjectURL(downloadUrl);
+        
+        // Small delay between downloads
+        if (i < albumFiles.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+    } catch (error) {
+      console.error('Error downloading files:', error);
+      alert('Error downloading files. Please try again.');
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -414,13 +516,25 @@ export default function AlbumsManagementPage() {
         >
           Back
         </button>
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-          className="bg-[#E5B574] text-white px-6 py-2 rounded font-semibold hover:bg-[#D59C58] transition-colors disabled:opacity-50"
-        >
-          {uploading ? 'Uploading...' : 'Upload Photos'}
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="bg-[#E5B574] text-white px-6 py-2 rounded font-semibold hover:bg-[#D59C58] transition-colors disabled:opacity-50"
+          >
+            {uploading ? 'Uploading...' : 'Upload Photos & Videos'}
+          </button>
+          <button
+            onClick={handleDownloadAll}
+            disabled={downloading || albumFiles.length === 0}
+            className="bg-[#C18037] text-white px-6 py-2 rounded font-semibold hover:bg-[#A66B2A] transition-colors disabled:opacity-50 flex items-center gap-2"
+          >
+            {downloading ? 'Downloading...' : 'Download All'}
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
+            </svg>
+          </button>
+        </div>
       </div>
       
       <h1 className="text-3xl font-bold text-black mb-4">ALBUM MANAGEMENT</h1>
@@ -432,7 +546,7 @@ export default function AlbumsManagementPage() {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,video/*"
         multiple
         className="hidden"
         onChange={handleFileUpload}
@@ -442,21 +556,21 @@ export default function AlbumsManagementPage() {
       <div className="bg-white rounded-lg shadow-sm p-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold text-black">
-            Album Photos ({albumFiles.length})
+            Album Photos & Videos ({albumFiles.length})
           </h2>
           <div className="text-sm text-gray-500">
-            Drag and drop to reorder photos
+            Drag and drop to reorder photos & videos
           </div>
         </div>
 
         {albumFiles.length === 0 ? (
           <div className="text-center py-16">
-            <div className="text-gray-500 text-lg mb-4">No photos in this album yet</div>
+            <div className="text-gray-500 text-lg mb-4">No photos or videos in this album yet</div>
             <button
               onClick={() => fileInputRef.current?.click()}
               className="bg-[#E5B574] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#D59C58] transition-colors"
             >
-              Upload First Photo
+              Upload First Photo or Video
             </button>
           </div>
         ) : (

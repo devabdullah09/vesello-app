@@ -101,7 +101,10 @@ export const uploadGalleryFile = async (
 ): Promise<{ downloadURL: string; path: string }> => {
   // Validate file
   const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/mov'];
-  validateFile(file, allowedTypes, 50); // 50MB max size
+  // Increased limit to 200MB for videos and high-resolution photos
+  const isVideo = file.type.startsWith('video/');
+  const maxSizeMB = isVideo ? 200 : 50;
+  validateFile(file, allowedTypes, maxSizeMB);
   
   // Generate path
   const path = generateGalleryPath(eventId, file.name);

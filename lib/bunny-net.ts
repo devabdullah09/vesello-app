@@ -48,7 +48,8 @@ export class BunnyNetService {
    * Validate file before upload
    */
   private validateFile(file: File, mediaType: 'photos' | 'videos'): void {
-    const maxSize = mediaType === 'photos' ? 10 * 1024 * 1024 : 100 * 1024 * 1024; // 10MB for photos, 100MB for videos
+    // Increased limits for high-resolution media: 50MB for photos, 200MB for videos
+    const maxSize = mediaType === 'photos' ? 50 * 1024 * 1024 : 200 * 1024 * 1024; // 50MB for photos, 200MB for videos
     
     if (file.size > maxSize) {
       throw new Error(`File ${file.name} is too large. Maximum size: ${maxSize / (1024 * 1024)}MB`);

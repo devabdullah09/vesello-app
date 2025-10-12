@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { useEvent } from "@/components/event-context";
 import TimelineSection from "@/components/sections/TimelineSection";
 import DynamicTimelineSection from "@/components/sections/DynamicTimelineSection";
 import CeremonySection from "@/components/sections/CeremonySection";
@@ -83,6 +84,7 @@ interface EventData {
       time: string;
       location: string;
       details?: string;
+      mapUrl?: string;
     };
     ceremonyVenueSection: {
       title: string;
@@ -150,13 +152,10 @@ interface EventData {
     wishesAndGiftsSection?: {
       title: string;
       description?: string;
-      registryLinks: Array<{
-        id: string;
-        storeName: string;
-        url: string;
-        description?: string;
-      }>;
       wishesMessage?: string;
+      place?: string;
+      when?: string;
+      giftSuggestions?: string;
     };
     seatingChartSection?: {
       title: string;
@@ -174,6 +173,7 @@ interface EventData {
 export default function PublicEventPage() {
   const params = useParams();
   const wwwId = params.wwwId as string;
+  const { setCoupleNames } = useEvent();
   const [eventData, setEventData] = useState<EventData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -253,14 +253,44 @@ export default function PublicEventPage() {
   // Handle smooth scrolling to team section when coming from gallery
   useEffect(() => {
     if (window.location.hash === '#team-section') {
-      setTimeout(() => {
+      let hasScrolled = false;
+      
+      const scrollToTeamSection = () => {
+        if (hasScrolled) return; // Prevent multiple scrolls
+        
         const element = document.getElementById('team-section');
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (element && element.offsetTop > 0) {
+          hasScrolled = true;
+          
+          // Scroll to the element with some offset from the header
+          const headerOffset = 100;
+          const elementPosition = element.offsetTop;
+          const offsetPosition = elementPosition - headerOffset;
+
+          // Use direct scroll without smooth behavior to prevent conflicts
+          window.scrollTo(0, offsetPosition);
+
+          // Clear the hash immediately to prevent browser default behavior
+          window.history.replaceState(null, '', window.location.pathname);
+          
+          // Force scroll position again after a short delay to ensure it stays
+          setTimeout(() => {
+            window.scrollTo(0, offsetPosition);
+          }, 50);
         }
-      }, 100);
+      };
+
+      // Try scrolling when eventData is loaded
+      if (eventData) {
+        scrollToTeamSection();
+      }
+
+      // Fallback scroll after a delay
+      const timeoutId = setTimeout(scrollToTeamSection, 1000);
+
+      return () => clearTimeout(timeoutId);
     }
-  }, []);
+  }, [eventData]); // Only depend on eventData
 
   const fetchEventData = async () => {
     try {
@@ -279,6 +309,10 @@ export default function PublicEventPage() {
       const result = await response.json();
       
       setEventData(result.data);
+      
+      // Set couple names in context for footer
+      const coupleNames = result.data.sectionContent?.heroSection?.coupleNames || result.data.coupleNames;
+      setCoupleNames(coupleNames);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load event');
     } finally {
@@ -599,6 +633,7 @@ export default function PublicEventPage() {
             time={eventData.sectionContent?.ceremonySection?.time || '12:00 PM'}
             location={eventData.sectionContent?.ceremonySection?.location || eventData.venue || 'Wedding Venue'}
             details={eventData.sectionContent?.ceremonySection?.details}
+            mapUrl={eventData.sectionContent?.ceremonySection?.mapUrl}
           />
         </EditableSection>
       )}
@@ -648,8 +683,10 @@ export default function PublicEventPage() {
           <WishesAndGiftsSection 
             title={eventData.sectionContent?.wishesAndGiftsSection?.title || 'Wishes & Gifts'}
             description={eventData.sectionContent?.wishesAndGiftsSection?.description || 'Your presence is the greatest gift, but if you wish to honor us with a gift, here are some suggestions.'}
-            registryLinks={eventData.sectionContent?.wishesAndGiftsSection?.registryLinks || []}
             wishesMessage={eventData.sectionContent?.wishesAndGiftsSection?.wishesMessage || 'We are so grateful for your love and support!'}
+            place={eventData.sectionContent?.wishesAndGiftsSection?.place || 'At the church'}
+            when={eventData.sectionContent?.wishesAndGiftsSection?.when || 'After ceremony next to church'}
+            giftSuggestions={eventData.sectionContent?.wishesAndGiftsSection?.giftSuggestions || 'flowers, bottle of wine, lottery coupon'}
           />
         </EditableSection>
       )}
@@ -658,7 +695,7 @@ export default function PublicEventPage() {
           onEdit={() => setTeamEditorOpen(true)}
           sectionName="Team Section"
         >
-          <div id="team-section">
+          <div id="team-section" className="pt-20">
             <DynamicTeamSection 
               title={eventData.sectionContent?.teamSection?.title || 'Team'}
               description={eventData.sectionContent?.teamSection?.description}
@@ -774,7 +811,14 @@ export default function PublicEventPage() {
       <WishesAndGiftsSectionEditor
         isOpen={wishesAndGiftsEditorOpen}
         onClose={() => setWishesAndGiftsEditorOpen(false)}
-        data={eventData?.sectionContent?.wishesAndGiftsSection || { title: 'Wishes & Gifts', description: '', registryLinks: [] }}
+        data={eventData?.sectionContent?.wishesAndGiftsSection || { 
+          title: 'Wishes & Gifts', 
+          description: 'Your presence is the greatest gift, but if you wish to honor us with a gift, here are some suggestions.',
+          wishesMessage: 'We are so grateful for your love and support!',
+          place: 'At the church',
+          when: 'After ceremony next to church',
+          giftSuggestions: 'flowers, bottle of wine, lottery coupon'
+        }}
         onSave={saveWishesAndGiftsSection}
       />
 

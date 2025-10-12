@@ -29,7 +29,13 @@ export default function EventPartyDayGallery() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadTotal, setUploadTotal] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [downloading, setDownloading] = useState(false);
+  
+  // Enhanced upload progress tracking
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [totalImages, setTotalImages] = useState(0);
+  const [totalVideos, setTotalVideos] = useState(0);
+  const [currentUploadingFile, setCurrentUploadingFile] = useState<string>('');
+
 
   // Load existing images and event data on component mount
   useEffect(() => {
@@ -82,61 +88,22 @@ export default function EventPartyDayGallery() {
     }
   };
 
-  const handleDownloadAll = async () => {
-    setDownloading(true);
-    try {
-      // Get all media URLs based on current tab
-      const mediaUrls = tab === 'photos' ? images : videos.map(v => v.src);
-      
-      if (mediaUrls.length === 0) {
-        alert('No media to download');
-        return;
-      }
-
-      // Download each file
-      for (let i = 0; i < mediaUrls.length; i++) {
-        const url = mediaUrls[i];
-        const response = await fetch(url);
-        const blob = await response.blob();
-        
-        // Create download link
-        const downloadUrl = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        
-        // Extract filename from URL or create one
-        const urlParts = url.split('/');
-        const filename = urlParts[urlParts.length - 1] || `media_${i + 1}.${tab === 'photos' ? 'jpg' : 'mp4'}`;
-        link.download = filename;
-        
-        // Trigger download
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        // Clean up
-        window.URL.revokeObjectURL(downloadUrl);
-        
-        // Small delay between downloads
-        if (i < mediaUrls.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
-      }
-    } catch (error) {
-      console.error('Error downloading files:', error);
-      alert('Error downloading files. Please try again.');
-    } finally {
-      setDownloading(false);
-    }
-  };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
     
-    setUploadTotal(files.length);
+    const filesArray = Array.from(files);
+    setSelectedFiles(filesArray);
+    setUploadTotal(filesArray.length);
     setUploadProgress(0);
     setUploading(true);
+
+    // Calculate file type breakdown
+    const imageFiles = filesArray.filter(file => file.type.startsWith('image/'));
+    const videoFiles = filesArray.filter(file => file.type.startsWith('video/'));
+    setTotalImages(imageFiles.length);
+    setTotalVideos(videoFiles.length);
 
     try {
       // Create FormData for upload
@@ -145,8 +112,13 @@ export default function EventPartyDayGallery() {
       formData.append('mediaType', tab);
       
       // Add all files to FormData
-      Array.from(files).forEach(file => {
+      filesArray.forEach((file, index) => {
         formData.append('files', file);
+        
+        // Update current uploading file
+        if (index === 0) {
+          setCurrentUploadingFile(file.name);
+        }
       });
 
       // Upload files via API endpoint
@@ -163,16 +135,25 @@ export default function EventPartyDayGallery() {
       const result = await response.json();
       console.log('Upload successful:', result);
       
+      // Update progress to show completion
+      setUploadProgress(filesArray.length);
+      setCurrentUploadingFile('');
+      
       // Reload gallery files after successful upload
       await loadGalleryFiles();
       
       setTimeout(() => {
         setUploading(false);
         setShowSuccess(true);
+        // Reset progress tracking
+        setSelectedFiles([]);
+        setTotalImages(0);
+        setTotalVideos(0);
       }, 500);
     } catch (error) {
       console.error('Upload error:', error);
       setUploading(false);
+      setCurrentUploadingFile('');
       alert('Upload failed. Please try again.');
     }
   };
@@ -186,7 +167,15 @@ export default function EventPartyDayGallery() {
         currentPage="gallery"
       />
       {uploading && (
-        <UploadingOverlay current={uploadProgress} total={uploadTotal} />
+        <UploadingOverlay 
+          current={uploadProgress} 
+          total={uploadTotal} 
+          mediaType={tab}
+          uploadedCount={uploadProgress}
+          totalImages={totalImages}
+          totalVideos={totalVideos}
+          currentFileName={currentUploadingFile}
+        />
       )}
       {showSuccess && (
         <UploadSuccessOverlay
@@ -211,15 +200,6 @@ export default function EventPartyDayGallery() {
                 Party Day
               </div>
               <div className="flex flex-col items-end gap-2">
-                <button
-                  onClick={handleDownloadAll}
-                  disabled={downloading || (tab === 'photos' ? images.length === 0 : videos.length === 0)}
-                  className="flex items-center text-sm text-[#C18037] hover:text-[#E5B574] disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
-                  style={{ fontFamily: 'Montserrat', fontWeight: 500 }}
-                >
-                  {downloading ? 'Downloading...' : 'DOWNLOAD ALL'}
-                  {downloadIcon}
-                </button>
                 <div className="text-base md:text-lg font-semibold text-[#08080A] flex items-center" style={{ fontFamily: 'Montserrat', fontWeight: 500 }}>
                   UPLOAD PHOTOS/VIDEOS {downloadIcon}
                 </div>

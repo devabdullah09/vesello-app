@@ -51,6 +51,7 @@ export interface Event {
       time: string;
       location: string;
       details?: string;
+      mapUrl?: string;
     };
     ceremonyVenueSection: {
       title: string;
@@ -86,13 +87,10 @@ export interface Event {
     wishesAndGiftsSection: {
       title: string;
       description?: string;
-      registryLinks: Array<{
-        id: string;
-        storeName: string;
-        url: string;
-        description?: string;
-      }>;
       wishesMessage?: string;
+      place?: string;
+      when?: string;
+      giftSuggestions?: string;
     };
     teamSection: {
       title: string;
@@ -103,6 +101,13 @@ export interface Event {
         role: string;
         photo?: string;
         bio?: string;
+        socialLinks?: {
+          facebook?: string;
+          instagram?: string;
+          twitter?: string;
+          tiktok?: string;
+          website?: string;
+        };
       }>;
     };
     accommodationSection: {

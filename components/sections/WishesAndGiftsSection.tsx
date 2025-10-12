@@ -1,28 +1,24 @@
 'use client';
 
-import { useState } from 'react';
-import Image from 'next/image';
 import CollapsibleSection from '../CollapsibleSection';
 
-interface RegistryLink {
-  id: string;
-  storeName: string;
-  url: string;
-  description?: string;
-}
 
 interface WishesAndGiftsSectionProps {
   title?: string;
   description?: string;
-  registryLinks?: RegistryLink[];
   wishesMessage?: string;
+  place?: string;
+  when?: string;
+  giftSuggestions?: string;
 }
 
 export default function WishesAndGiftsSection({ 
   title = 'Wishes And Gifts',
   description = 'Your presence is the greatest gift, but if you wish to honor us with a gift, here are some suggestions.',
-  registryLinks = [],
-  wishesMessage = 'We are so grateful for your love and support!'
+  wishesMessage = 'We are so grateful for your love and support!',
+  place = 'At the church',
+  when = 'After ceremony next to church',
+  giftSuggestions = 'flowers, bottle of wine, lottery coupon'
 }: WishesAndGiftsSectionProps) {
   return (
     <CollapsibleSection title={title}>
@@ -58,104 +54,81 @@ export default function WishesAndGiftsSection({
           </p>
         </div>
       )}
-      {/* Two Columns */}
-      <div className="flex flex-col md:flex-row justify-center items-start gap-6 sm:gap-8 md:gap-10 mb-8 sm:mb-12 md:mb-16 w-full max-w-4xl mx-auto px-4 sm:px-6">
-        {/* Left Column */}
-        <div className="flex-1 text-center md:text-right pr-0 md:pr-8">
-          <div className="font-bold text-black mb-3 uppercase" 
-               style={{ 
-                 fontFamily: 'Montserrat',
-                 fontSize: 'clamp(1rem, 3vw, 1.25rem)'
-               }}>
-            At The Church
-          </div>
-          <ul className="space-y-1 text-black" 
-              style={{ 
-                fontFamily: 'Montserrat',
-                fontSize: 'clamp(0.75rem, 2.5vw, 0.875rem)'
-              }}>
-            <li>Just After The Ceremony</li>
-            <li>Upon Entering The</li>
-            <li>Wedding Hall</li>
-            <li>After Dinner</li>
-            <li>During Cocktail Hour</li>
-            <li>While Waiting For The</li>
-            <li>Couple's Entrance</li>
-            <li>Near The Welcome Board</li>
-            <li>At The Table Via QR Code</li>
-          </ul>
-        </div>
-        {/* Divider */}
-        <div className="hidden md:flex flex-col justify-center items-center px-4">
-          <div className="w-px h-64 bg-black opacity-40" />
-        </div>
-        {/* Right Column */}
-        <div className="flex-1 text-center md:text-left pl-0 md:pl-8">
-          <div className="font-bold text-black mb-3 uppercase" 
-               style={{ 
-                 fontFamily: 'Montserrat',
-                 fontSize: 'clamp(1rem, 3vw, 1.25rem)'
-               }}>
-            At The Wedding
-          </div>
-          <ul className="space-y-1 text-black" 
-              style={{ 
-                fontFamily: 'Montserrat',
-                fontSize: 'clamp(0.75rem, 2.5vw, 0.875rem)'
-              }}>
-            <li>After The Church Ceremony</li>
-            <li>At The Church Exit</li>
-            <li>Outside The Chapel</li>
-            <li>Before Leaving For The</li>
-            <li>Reception Hall</li>
-            <li>While Guests Gather</li>
-            <li>Outside The Church</li>
-            <li>Displayed Near The Church</li>
-            <li>Welcome Sign</li>
-          </ul>
-        </div>
-      </div>
-      {/* Registry Links Section */}
-      {registryLinks.length > 0 && (
-        <div className="text-center mt-6 sm:mt-8 md:mt-10">
-          <div className="font-bold mb-4" 
-               style={{ 
-                 fontFamily: 'Montserrat', 
-                 color: '#E5B574',
-                 fontSize: 'clamp(1.25rem, 4vw, 1.5rem)'
-               }}>
-            Gift Registry
-          </div>
-          <div className="space-y-3">
-            {registryLinks.map((link) => (
-              <div key={link.id} className="mb-3">
-                <a 
-                  href={link.url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-block bg-[#E5B574] text-white px-6 py-3 rounded-lg hover:bg-[#D59C58] transition-colors"
+
+      {/* Polish Wedding Information */}
+      <div className="flex flex-col items-center gap-6 sm:gap-8 md:gap-10 mb-8 sm:mb-12 md:mb-16 w-full max-w-4xl mx-auto px-4 sm:px-6">
+        
+        {/* Place Information */}
+        <div className="w-full text-center">
+          <div className="flex items-center justify-center mb-3">
+            <div className="flex-1 h-px bg-black opacity-20"></div>
+            <span className="px-4 font-bold text-black uppercase" 
                   style={{ 
                     fontFamily: 'Montserrat',
-                    fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
-                    fontWeight: 500
-                  }}
-                >
-                  {link.storeName}
-                </a>
-                {link.description && (
-                  <p className="mt-2 text-gray-600" 
-                     style={{ 
-                       fontFamily: 'Montserrat',
-                       fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
-                     }}>
-                    {link.description}
-                  </p>
-                )}
-              </div>
-            ))}
+                    fontSize: 'clamp(1rem, 3vw, 1.25rem)'
+                  }}>
+              Place
+            </span>
+            <div className="flex-1 h-px bg-black opacity-20"></div>
+          </div>
+          <div className="text-black" 
+               style={{ 
+                 fontFamily: 'Montserrat',
+                 fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
+                 lineHeight: 1.5
+               }}>
+            {place}
           </div>
         </div>
-      )}
+
+        {/* When Information */}
+        <div className="w-full text-center">
+          <div className="flex items-center justify-center mb-3">
+            <div className="flex-1 h-px bg-black opacity-20"></div>
+            <span className="px-4 font-bold text-black uppercase" 
+                  style={{ 
+                    fontFamily: 'Montserrat',
+                    fontSize: 'clamp(1rem, 3vw, 1.25rem)'
+                  }}>
+              When
+            </span>
+            <div className="flex-1 h-px bg-black opacity-20"></div>
+          </div>
+          <div className="text-black" 
+               style={{ 
+                 fontFamily: 'Montserrat',
+                 fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
+                 lineHeight: 1.5
+               }}>
+            {when}
+          </div>
+        </div>
+
+        {/* Gift Suggestions */}
+        {giftSuggestions && (
+          <div className="w-full text-center">
+            <div className="flex items-center justify-center mb-3">
+              <div className="flex-1 h-px bg-black opacity-20"></div>
+              <span className="px-4 font-bold text-black uppercase" 
+                    style={{ 
+                      fontFamily: 'Montserrat',
+                      fontSize: 'clamp(1rem, 3vw, 1.25rem)'
+                    }}>
+                Gifts preferences
+              </span>
+              <div className="flex-1 h-px bg-black opacity-20"></div>
+            </div>
+            <div className="text-black" 
+                 style={{ 
+                   fontFamily: 'Montserrat',
+                   fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
+                   lineHeight: 1.5
+                 }}>
+              {giftSuggestions}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Wishes Message */}
       {wishesMessage && (

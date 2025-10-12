@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import EventHeader from "@/components/layout/EventHeader";
+import { useEvent } from "@/components/event-context";
 
 interface EventData {
   id: string;

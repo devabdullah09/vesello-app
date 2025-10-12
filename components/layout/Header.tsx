@@ -4,6 +4,8 @@ import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Menu, X } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { signOutUser } from '@/lib/supabase-auth'
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -78,8 +80,7 @@ const Header = () => {
 }
 
 export const DashboardHeader = () => {
-  const router = require('next/navigation').useRouter();
-  const { signOutUser } = require('@/lib/supabase-auth');
+  const router = useRouter();
   
   const handleLogout = async () => {
     try {

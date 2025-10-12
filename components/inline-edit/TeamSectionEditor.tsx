@@ -10,6 +10,13 @@ interface TeamMember {
   role: string;
   photo?: string;
   bio?: string;
+  socialLinks?: {
+    facebook?: string;
+    instagram?: string;
+    twitter?: string;
+    tiktok?: string;
+    website?: string;
+  };
 }
 
 interface TeamSectionData {
@@ -71,7 +78,14 @@ export default function TeamSectionEditor({
       name: 'New Team Member',
       role: 'Wedding Party',
       photo: '/images/team-placeholder.jpeg',
-      bio: ''
+      bio: '',
+      socialLinks: {
+        facebook: '',
+        instagram: '',
+        twitter: '',
+        tiktok: '',
+        website: ''
+      }
     };
 
     setFormData(prev => ({
@@ -92,6 +106,23 @@ export default function TeamSectionEditor({
       ...prev,
       members: prev.members.map(m =>
         m.id === memberId ? { ...m, [field]: value } : m
+      )
+    }));
+  };
+
+  const updateSocialLink = (memberId: string, platform: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      members: prev.members.map(m =>
+        m.id === memberId 
+          ? { 
+              ...m, 
+              socialLinks: { 
+                ...m.socialLinks, 
+                [platform]: value 
+              } 
+            } 
+          : m
       )
     }));
   };
@@ -197,6 +228,63 @@ export default function TeamSectionEditor({
                   className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                   placeholder="Brief bio..."
                 />
+              </div>
+
+              {/* Social Links */}
+              <div className="space-y-2">
+                <label className="block text-xs text-gray-600 mb-1">Social Links (Optional)</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Facebook</label>
+                    <input
+                      type="url"
+                      value={member.socialLinks?.facebook || ''}
+                      onChange={(e) => updateSocialLink(member.id, 'facebook', e.target.value)}
+                      className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                      placeholder="https://facebook.com/..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Instagram</label>
+                    <input
+                      type="url"
+                      value={member.socialLinks?.instagram || ''}
+                      onChange={(e) => updateSocialLink(member.id, 'instagram', e.target.value)}
+                      className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                      placeholder="https://instagram.com/..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Twitter</label>
+                    <input
+                      type="url"
+                      value={member.socialLinks?.twitter || ''}
+                      onChange={(e) => updateSocialLink(member.id, 'twitter', e.target.value)}
+                      className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                      placeholder="https://twitter.com/..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">TikTok</label>
+                    <input
+                      type="url"
+                      value={member.socialLinks?.tiktok || ''}
+                      onChange={(e) => updateSocialLink(member.id, 'tiktok', e.target.value)}
+                      className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                      placeholder="https://tiktok.com/@..."
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-xs text-gray-500 mb-1">Website</label>
+                    <input
+                      type="url"
+                      value={member.socialLinks?.website || ''}
+                      onChange={(e) => updateSocialLink(member.id, 'website', e.target.value)}
+                      className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                      placeholder="https://website.com"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           ))}

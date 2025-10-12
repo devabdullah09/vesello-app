@@ -5,6 +5,8 @@ import UploadingOverlay from '@/components/gallery/UploadingOverlay';
 import UploadSuccessOverlay from '@/components/gallery/UploadSuccessOverlay';
 import { useRouter } from 'next/navigation';
 import { uploadFiles, fetchGalleryFiles, getInitialImages, getInitialVideos, type GalleryFile, getCdnUrl } from '@/lib/gallery';
+import { useAuth } from '@/components/supabase-auth-provider';
+import { hasRole } from '@/lib/supabase-auth';
 
 const downloadIcon = (
   <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="inline ml-1 text-[#C18037]">
@@ -13,6 +15,7 @@ const downloadIcon = (
 );
 
 export default function PartyDayGallery() {
+  const { userProfile, loading: authLoading } = useAuth();
   const [tab, setTab] = useState<'photos' | 'videos'>('photos');
   const [images, setImages] = useState<string[]>([]);
   const [videos, setVideos] = useState<{ src: string; thumb: string }[]>([]);
@@ -24,6 +27,16 @@ export default function PartyDayGallery() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadTotal, setUploadTotal] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
+  
+  // Enhanced upload progress tracking
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [totalImages, setTotalImages] = useState(0);
+  const [totalVideos, setTotalVideos] = useState(0);
+  const [currentUploadingFile, setCurrentUploadingFile] = useState<string>('');
+  
+  // Check if user has download permissions (organizer or superadmin)
+  const canDownload = hasRole(userProfile, 'organizer');
+  
   const router = useRouter();
 
   // Load existing images on component mount
@@ -64,16 +77,25 @@ export default function PartyDayGallery() {
     const files = e.target.files;
     if (!files) return;
     
-    setUploadTotal(files.length);
+    const filesArray = Array.from(files);
+    setSelectedFiles(filesArray);
+    setUploadTotal(filesArray.length);
     setUploadProgress(0);
     setUploading(true);
+
+    // Calculate file type breakdown
+    const imageFiles = filesArray.filter(file => file.type.startsWith('image/'));
+    const videoFiles = filesArray.filter(file => file.type.startsWith('video/'));
+    setTotalImages(imageFiles.length);
+    setTotalVideos(videoFiles.length);
 
     try {
       // Upload files to server (which now uploads to Bunny.net)
       const response = await uploadFiles(files, 'party-day', tab);
       
       if (response.success) {
-        setUploadProgress(files.length);
+        setUploadProgress(filesArray.length);
+        setCurrentUploadingFile('');
         
         // Reload gallery files after successful upload
         await loadGalleryFiles();
@@ -81,6 +103,10 @@ export default function PartyDayGallery() {
         setTimeout(() => {
           setUploading(false);
           setShowSuccess(true);
+          // Reset progress tracking
+          setSelectedFiles([]);
+          setTotalImages(0);
+          setTotalVideos(0);
         }, 500);
       } else {
         throw new Error('Upload failed');
@@ -88,6 +114,7 @@ export default function PartyDayGallery() {
     } catch (error) {
       console.error('Upload error:', error);
       setUploading(false);
+      setCurrentUploadingFile('');
       alert('Upload failed. Please try again.');
     }
   };
@@ -95,7 +122,15 @@ export default function PartyDayGallery() {
   return (
     <>
       {uploading && (
-        <UploadingOverlay current={uploadProgress} total={uploadTotal} />
+        <UploadingOverlay 
+          current={uploadProgress} 
+          total={uploadTotal} 
+          mediaType={tab}
+          uploadedCount={uploadProgress}
+          totalImages={totalImages}
+          totalVideos={totalVideos}
+          currentFileName={currentUploadingFile}
+        />
       )}
       {showSuccess && (
         <UploadSuccessOverlay

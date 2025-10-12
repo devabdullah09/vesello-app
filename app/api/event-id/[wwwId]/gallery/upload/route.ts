@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { uploadFiles } from '@/lib/bunny-net';
 
+// Configure API route for large file uploads
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '500mb', // Allow up to 500MB file uploads
+    },
+  },
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ wwwId: string }> }

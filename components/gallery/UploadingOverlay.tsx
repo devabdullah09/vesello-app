@@ -7,9 +7,24 @@ interface UploadingOverlayProps {
   current: number;
   total: number;
   onCancel?: () => void;
+  // Enhanced progress information
+  mediaType?: 'photos' | 'videos';
+  uploadedCount?: number;
+  totalImages?: number;
+  totalVideos?: number;
+  currentFileName?: string;
 }
 
-const UploadingOverlay: React.FC<UploadingOverlayProps> = ({ current, total, onCancel }) => {
+const UploadingOverlay: React.FC<UploadingOverlayProps> = ({ 
+  current, 
+  total, 
+  onCancel, 
+  mediaType, 
+  uploadedCount = 0, 
+  totalImages = 0, 
+  totalVideos = 0, 
+  currentFileName 
+}) => {
   return (
     <div className="fixed inset-0 z-[1000] bg-white flex flex-col min-h-screen">
       <Header />
@@ -33,14 +48,44 @@ const UploadingOverlay: React.FC<UploadingOverlayProps> = ({ current, total, onC
               <div className="text-2xl md:text-3xl font-semibold" style={{ fontFamily: 'Montserrat', fontWeight: 500 }}>ITEMS UPLOADING...</div>
               <div className="text-base md:text-lg mt-2 mb-6" style={{ fontFamily: 'Montserrat', fontWeight: 400, color: '#888' }}>Please Keep Your Browser Open.</div>
             </div>
-            {/* Progress Bar */}
-            <div className="w-full max-w-md mx-auto mb-4">
+            
+            {/* Detailed Progress Information */}
+            <div className="w-full max-w-md mx-auto mb-4 space-y-3">
+              {/* Current file being uploaded */}
+              {currentFileName && (
+                <div className="text-center text-sm text-[#C18037]" style={{ fontFamily: 'Montserrat', fontWeight: 500 }}>
+                  Uploading: {currentFileName}
+                </div>
+              )}
+              
+              {/* Progress Bar */}
               <div className="h-4 rounded-full bg-[#E5B574] relative overflow-hidden">
                 <div className="h-full bg-black transition-all" style={{ width: `${(current / total) * 100}%` }} />
               </div>
-              <div className="text-center text-[#888] mt-2" style={{ fontFamily: 'Montserrat', fontWeight: 400 }}>
+              
+              {/* Progress Text */}
+              <div className="text-center text-[#888]" style={{ fontFamily: 'Montserrat', fontWeight: 400 }}>
                 Uploading {current} of {total}
               </div>
+              
+              {/* Detailed Breakdown */}
+              {(totalImages > 0 || totalVideos > 0) && (
+                <div className="text-center text-xs text-[#888] space-y-1" style={{ fontFamily: 'Montserrat', fontWeight: 400 }}>
+                  {totalImages > 0 && (
+                    <div>📸 {uploadedCount >= totalImages ? totalImages : Math.min(uploadedCount, totalImages)} of {totalImages} images uploaded</div>
+                  )}
+                  {totalVideos > 0 && (
+                    <div>🎥 {uploadedCount >= totalImages ? Math.max(0, uploadedCount - totalImages) : 0} of {totalVideos} videos uploaded</div>
+                  )}
+                </div>
+              )}
+              
+              {/* Media Type Indicator */}
+              {mediaType && (
+                <div className="text-center text-sm text-[#C18037]" style={{ fontFamily: 'Montserrat', fontWeight: 500 }}>
+                  {mediaType === 'photos' ? '📸 Uploading Photos' : '🎥 Uploading Videos'}
+                </div>
+              )}
             </div>
             {onCancel && (
               <button onClick={onCancel} className="mt-4 text-sm text-[#C18037] underline">Cancel</button>

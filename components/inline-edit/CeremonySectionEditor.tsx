@@ -10,6 +10,7 @@ interface CeremonySectionData {
   time: string;
   location: string;
   details?: string;
+  mapUrl?: string;
 }
 
 interface CeremonySectionEditorProps {
@@ -130,6 +131,19 @@ export default function CeremonySectionEditor({
             onChange={(e) => handleInputChange('location', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E5B574] focus:border-transparent"
             placeholder="Ceremony location"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Google Maps Link (Optional)
+          </label>
+          <input
+            type="url"
+            value={formData.mapUrl || ''}
+            onChange={(e) => handleInputChange('mapUrl', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E5B574] focus:border-transparent"
+            placeholder="https://maps.google.com/..."
           />
         </div>
 

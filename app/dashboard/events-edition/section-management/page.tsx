@@ -48,6 +48,7 @@ interface EventData {
       time: string;
       location: string;
       details?: string;
+      mapUrl?: string;
     };
     ceremonyVenueSection: {
       title: string;
