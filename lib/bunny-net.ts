@@ -69,7 +69,7 @@ export class BunnyNetService {
    */
   async uploadFiles(
     files: File[],
-    albumType: 'wedding-day' | 'party-day',
+    albumType: string, // Changed to accept any album type (including custom albums)
     mediaType: 'photos' | 'videos',
     eventId?: string
   ): Promise<BunnyNetUploadResponse> {
@@ -113,7 +113,7 @@ export class BunnyNetService {
    */
   private async uploadSingleFile(
     file: File,
-    albumType: string,
+    albumType: string, // Already accepts any album type
     mediaType: string,
     eventId?: string
   ): Promise<string> {
@@ -153,7 +153,7 @@ export class BunnyNetService {
    */
   async deleteFile(
     fileName: string,
-    albumType: string,
+    albumType: string, // Already accepts any album type
     mediaType: string,
     eventId?: string
   ): Promise<boolean> {
