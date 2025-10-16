@@ -12,6 +12,7 @@ export default function DynamicMainGalleryPage() {
   const [showCopiedPopup, setShowCopiedPopup] = useState(false);
   const [weddingDayCount, setWeddingDayCount] = useState(0);
   const [partyDayCount, setPartyDayCount] = useState(0);
+  const [customAlbums, setCustomAlbums] = useState<any[]>([]);
   const [eventData, setEventData] = useState<{coupleNames: string, eventDate: string, galleryEnabled: boolean, rsvpEnabled: boolean} | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -49,6 +50,21 @@ export default function DynamicMainGalleryPage() {
               galleryEnabled: result.data.galleryEnabled,
               rsvpEnabled: result.data.rsvpEnabled
             });
+
+            // Fetch custom albums for this event using public API
+            try {
+              const albumsResponse = await fetch(`/api/event-id/${wwwId}/gallery/albums`);
+              if (albumsResponse.ok) {
+                const albumsResult = await albumsResponse.json();
+                setCustomAlbums(albumsResult.data || []);
+                console.log('Custom albums loaded:', albumsResult.data);
+              } else {
+                console.error('Failed to fetch albums:', albumsResponse.status);
+              }
+            } catch (albumsError) {
+              console.error('Error fetching custom albums:', albumsError);
+              // Don't fail the whole page if custom albums fail to load
+            }
           }
         }
       } catch (error) {
@@ -106,7 +122,7 @@ export default function DynamicMainGalleryPage() {
           <div className="flex flex-col md:flex-row gap-8 justify-center items-center w-full mb-8">
             {/* Wedding Day */}
             <div className="flex flex-col items-center">
-              <Link href={`/event-id/${wwwId}/gallery/wedding-day`} className="relative w-[270px] h-[220px] md:w-[370px] md:h-[260px] mb-2 group block">
+              <Link href={`/event-id/${wwwId}/gallery/album/wedding-day`} className="relative w-[270px] h-[220px] md:w-[370px] md:h-[260px] mb-2 group block">
                 <Image src="/images/Gallery/maingallery.jpg" alt="Wedding Day" fill 
                 style={{ objectFit: 'cover', borderRadius: '0 0 180px 180px/0 0 220px 0' }} className="shadow-lg" />
                 <div className="absolute inset-0 bg-[#E5B574]/70 flex flex-col items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-300" 
@@ -126,7 +142,7 @@ export default function DynamicMainGalleryPage() {
             </div>
             {/* Party Day */}
             <div className="flex flex-col items-center">
-              <Link href={`/event-id/${wwwId}/gallery/party-day`} className="relative w-[270px] h-[220px] md:w-[370px] md:h-[260px] mb-2 group block">
+              <Link href={`/event-id/${wwwId}/gallery/album/party-day`} className="relative w-[270px] h-[220px] md:w-[370px] md:h-[260px] mb-2 group block">
                 <Image src="/images/Gallery/maingallery.jpg" alt="Party Day" fill style={{ objectFit: 'cover', borderRadius: '0 0 180px 180px/0 0 220px 0px' }} className="shadow-lg" />
                 <div className="absolute inset-0 bg-[#C18037]/70 flex flex-col items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-300" style={{ borderRadius: '0 0 180px 180px/0 0 220px 0px' }}>
                   <div className="text-white text-center font-semibold mb-2" style={{ fontFamily: 'Montserrat', fontWeight: 400, fontSize: '16px', color: '#fff', letterSpacing: '0.01em', lineHeight: 1.4 }}>Got Photos?<br />Add Them Now!</div>
@@ -145,6 +161,44 @@ export default function DynamicMainGalleryPage() {
               </div>
             </div>
           </div>
+
+          {/* Custom Albums Section */}
+          {customAlbums.length > 0 && (
+            <div className="flex flex-col md:flex-row gap-8 justify-center items-center w-full mb-8 flex-wrap">
+              {customAlbums.map((album) => (
+                <div key={album.id} className="flex flex-col items-center">
+                  <Link href={`/event-id/${wwwId}/gallery/album/custom-${album.id}`} className="relative w-[270px] h-[220px] md:w-[370px] md:h-[260px] mb-2 group block">
+                    <Image 
+                      src={album.cover_image_url || "/images/Gallery/maingallery.jpg"} 
+                      alt={album.name} 
+                      fill 
+                      style={{ objectFit: 'cover', borderRadius: '0 0 180px 180px/0 0 220px 0' }} 
+                      className="shadow-lg" 
+                    />
+                    <div 
+                      className="absolute inset-0 bg-[#E5B574]/70 flex flex-col items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-300" 
+                      style={{ borderRadius: '0 0 180px 180px/0 0 220px 0px' }}
+                    >
+                      <div className="text-white text-center font-semibold mb-2" style={{ fontFamily: 'Montserrat', fontWeight: 400, fontSize: '16px', color: '#fff', letterSpacing: '0.01em', lineHeight: 1.4 }}>
+                        {album.name}<br />Gallery
+                      </div>
+                      <button className="border border-white text-white rounded px-6 py-1 bg-transparent hover:bg-white hover:text-[#C18037] transition" style={{ fontFamily: 'Montserrat', fontWeight: 600, fontSize: '16px', letterSpacing: '0.01em', lineHeight: 1.4 }}>
+                        View Photos
+                      </button>
+                    </div>
+                  </Link>
+                  <div className="text-center mt-2" style={{ fontFamily: 'Montserrat', fontWeight: 400, fontSize: '16px', color: '#08080A', letterSpacing: '0.01em', lineHeight: 1.4 }}>
+                    {album.name}
+                    {album.description && (
+                      <div className="text-xs text-gray-500 mt-1" style={{ fontFamily: 'Montserrat', fontSize: '12px' }}>
+                        {album.description}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Copy Party Link Section */}
           <div className="flex flex-col items-center mt-4 mb-2">

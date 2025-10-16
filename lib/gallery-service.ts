@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { createServerClient } from './supabase'
 import { 
   GalleryAlbum, 
   CreateGalleryAlbumData, 
@@ -13,7 +14,10 @@ import {
 // Create a new gallery album
 export const createGalleryAlbum = async (albumData: CreateGalleryAlbumData): Promise<GalleryAlbum> => {
   try {
-    const { data, error } = await supabase
+    // Use server client to bypass RLS policies
+    const serverSupabase = createServerClient()
+    
+    const { data, error } = await serverSupabase
       .from('gallery_albums')
       .insert([{
         event_id: albumData.eventId,
@@ -37,15 +41,20 @@ export const createGalleryAlbum = async (albumData: CreateGalleryAlbumData): Pro
 // Get all albums for an event
 export const getEventAlbums = async (eventId: string): Promise<GalleryAlbum[]> => {
   try {
+    console.log('getEventAlbums called with eventId:', eventId);
     const { data, error } = await supabase
       .from('gallery_albums')
       .select('*')
       .eq('event_id', eventId)
       .order('created_at', { ascending: false })
 
+    console.log('Database query result:', { data, error });
+
     if (error) throw error
 
-    return data.map(mapAlbumFromDB)
+    const mappedData = data.map(mapAlbumFromDB);
+    console.log('Mapped albums:', mappedData);
+    return mappedData;
   } catch (error) {
     console.error('Error getting event albums:', error)
     throw error
