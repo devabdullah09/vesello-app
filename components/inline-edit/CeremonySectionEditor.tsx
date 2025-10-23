@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import EditModal from './EditModal';
+import ImageUpload from '@/components/ui/ImageUpload';
 
 interface CeremonySectionData {
   title: string;
@@ -11,6 +12,7 @@ interface CeremonySectionData {
   location: string;
   details?: string;
   mapUrl?: string;
+  imageUrl?: string;
 }
 
 interface CeremonySectionEditorProps {
@@ -157,6 +159,19 @@ export default function CeremonySectionEditor({
             rows={3}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E5B574] focus:border-transparent"
             placeholder="Any additional ceremony information..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Ceremony Image
+          </label>
+          <ImageUpload
+            currentImage={formData.imageUrl}
+            onImageChange={(imageUrl) => handleInputChange('imageUrl', imageUrl)}
+            placeholder="Upload ceremony image"
+            className="w-full h-48"
+            uploadPath="ceremony-images"
           />
         </div>
       </div>

@@ -4,12 +4,15 @@ import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import { useInvitation } from '@/components/invitation-context';
 import { useInvitationFlow } from '@/hooks/use-invitation-flow';
+import { useLanguage } from '@/components/language-context';
 import EventHeader from '@/components/layout/EventHeader';
+import EventFooter from '@/components/layout/EventFooter';
 
 export default function DynamicAttendancePage() {
   const params = useParams();
   const wwwId = params?.wwwId as string;
   const { state, dispatch } = useInvitation();
+  const { t } = useLanguage();
   const [attendance, setAttendance] = useState<{ [guestName: string]: 'will' | 'cant' }>({});
   const [eventData, setEventData] = useState<{coupleNames: string, eventDate: string, venue: string, galleryEnabled: boolean, rsvpEnabled: boolean} | null>(null);
   const router = useRouter();
@@ -108,8 +111,8 @@ export default function DynamicAttendancePage() {
           {/* Main Content */}
           <div className="w-full max-w-[700px] mx-auto flex flex-col items-center mb-8 mt-2 z-10 px-16 pt-12 pb-8">
             <div className="text-center w-full">
-              <div className="text-4xl md:text-5xl sail-font" style={{ fontWeight: 500, color: '#08080A', letterSpacing: '0.5px', lineHeight: 1.1, fontFamily: 'Sail, cursive' }}>
-                Wedding Day
+              <div className="text-4xl md:text-5xl" style={{ fontFamily: 'Great Vibes, cursive', fontWeight: 500, color: '#08080A', letterSpacing: '0.5px', lineHeight: 1.1 }}>
+                {t.invitation.weddingDay}
               </div>
               {/* Horizontal Divider */}
               <div className="w-24 h-[2px] bg-[#B7B7B7] mx-auto my-4" />
@@ -135,14 +138,14 @@ export default function DynamicAttendancePage() {
                     style={{ fontFamily: 'Montserrat' }}
                     onClick={() => handleSelect(guestName, 'will')}
                   >
-                    Will Attend
+{t.invitation.willAttend}
                   </button>
                   <button
                     className={`w-full py-3 rounded-md text-base transition-colors focus:outline-none ${attendance[guestName] === 'cant' ? 'bg-[#08080A] text-white' : 'bg-[#F5F5F5] text-[#08080A]'}`}
                     style={{ fontFamily: 'Montserrat' }}
                     onClick={() => handleSelect(guestName, 'cant')}
                   >
-                    Can't Attend
+{t.invitation.cantAttend}
                   </button>
                 </React.Fragment>
               ))}
@@ -154,12 +157,16 @@ export default function DynamicAttendancePage() {
               style={{ fontFamily: 'Montserrat' }}
               onClick={handleContinue}
             >
-              Continue
+{t.invitation.continue}
             </button>
           </div>
         </div>
       </div>
    
+      {/* Event Footer */}
+      <div className="mt-auto">
+        <EventFooter />
+      </div>
     </div>
     </>
   );

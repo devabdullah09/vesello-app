@@ -4,12 +4,15 @@ import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import { useInvitation } from '@/components/invitation-context';
 import { useInvitationFlow } from '@/hooks/use-invitation-flow';
+import { useLanguage } from '@/components/language-context';
 import EventHeader from '@/components/layout/EventHeader';
+import EventFooter from '@/components/layout/EventFooter';
 
 export default function DynamicAccommodationPage() {
   const params = useParams();
   const wwwId = params?.wwwId as string;
   const { state, dispatch } = useInvitation();
+  const { t } = useLanguage();
   const [accommodation, setAccommodation] = useState<{ [guestName: string]: 'Yes' | 'No' }>({});
   const [eventData, setEventData] = useState<{coupleNames: string, eventDate: string, venue: string, galleryEnabled: boolean, rsvpEnabled: boolean} | null>(null);
   const router = useRouter();
@@ -108,8 +111,8 @@ export default function DynamicAccommodationPage() {
           <div className="w-full max-w-[1200px] mx-auto flex flex-col items-center mb-8 mt-2 z-10 px-16 pt-12 pb-8">
             <div className="text-center w-full mb-10">
               <div className="flex flex-col items-center">
-                <span className="text-4xl md:text-5xl" style={{ fontFamily: 'Sail, cursive', fontWeight: 400, color: '#E5B574', letterSpacing: '0.5px', lineHeight: 1.1 }}>Do You Need</span>
-                <span className="text-4xl md:text-5xl" style={{ fontFamily: 'Sail, cursive', fontWeight: 400, color: '#08080A', letterSpacing: '0.5px', lineHeight: 1.1, marginTop: '.5rem' }}>Accommodation</span>
+                <span className="text-4xl md:text-5xl" style={{ fontFamily: 'Great Vibes, cursive', fontWeight: 500, color: '#E5B574', letterSpacing: '0.5px', lineHeight: 1.1 }}>{t.invitation.doYouNeed}</span>
+                <span className="text-4xl md:text-5xl" style={{ fontFamily: 'Great Vibes, cursive', fontWeight: 500, color: '#08080A', letterSpacing: '0.5px', lineHeight: 1.1, marginTop: '.5rem' }}>{t.invitation.needAccommodation}</span>
                 <div className="w-24 h-[2px] bg-[#B7B7B7] mx-auto my-4" />
               </div>
             </div>
@@ -119,7 +122,7 @@ export default function DynamicAccommodationPage() {
                 <div key={guestName} className={`flex flex-col w-full items-${idx % 2 === 0 ? 'start' : 'end'}`}>
                   <div className={`text-sm md:text-base text-[#08080A] uppercase mb-2 ${idx % 2 === 0 ? '' : 'text-right'}`} style={{ fontFamily: 'Montserrat', letterSpacing: '0.5px' }}>{guestName}</div>
                   <div className={`flex flex-row gap-4 w-full ${idx % 2 === 0 ? '' : 'justify-end'}`}>
-                    {['Yes', 'No'].map(option => (
+                    {[t.invitation.yes, t.invitation.no].map(option => (
                       <button
                         key={option}
                         className={`w-full py-3 rounded-md text-base transition-colors focus:outline-none ${accommodation[guestName] === option ? 'bg-[#08080A] text-white' : 'bg-[#F5F5F5] text-[#08080A]'}`}
@@ -139,10 +142,15 @@ export default function DynamicAccommodationPage() {
               style={{ fontFamily: 'Montserrat', marginTop: '5rem'}}
               onClick={handleContinue}
             >
-              Continue
+{t.invitation.continue}
             </button>
           </div>
         </div>
+      </div>
+      
+      {/* Event Footer */}
+      <div className="mt-auto">
+        <EventFooter />
       </div>
     </div>
     </>

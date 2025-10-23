@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useInvitation } from "@/components/invitation-context";
+import { useLanguage } from "@/components/language-context";
 
 const childAges = [
   "1 Year Old",
@@ -19,6 +20,7 @@ const childAges = [
 ];
 
 export default function InvitationReplyPage() {
+  const { t } = useLanguage();
   const { state, dispatch } = useInvitation();
   const [mainGuest, setMainGuest] = useState({ name: "", surname: "", isChild: false });
   const [guests, setGuests] = useState<{ name: string; surname: string; isChild: boolean; age?: string }[]>([
@@ -109,7 +111,7 @@ export default function InvitationReplyPage() {
           >
             
               <div className="text-sm text-[#08080A] mb-7 text-center" style={{ fontFamily: 'Montserrat', fontWeight: 400 }}>
-                If you're responding for you and a guest (or your family),<br />you'll be able to RSVP for your entire group.
+                {t.invitation.welcome}
               </div>
 
               
@@ -120,7 +122,7 @@ export default function InvitationReplyPage() {
                   name="name"
                   value={mainGuest.name}
                   onChange={handleMainGuestChange}
-                  placeholder="Name"
+                  placeholder={t.forms.name}
                   className="bg-[#f6f6f6] rounded-md px-8 py-2 w-94 min-w-[330px] text-base border border-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#C18037] placeholder:text-[#bdbdbd]"
                   style={{ fontFamily: 'Montserrat' }}
                   required

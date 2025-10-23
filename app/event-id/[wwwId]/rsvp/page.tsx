@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import EventHeader from "@/components/layout/EventHeader";
+import EventFooter from "@/components/layout/EventFooter";
 import { useEvent } from "@/components/event-context";
 
 interface EventData {
@@ -343,14 +344,8 @@ export default function EventRSVPPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-8 px-6 border-t border-white/30">
-        <div className="max-w-4xl mx-auto text-center">
-          <p className="text-gray-600">
-            Powered by <span className="font-semibold text-[#E5B574]">Vesello</span> - Wedding Event Management
-          </p>
-        </div>
-      </footer>
+      {/* Event Footer */}
+      <EventFooter />
     </div>
   );
 }

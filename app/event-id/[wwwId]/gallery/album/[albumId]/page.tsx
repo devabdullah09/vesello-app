@@ -5,6 +5,8 @@ import UploadingOverlay from '@/components/gallery/UploadingOverlay';
 import UploadSuccessOverlay from '@/components/gallery/UploadSuccessOverlay';
 import { useRouter, useParams } from 'next/navigation';
 import EventHeader from '@/components/layout/EventHeader';
+import EventFooter from '@/components/layout/EventFooter';
+import { useLanguage } from '@/components/language-context';
 
 const downloadIcon = (
   <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="inline ml-1 text-[#C18037]">
@@ -15,6 +17,7 @@ const downloadIcon = (
 export default function DynamicAlbumGallery() {
   const params = useParams();
   const router = useRouter();
+  const { t } = useLanguage();
   const wwwId = params.wwwId as string;
   const albumId = params.albumId as string;
   
@@ -85,24 +88,63 @@ export default function DynamicAlbumGallery() {
 
   const loadGalleryFiles = async () => {
     try {
-      // Load photos
-      const photosResponse = await fetch(`/api/event-id/${wwwId}/gallery/files?album=${albumId}&type=photos`);
-      if (photosResponse.ok) {
-        const photosResult = await photosResponse.json();
-        if (photosResult.success) {
-          setImages(photosResult.files.map((file: any) => file.url || file.cdnUrl));
+      console.log('Loading gallery files for albumId:', albumId);
+      // Check if this is a custom album (UUID format or custom- prefix)
+      const isCustomAlbum = albumId.startsWith('custom-') || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(albumId);
+      console.log('Is custom album:', isCustomAlbum);
+      
+      if (isCustomAlbum) {
+        // For custom albums, fetch from database
+        // Remove 'custom-' prefix if present
+        const actualAlbumId = albumId.startsWith('custom-') ? albumId.replace('custom-', '') : albumId;
+        console.log('Fetching custom album files for albumId:', actualAlbumId);
+        const response = await fetch(`/api/event-id/${wwwId}/gallery/custom-album-files?albumId=${actualAlbumId}`);
+        console.log('Custom album files response status:', response.status);
+        if (response.ok) {
+          const result = await response.json();
+          console.log('Custom album files response:', result);
+          if (result.success) {
+            console.log('Custom album files loaded:', result.files);
+            const photos = result.files.filter((file: any) => file.mime_type && file.mime_type.startsWith('image/'));
+            const videos = result.files.filter((file: any) => file.mime_type && file.mime_type.startsWith('video/'));
+            
+            console.log('Photos found:', photos);
+            console.log('Videos found:', videos);
+            
+            const imageUrls = photos.map((file: any) => file.image_url);
+            const videoData = videos.map((file: any) => ({
+              src: file.image_url,
+              thumb: file.thumbnail_url || file.image_url
+            }));
+            
+            console.log('Setting images:', imageUrls);
+            console.log('Setting videos:', videoData);
+            
+            setImages(imageUrls);
+            setVideos(videoData);
+          }
         }
-      }
+      } else {
+        // For default albums, use existing logic
+        // Load photos
+        const photosResponse = await fetch(`/api/event-id/${wwwId}/gallery/files?album=${albumId}&type=photos`);
+        if (photosResponse.ok) {
+          const photosResult = await photosResponse.json();
+          if (photosResult.success) {
+            setImages(photosResult.files.map((file: any) => file.url || file.cdnUrl));
+          }
+        }
 
-      // Load videos
-      const videosResponse = await fetch(`/api/event-id/${wwwId}/gallery/files?album=${albumId}&type=videos`);
-      if (videosResponse.ok) {
-        const videosResult = await videosResponse.json();
-        if (videosResult.success) {
-          setVideos(videosResult.files.map((file: any) => ({
-            src: file.url || file.cdnUrl,
-            thumb: file.thumbnailUrl || file.url || file.cdnUrl
-          })));
+        // Load videos
+        const videosResponse = await fetch(`/api/event-id/${wwwId}/gallery/files?album=${albumId}&type=videos`);
+        if (videosResponse.ok) {
+          const videosResult = await videosResponse.json();
+          if (videosResult.success) {
+            setVideos(videosResult.files.map((file: any) => ({
+              src: file.url || file.cdnUrl,
+              thumb: file.thumbnailUrl || file.url || file.cdnUrl
+            })));
+          }
         }
       }
     } catch (error) {
@@ -143,6 +185,9 @@ export default function DynamicAlbumGallery() {
 
         if (photoResponse.ok) {
           uploadedCount += photoFiles.length;
+        } else {
+          const errorData = await photoResponse.json();
+          throw new Error(errorData.error || 'Photo upload failed');
         }
       }
       
@@ -162,6 +207,9 @@ export default function DynamicAlbumGallery() {
 
         if (videoResponse.ok) {
           uploadedCount += videoFiles.length;
+        } else {
+          const errorData = await videoResponse.json();
+          throw new Error(errorData.error || 'Video upload failed');
         }
       }
 
@@ -173,7 +221,7 @@ export default function DynamicAlbumGallery() {
       
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Upload failed. Please try again.');
+      alert(`Upload failed: ${error instanceof Error ? error.message : 'Please try again.'}`);
     } finally {
       setUploading(false);
       setUploadProgress(0);
@@ -181,34 +229,12 @@ export default function DynamicAlbumGallery() {
     }
   };
 
-  const handleDownload = (url: string, filename?: string) => {
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename || url.split('/').pop() || 'download';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const handleDownloadAll = async () => {
-    const allFiles = [...images, ...videos.map(v => v.src)];
-    
-    for (let i = 0; i < allFiles.length; i++) {
-      const url = allFiles[i];
-      const filename = `photo_${i + 1}.${url.includes('video') ? 'mp4' : 'jpg'}`;
-      handleDownload(url, filename);
-      
-      // Small delay between downloads
-      if (i < allFiles.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-    }
-  };
+  // Download functionality removed for guests - only upload allowed
 
   if (!eventData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
+        <div className="text-lg">{t.status.loading}</div>
       </div>
     );
   }
@@ -217,28 +243,33 @@ export default function DynamicAlbumGallery() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">Gallery Not Available</h1>
-          <p className="text-gray-600">This event's gallery is not enabled.</p>
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">{t.gallery.title} {t.status.notAvailable}</h1>
+          <p className="text-gray-600">{t.gallery.notAvailable}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <EventHeader eventId={wwwId} />
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <EventHeader 
+        eventId={wwwId} 
+        galleryEnabled={eventData.galleryEnabled}
+        rsvpEnabled={eventData.rsvpEnabled}
+        currentPage="gallery"
+      />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 flex-1">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            {albumData?.name || 'Gallery'}
+            {albumData?.name || t.gallery.title}
           </h1>
           {albumData?.description && (
             <p className="text-gray-600">{albumData.description}</p>
           )}
           <p className="text-gray-500 mt-2">
-            {eventData.coupleNames} Wedding
+            {eventData.coupleNames} {t.event.title}
           </p>
         </div>
 
@@ -246,9 +277,9 @@ export default function DynamicAlbumGallery() {
         <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-2">Upload Photos & Videos</h2>
+              <h2 className="text-xl font-semibold text-gray-800 mb-2">{t.gallery.uploadPhotos} & {t.gallery.videos}</h2>
               <p className="text-gray-600 text-sm">
-                Share your memories from {albumData?.name || 'this event'}
+                {t.gallery.shareMemories} {albumData?.name || t.event.title}
               </p>
             </div>
             <div className="flex gap-3">
@@ -256,16 +287,8 @@ export default function DynamicAlbumGallery() {
                 onClick={() => fileInputRef.current?.click()}
                 className="bg-[#E5B574] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#D59C58] transition-colors"
               >
-                Choose Files
+                {t.gallery.selectPhotos}
               </button>
-              {(images.length > 0 || videos.length > 0) && (
-                <button
-                  onClick={handleDownloadAll}
-                  className="bg-[#C18037] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#A66B2A] transition-colors flex items-center"
-                >
-                  Download All{downloadIcon}
-                </button>
-              )}
             </div>
           </div>
           
@@ -290,7 +313,7 @@ export default function DynamicAlbumGallery() {
                   : 'text-gray-600 hover:text-gray-800'
               }`}
             >
-              Photos ({images.length})
+              {t.gallery.photos} ({images.length})
             </button>
             <button
               onClick={() => setTab('videos')}
@@ -300,7 +323,7 @@ export default function DynamicAlbumGallery() {
                   : 'text-gray-600 hover:text-gray-800'
               }`}
             >
-              Videos ({videos.length})
+              {t.gallery.videos} ({videos.length})
             </button>
           </div>
         </div>
@@ -313,18 +336,10 @@ export default function DynamicAlbumGallery() {
                 <div className="aspect-square relative overflow-hidden rounded-lg bg-gray-200">
                   <Image
                     src={imageUrl}
-                    alt={`Photo ${index + 1}`}
+                    alt={`${t.gallery.photos} ${index + 1}`}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-                    <button
-                      onClick={() => handleDownload(imageUrl, `photo_${index + 1}.jpg`)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity bg-white text-gray-800 px-3 py-2 rounded-lg font-semibold flex items-center gap-2"
-                    >
-                      Download{downloadIcon}
-                    </button>
-                  </div>
                 </div>
               </div>
             ))
@@ -334,7 +349,7 @@ export default function DynamicAlbumGallery() {
                 <div className="aspect-square relative overflow-hidden rounded-lg bg-gray-200">
                   <Image
                     src={video.thumb}
-                    alt={`Video ${index + 1}`}
+                    alt={`${t.gallery.videos} ${index + 1}`}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
@@ -344,14 +359,6 @@ export default function DynamicAlbumGallery() {
                         <path d="M8 5v14l11-7z"/>
                       </svg>
                     </div>
-                  </div>
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
-                    <button
-                      onClick={() => handleDownload(video.src, `video_${index + 1}.mp4`)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity bg-white text-gray-800 px-3 py-2 rounded-lg font-semibold flex items-center gap-2"
-                    >
-                      Download{downloadIcon}
-                    </button>
                   </div>
                 </div>
               </div>
@@ -363,13 +370,13 @@ export default function DynamicAlbumGallery() {
         {(tab === 'photos' ? images.length === 0 : videos.length === 0) && (
           <div className="text-center py-16">
             <div className="text-gray-500 text-lg mb-4">
-              No {tab} uploaded yet
+              {t.gallery.noPhotos} {tab === 'photos' ? t.gallery.photos.toLowerCase() : t.gallery.videos.toLowerCase()} {t.gallery.uploadedYet}
             </div>
             <button
               onClick={() => fileInputRef.current?.click()}
               className="bg-[#E5B574] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#D59C58] transition-colors"
             >
-              Upload First {tab === 'photos' ? 'Photo' : 'Video'}
+              {t.gallery.uploadFirst} {tab === 'photos' ? t.gallery.photo : t.gallery.video}
             </button>
           </div>
         )}
@@ -389,6 +396,11 @@ export default function DynamicAlbumGallery() {
           onCountMeIn={() => setShowSuccessOverlay(false)}
         />
       )}
+      
+      {/* Event Footer - Sticky to bottom */}
+      <div className="mt-auto">
+        <EventFooter />
+      </div>
     </div>
   );
 }

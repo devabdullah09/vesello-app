@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import CollapsibleSection from '../CollapsibleSection';
+import { useLanguage } from '@/components/language-context';
 
 interface Table {
   id: string;
@@ -19,8 +20,10 @@ export default function SeatingChartSection({
   description = 'Find your seat for the reception.',
   tables = []
 }: SeatingChartSectionProps) {
+  const { t } = useLanguage();
+  
   return (
-    <CollapsibleSection title={title}>
+    <CollapsibleSection title={t.seatingChart.title}>
       {/* Welcome Image (centered, wide, gold) */}
       <div className="flex justify-center my-2">
         <Image
@@ -41,7 +44,7 @@ export default function SeatingChartSection({
                fontFamily: 'Montserrat',
                fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
              }}>
-            {description}
+            {t.seatingChart.description}
           </p>
         </div>
       )}
@@ -58,7 +61,7 @@ export default function SeatingChartSection({
                   fontFamily: 'Montserrat',
                   fontSize: 'clamp(1rem, 3vw, 1.25rem)'
                 }}>
-              {table.tableNumber}
+              {t.seatingChart.table} {table.tableNumber}
             </h3>
             <div className="space-y-1">
               {table.guests.map((guest, index) => (

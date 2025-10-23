@@ -10,7 +10,7 @@ interface VenueSectionData {
   address: string;
   description?: string;
   mapUrl?: string;
-  images?: string[];
+  imageUrl?: string;
 }
 
 interface VenueSectionEditorProps {
@@ -26,7 +26,7 @@ const getDefaultData = () => ({
     "address": "",
     "description": "A beautiful location for our special day.",
     "mapUrl": "",
-    "images": []
+    "imageUrl": ""
 });
 
 export default function VenueSectionEditor({
@@ -133,8 +133,8 @@ export default function VenueSectionEditor({
             Venue Photo (Optional)
           </label>
           <ImageUpload
-            currentImage={formData.images?.[0]}
-            onImageChange={(url) => handleInputChange('images', [url])}
+            currentImage={formData.imageUrl}
+            onImageChange={(url) => handleInputChange('imageUrl', url)}
             placeholder="Upload venue photo"
             className="w-full h-48"
             uploadPath="venue-photos"

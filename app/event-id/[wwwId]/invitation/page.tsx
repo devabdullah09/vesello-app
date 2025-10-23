@@ -5,7 +5,9 @@ import { Trash } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { useInvitation } from "@/components/invitation-context";
 import { useInvitationFlow } from '@/hooks/use-invitation-flow';
+import { useLanguage } from '@/components/language-context';
 import EventHeader from "@/components/layout/EventHeader";
+import EventFooter from "@/components/layout/EventFooter";
 
 const childAges = [
   "1 Year Old",
@@ -24,6 +26,7 @@ export default function DynamicInvitationReplyPage() {
   const params = useParams();
   const wwwId = params?.wwwId as string;
   const { state, dispatch } = useInvitation();
+  const { t } = useLanguage();
   const [mainGuest, setMainGuest] = useState({ name: "", surname: "", isChild: false });
   const [eventData, setEventData] = useState<{coupleNames: string, eventDate: string, venue: string, galleryEnabled: boolean, rsvpEnabled: boolean} | null>(null);
   const [guests, setGuests] = useState<{ name: string; surname: string; isChild: boolean; age?: string }[]>([
@@ -130,10 +133,10 @@ export default function DynamicInvitationReplyPage() {
           {/* Main Content */}
           <div className="w-full flex flex-col items-center mb-8 mt-2 z-10">
             <div className="text-center">
-              <div className="text-4xl md:text-5xl sail-font" style={{ fontWeight: 100, color: '#08080A', letterSpacing: '0.5px', lineHeight: 1.1 }}>
+              <div className="text-4xl md:text-5xl" style={{ fontFamily: 'Great Vibes, cursive', fontWeight: 500, color: '#08080A', letterSpacing: '0.5px', lineHeight: 1.1 }}>
                 {eventData?.coupleNames || 'Loading...'}
               </div>
-              <div className="text-3xl md:text-4xl sail-font" style={{ background: 'linear-gradient(90deg, #E5B574 0%, #C18037 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 400, marginTop: '-8px', letterSpacing: '0.5px', lineHeight: 1.1 }}>
+              <div className="text-3xl md:text-4xl" style={{ fontFamily: 'Great Vibes, cursive', background: 'linear-gradient(90deg, #E5B574 0%, #C18037 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 500, marginTop: '-8px', letterSpacing: '0.5px', lineHeight: 1.1 }}>
                 Wedding
               </div>
               <div className="text-base md:text-lg mt-4 mb-2 tracking-widest" style={{ color: '#08080A', fontWeight: 200, fontFamily: 'Montserrat', letterSpacing: '0.35em' }}>
@@ -151,7 +154,7 @@ export default function DynamicInvitationReplyPage() {
           >
             
               <div className="text-sm text-[#08080A] mb-7 text-center" style={{ fontFamily: 'Montserrat', fontWeight: 400 }}>
-                If you're responding for you and a guest (or your family),<br />you'll be able to RSVP for your entire group.
+                {t.invitation.respondingFor}<br />{t.invitation.entireGroup}
               </div>
 
               
@@ -162,7 +165,7 @@ export default function DynamicInvitationReplyPage() {
                   name="name"
                   value={mainGuest.name}
                   onChange={handleMainGuestChange}
-                  placeholder="Name"
+                  placeholder={t.invitation.name}
                   className="bg-[#f6f6f6] rounded-md px-8 py-2 w-94 min-w-[330px] text-base border border-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#C18037] placeholder:text-[#bdbdbd]"
                   style={{ fontFamily: 'Montserrat' }}
                   required
@@ -172,7 +175,7 @@ export default function DynamicInvitationReplyPage() {
                   name="surname"
                   value={mainGuest.surname}
                   onChange={handleMainGuestChange}
-                  placeholder="Surname"
+                  placeholder={t.invitation.surname}
                   className="bg-[#f6f6f6] rounded-md px-8 py-2 w-64 min-w-[330px] text-base border border-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#C18037] placeholder:text-[#bdbdbd]"
                   style={{ fontFamily: 'Montserrat' }}
                   required
@@ -182,15 +185,15 @@ export default function DynamicInvitationReplyPage() {
 
             <div className="w-full mb-6">
               <div className="flex items-center justify-between mb-2">
-                <div className="text-lg font-semibold" style={{ fontFamily: 'Montserrat', color: '#08080A' }}>Add Plus Ones or Household</div>
-                <div className="text-base font-normal text-[#08080A]" style={{ fontFamily: 'Montserrat' }}>Is it a child?</div>
+                <div className="text-lg font-semibold" style={{ fontFamily: 'Montserrat', color: '#08080A' }}>{t.invitation.addPlusOnes}</div>
+                <div className="text-base font-normal text-[#08080A]" style={{ fontFamily: 'Montserrat' }}>{t.invitation.isItChild}</div>
               </div>
               <div className="flex flex-col gap-3">
                 {guests.map((guest, idx) => (
                   <div key={idx} className="flex items-center gap-3">
                     <input
                       type="text"
-                      placeholder="Name"
+                      placeholder={t.invitation.name}
                       value={guest.name}
                       onChange={e => handleGuestChange(idx, "name", e.target.value)}
                       className="bg-[#f6f6f6] rounded-md px-8 py-2 w-40 min-w-[220px] text-base border border-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#C18037] placeholder:text-[#bdbdbd]"
@@ -198,7 +201,7 @@ export default function DynamicInvitationReplyPage() {
                     />
                     <input
                       type="text"
-                      placeholder="Surname"
+                      placeholder={t.invitation.surname}
                       value={guest.surname}
                       onChange={e => handleGuestChange(idx, "surname", e.target.value)}
                       className="bg-[#f6f6f6] rounded-md px-8 py-2 w-40 min-w-[220px] text-base border border-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#C18037] placeholder:text-[#bdbdbd]"
@@ -220,7 +223,7 @@ export default function DynamicInvitationReplyPage() {
                         className="bg-[#f6f6f6] rounded-md px-2 py-2 w-32 text-base border border-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#C18037] placeholder:text-[#bdbdbd]"
                         style={{ fontFamily: 'Montserrat' }}
                       >
-                        <option value="">Age</option>
+                        <option value="">{t.invitation.age}</option>
                         {childAges.map((age) => (
                           <option key={age} value={age}>{age}</option>
                         ))}
@@ -247,18 +250,23 @@ export default function DynamicInvitationReplyPage() {
                 className="min-w-[220px] border border-[#C18037] text-[#08080A] rounded-md px-6 py-3 font-semibold hover:bg-[#f6f6f6] transition-colors"
                 style={{ fontFamily: 'Montserrat' }}
               >
-                Add Guests
+{t.invitation.addGuests}
               </button>
               <button
                 type="submit"
                 className="min-w-[220px] bg-[#08080A] text-white rounded-md px-6 py-3 font-semibold hover:bg-[#C18037] hover:text-white transition-colors"
                 style={{ fontFamily: 'Montserrat' }}
               >
-                Continue
+{t.invitation.continue}
               </button>
             </div>
           </form>
         </div>
+      </div>
+      
+      {/* Event Footer */}
+      <div className="mt-auto">
+        <EventFooter />
       </div>
     </div>
     </>

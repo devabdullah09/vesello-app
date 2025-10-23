@@ -30,7 +30,11 @@ export async function POST(
     }
 
     // Validate album type and media type
-    if (!['wedding-day', 'party-day'].includes(albumType)) {
+    // Allow custom albums (UUID format) or default albums
+    const isValidDefaultAlbum = ['wedding-day', 'party-day'].includes(albumType);
+    const isValidCustomAlbum = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(albumType);
+    
+    if (!isValidDefaultAlbum && !isValidCustomAlbum) {
       return NextResponse.json({ error: 'Invalid album type' }, { status: 400 });
     }
 
@@ -38,20 +42,39 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid media type' }, { status: 400 });
     }
 
-    // Upload files to Bunny.net
-    const uploadResult = await uploadFiles(
-      files, 
-      albumType as 'wedding-day' | 'party-day', 
-      mediaType as 'photos' | 'videos',
-      wwwId
-    );
+    // Handle custom albums vs default albums differently
+    if (isValidCustomAlbum) {
+      // For custom albums, store files in database
+      const { storeCustomAlbumFiles } = await import('@/lib/gallery-service');
+      const uploadResult = await storeCustomAlbumFiles(
+        files,
+        albumType, // This is the custom album UUID
+        wwwId,
+        mediaType as 'photos' | 'videos'
+      );
 
-    return NextResponse.json({
-      success: true,
-      files: uploadResult.files,
-      cdnUrls: uploadResult.cdnUrls,
-      message: uploadResult.message
-    });
+      return NextResponse.json({
+        success: true,
+        files: uploadResult.files,
+        cdnUrls: uploadResult.cdnUrls,
+        message: uploadResult.message
+      });
+    } else {
+      // For default albums, use existing Bunny.net upload
+      const uploadResult = await uploadFiles(
+        files, 
+        albumType as 'wedding-day' | 'party-day', 
+        mediaType as 'photos' | 'videos',
+        wwwId
+      );
+
+      return NextResponse.json({
+        success: true,
+        files: uploadResult.files,
+        cdnUrls: uploadResult.cdnUrls,
+        message: uploadResult.message
+      });
+    }
 
   } catch (error) {
     return NextResponse.json({ 

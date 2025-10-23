@@ -1,6 +1,7 @@
 import React from 'react';
 import { MapPin } from 'lucide-react';
 import CollapsibleSection from '../CollapsibleSection';
+import { useLanguage } from '@/components/language-context';
 
 interface DynamicCeremonySectionProps {
   title: string;
@@ -10,6 +11,7 @@ interface DynamicCeremonySectionProps {
   location: string;
   details?: string;
   mapUrl?: string;
+  imageUrl?: string;
 }
 
 export default function DynamicCeremonySection({ 
@@ -19,8 +21,10 @@ export default function DynamicCeremonySection({
   time, 
   location, 
   details,
-  mapUrl 
+  mapUrl,
+  imageUrl 
 }: DynamicCeremonySectionProps) {
+  const { t } = useLanguage();
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
@@ -51,7 +55,7 @@ export default function DynamicCeremonySection({
   };
 
   return (
-    <CollapsibleSection title="Ceremony">
+    <CollapsibleSection title={t.ceremony.title}>
       <div className="flex flex-col md:flex-row items-center md:items-stretch">
         {/* Left: Text Content */}
         <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 md:px-10 py-6 md:py-0">
@@ -64,14 +68,14 @@ export default function DynamicCeremonySection({
               letterSpacing: '0.01em', 
               lineHeight: 1.4 
             }}>
-              {description}
+              {t.ceremony.description}
             </span>
           </div>
           <div className="mb-4 sm:mb-5">
             <span
               style={{
-                fontFamily: 'Sail',
-                fontWeight: 400,
+                fontFamily: 'Great Vibes, cursive',
+                fontWeight: 500,
                 fontSize: 'clamp(1.5rem, 5vw, 2.2rem)',
                 background: 'linear-gradient(90deg, #E5B574 0%, #D59C58 43%, #C18037 100%)',
                 WebkitBackgroundClip: 'text',
@@ -81,7 +85,7 @@ export default function DynamicCeremonySection({
                 lineHeight: 1.1,
               }}
             >
-              {title}
+              {t.ceremony.details}
             </span>
           </div>
           <div className="space-y-1 mb-3">
@@ -136,7 +140,7 @@ export default function DynamicCeremonySection({
                 fontWeight: 500, 
                 fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' 
               }}>
-                View on Map
+                {t.ceremony.viewOnMap}
               </span>
             </a>
           ) : (
@@ -147,7 +151,7 @@ export default function DynamicCeremonySection({
                 fontWeight: 500, 
                 fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' 
               }}>
-                View on Map
+                {t.ceremony.viewOnMap}
               </span>
             </div>
           )}
@@ -156,7 +160,7 @@ export default function DynamicCeremonySection({
         {/* Right: Image */}
         <div className="flex-1 flex items-center justify-center p-4 md:p-6">
           <img
-            src="/images/ceremony.png"
+            src={imageUrl || "/images/ceremony.png"}
             alt="Wedding ceremony"
             className="w-full h-auto max-w-sm object-contain"
             style={{ maxHeight: '300px' }}

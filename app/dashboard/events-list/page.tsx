@@ -2,11 +2,13 @@
 import { useEffect, useState } from "react";
 import { useEvents, useAuth } from '@/hooks/use-dashboard'
 import { useRouter } from 'next/navigation'
+import { useLanguage } from '@/components/language-context'
 
 export default function EventsListPage() {
   const { events, loading, error, fetchEvents, createEvent, updateEvent, deleteEvent } = useEvents()
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
+  const { t } = useLanguage()
   const [showModal, setShowModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
@@ -20,6 +22,19 @@ export default function EventsListPage() {
     rsvpEnabled: false,
   });
 
+  // Filter states
+  const [filters, setFilters] = useState({
+    wwwId: "",
+    organizer: "",
+    dateFrom: "",
+    dateTo: "",
+    status: "",
+    search: ""
+  });
+
+  // Filtered events
+  const [filteredEvents, setFilteredEvents] = useState(events);
+
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login')
@@ -28,10 +43,52 @@ export default function EventsListPage() {
     }
   }, [user, authLoading, router]);
 
+  // Filter events when events or filters change
+  useEffect(() => {
+    let filtered = [...events];
+
+    if (filters.wwwId) {
+      filtered = filtered.filter(event => 
+        event.wwwId.toLowerCase().includes(filters.wwwId.toLowerCase())
+      );
+    }
+
+    if (filters.organizer) {
+      filtered = filtered.filter(event => 
+        event.organizerId && event.organizerId.toLowerCase().includes(filters.organizer.toLowerCase())
+      );
+    }
+
+    if (filters.status) {
+      filtered = filtered.filter(event => event.status === filters.status);
+    }
+
+    if (filters.dateFrom) {
+      filtered = filtered.filter(event => 
+        new Date(event.eventDate) >= new Date(filters.dateFrom)
+      );
+    }
+
+    if (filters.dateTo) {
+      filtered = filtered.filter(event => 
+        new Date(event.eventDate) <= new Date(filters.dateTo)
+      );
+    }
+
+    if (filters.search) {
+      filtered = filtered.filter(event => 
+        event.title.toLowerCase().includes(filters.search.toLowerCase()) ||
+        event.coupleNames.toLowerCase().includes(filters.search.toLowerCase())
+      );
+    }
+
+    setFilteredEvents(filtered);
+  }, [events, filters]);
+
   if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Loading events...</div>
+        <div className="text-lg">{t.status.loading}</div>
       </div>
     )
   }
@@ -121,7 +178,7 @@ export default function EventsListPage() {
   }
 
   const handleDeleteEvent = async (eventId: string) => {
-    if (confirm('Are you sure you want to delete this event?')) {
+    if (confirm(t.dashboard.confirm)) {
       try {
         await deleteEvent(eventId)
       } catch (error) {
@@ -130,47 +187,141 @@ export default function EventsListPage() {
     }
   }
 
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      wwwId: "",
+      organizer: "",
+      dateFrom: "",
+      dateTo: "",
+      status: "",
+      search: ""
+    });
+  };
+
+  const handleManageClick = (eventId: string) => {
+    router.push('/dashboard/events-edition');
+  };
+
   return (
     <div className="flex-1 p-12">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-semibold text-black">EVENTS LIST</h1>
+        <h1 className="text-2xl font-semibold text-black">{t.dashboard.events}</h1>
         <button
           className="bg-gradient-to-r from-[#E5B574] via-[#D59C58] to-[#C18037] text-white font-semibold px-6 py-2 rounded-md shadow-md hover:from-[#D59C58] hover:to-[#E5B574] transition-colors"
           onClick={openCreateModal}
         >
-          Add Event
+          {t.dashboard.createEvent}
         </button>
       </div>
       
       {error && (
         <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-          Error: {error}
+          {t.status.error}: {error}
         </div>
       )}
+
+      {/* Filter Section */}
+      <div className="bg-gray-50 p-6 rounded-lg mb-6">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">Filter Events</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Event ID</label>
+            <input 
+              className="w-full border rounded px-3 py-2" 
+              placeholder="Enter WWW ID..." 
+              value={filters.wwwId}
+              onChange={(e) => handleFilterChange('wwwId', e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Organizer</label>
+            <input 
+              className="w-full border rounded px-3 py-2" 
+              placeholder="Enter organizer..." 
+              value={filters.organizer}
+              onChange={(e) => handleFilterChange('organizer', e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select 
+              className="w-full border rounded px-3 py-2" 
+              value={filters.status}
+              onChange={(e) => handleFilterChange('status', e.target.value)}
+            >
+              <option value="">All Statuses</option>
+              <option value="planned">Planned</option>
+              <option value="active">Active</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date From</label>
+            <input 
+              type="date"
+              className="w-full border rounded px-3 py-2" 
+              value={filters.dateFrom}
+              onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date To</label>
+            <input 
+              type="date"
+              className="w-full border rounded px-3 py-2" 
+              value={filters.dateTo}
+              onChange={(e) => handleFilterChange('dateTo', e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+            <input 
+              className="w-full border rounded px-3 py-2" 
+              placeholder="Search by title or couple names..." 
+              value={filters.search}
+              onChange={(e) => handleFilterChange('search', e.target.value)}
+            />
+          </div>
+        </div>
+        <button 
+          onClick={clearFilters}
+          className="bg-gray-400 text-white px-6 py-2 rounded hover:bg-gray-500 transition-colors"
+        >
+          Clear Filters
+        </button>
+      </div>
 
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white rounded-lg border">
           <thead>
             <tr className="bg-gray-50">
               <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">WWW ID</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">TITLE</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">{t.dashboard.eventName}</th>
               <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">COUPLE</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">DATE</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">STATUS</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">GALLERY</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">{t.dashboard.eventDate}</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">{t.dashboard.eventStatus}</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">{t.dashboard.gallery}</th>
               <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">RSVP</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">ACTIONS</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">{t.dashboard.actions}</th>
             </tr>
           </thead>
           <tbody>
-            {events.length === 0 ? (
+            {filteredEvents.length === 0 ? (
               <tr>
                 <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
-                  No events found. Create your first event!
+                  {events.length === 0 ? t.dashboard.noEvents : t.status.noData}
                 </td>
               </tr>
             ) : (
-              events.map((event, idx) => (
+              filteredEvents.map((event, idx) => (
                 <tr key={event.id} className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}>
                   <td className="px-6 py-4 whitespace-nowrap font-medium">{event.wwwId}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{event.title}</td>
@@ -187,29 +338,29 @@ export default function EventsListPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
-                    {event.galleryEnabled ? <input type="checkbox" checked readOnly /> : null}
+                    {event.galleryEnabled ? <input type="checkbox" checked readOnly className="w-4 h-4" /> : <span className="text-gray-400">-</span>}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
-                    {event.rsvpEnabled ? <span role="img" aria-label="rsvp">📷</span> : null}
+                    {event.rsvpEnabled ? <span role="img" aria-label="rsvp" className="text-lg">📷</span> : <span className="text-gray-400">-</span>}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button 
-                      className="text-green-600 font-semibold mr-2"
-                      onClick={() => router.push(`/dashboard/events-edition/day-details?wwwId=${event.wwwId}`)}
+                      className="text-green-600 font-semibold mr-2 hover:text-green-800"
+                      onClick={() => handleManageClick(event.id)}
                     >
-                      Manage
+                      {t.dashboard.manage}
                     </button>
                     <button 
-                      className="text-blue-600 font-semibold mr-2"
+                      className="text-blue-600 font-semibold mr-2 hover:text-blue-800"
                       onClick={() => openEditModal(event)}
                     >
-                      Edit
+                      {t.forms.edit}
                     </button>
                     <button 
-                      className="text-red-500 font-semibold"
+                      className="text-red-500 font-semibold hover:text-red-700"
                       onClick={() => handleDeleteEvent(event.id)}
                     >
-                      Delete
+                      {t.forms.delete}
                     </button>
                   </td>
                 </tr>

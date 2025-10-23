@@ -6,6 +6,7 @@ import { Menu, X } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { signOutUser } from '@/lib/supabase-auth'
+import { useLanguage } from '@/components/language-context'
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -81,6 +82,7 @@ const Header = () => {
 
 export const DashboardHeader = () => {
   const router = useRouter();
+  const { language, setLanguage, t } = useLanguage();
   
   const handleLogout = async () => {
     try {
@@ -96,14 +98,40 @@ export const DashboardHeader = () => {
     <header className="w-full bg-white shadow-sm flex items-center justify-between px-8 h-20 fixed top-0 left-0 z-50">
       <div className="flex items-center select-none">
         <img src="/images/logo.png" alt="Vesello Logo" className="h-10 w-auto mr-2" style={{objectFit: 'contain'}} />
-    
       </div>
-      <button
-        className="bg-black text-white px-6 py-2 rounded-md font-semibold text-base hover:bg-[#E5B574] hover:text-black transition-colors"
-        onClick={handleLogout}
-      >
-        Logout
-      </button>
+      
+      <div className="flex items-center gap-4">
+        {/* Language Switcher */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setLanguage('en')}
+            className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+              language === 'en' 
+                ? 'bg-[#E5B574] text-black' 
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            EN
+          </button>
+          <button
+            onClick={() => setLanguage('pl')}
+            className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+              language === 'pl' 
+                ? 'bg-[#E5B574] text-black' 
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            PL
+          </button>
+        </div>
+        
+        <button
+          className="bg-black text-white px-6 py-2 rounded-md font-semibold text-base hover:bg-[#E5B574] hover:text-black transition-colors"
+          onClick={handleLogout}
+        >
+          {t.navigation.logout}
+        </button>
+      </div>
     </header>
   );
 };

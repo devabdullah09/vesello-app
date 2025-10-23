@@ -3,6 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useLanguage } from '@/components/language-context'
 
 interface EventHeaderProps {
   eventId: string
@@ -17,6 +18,7 @@ export default function EventHeader({
   rsvpEnabled = false, 
   currentPage = 'home' 
 }: EventHeaderProps) {
+  const { t } = useLanguage()
   const homeUrl = `/event-id/${eventId}`
 
   return (
@@ -33,20 +35,20 @@ export default function EventHeader({
           <div className="flex items-center space-x-6">
             {/* Home Link - Always present, links to event page */}
             {currentPage === 'home' ? (
-              <span className="text-[#E5B574] font-medium">Home</span>
+              <span className="text-[#E5B574] font-medium">{t.navigation.home}</span>
             ) : (
               <Link href={homeUrl} className="text-gray-600 hover:text-[#E5B574] transition-colors">
-                Home
+                {t.navigation.home}
               </Link>
             )}
             
             {/* Gallery Link - Conditional based on galleryEnabled */}
             {galleryEnabled && (
               currentPage === 'gallery' ? (
-                <span className="text-[#E5B574] font-medium">Gallery</span>
+                <span className="text-[#E5B574] font-medium">{t.navigation.gallery}</span>
               ) : (
                 <Link href={`${homeUrl}/gallery`} className="text-gray-600 hover:text-[#E5B574] transition-colors">
-                  Gallery
+                  {t.navigation.gallery}
                 </Link>
               )
             )}
@@ -54,10 +56,10 @@ export default function EventHeader({
             {/* RSVP Link - Conditional based on rsvpEnabled */}
             {rsvpEnabled && (
               currentPage === 'rsvp' ? (
-                <span className="text-[#E5B574] font-medium">Reply to Invitation</span>
+                <span className="text-[#E5B574] font-medium">{t.navigation.rsvp}</span>
               ) : (
                 <Link href={`${homeUrl}/invitation`} className="text-gray-600 hover:text-[#E5B574] transition-colors">
-                  Reply to Invitation
+                  {t.navigation.rsvp}
                 </Link>
               )
             )}

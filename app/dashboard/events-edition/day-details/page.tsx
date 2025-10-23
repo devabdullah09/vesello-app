@@ -2,6 +2,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from '@/components/supabase-auth-provider';
+import { useLanguage } from '@/components/language-context';
 import supabase from '@/lib/supabase';
 
 interface EventDayDetails {
@@ -32,6 +33,7 @@ export default function EventsDayDetailsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [eventDetails, setEventDetails] = useState<EventDayDetails | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
@@ -254,35 +256,35 @@ export default function EventsDayDetailsPage() {
           onClick={handleBack}
           className="bg-black text-white px-6 py-2 rounded font-semibold hover:bg-gray-800 transition-colors"
         >
-          Back
+          {t.common.back}
         </button>
         <div className="flex flex-col items-end space-y-2">
           <button 
             onClick={() => router.push(`/dashboard/events-edition/content-editor?wwwId=${eventDetails.wwwId}`)}
             className="bg-gradient-to-r from-[#E5B574] via-[#D59C58] to-[#C18037] text-white font-semibold px-6 py-2 rounded-md shadow-md hover:from-[#D59C58] hover:to-[#E5B574] transition-colors"
           >
-            Edit Website
+            {t.dashboard.editWebsite}
           </button>
-          <span className="text-sm text-black">*required</span>
+          <span className="text-sm text-black">*{t.dashboard.required}</span>
         </div>
       </div>
       
-      <h1 className="text-3xl font-bold text-black mb-8">EVENT'S DAY DETAILS MANAGEMENT</h1>
+      <h1 className="text-3xl font-bold text-black mb-8">{t.dashboard.dayDetails}</h1>
       
       {/* Event Info */}
       <div className="bg-white p-6 rounded-lg shadow-sm mb-8">
-        <h2 className="text-xl font-semibold text-black mb-4">Event Information</h2>
+        <h2 className="text-xl font-semibold text-black mb-4">{t.dashboard.eventOverview}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-sm text-gray-600">Event Title</label>
+            <label className="text-sm text-gray-600">{t.dashboard.eventTitle}</label>
             <p className="text-lg font-medium text-black">{eventDetails.title}</p>
           </div>
           <div>
-            <label className="text-sm text-gray-600">Couple Names</label>
+            <label className="text-sm text-gray-600">{t.dashboard.coupleNames}</label>
             <p className="text-lg font-medium text-black">{eventDetails.coupleNames}</p>
           </div>
           <div>
-            <label className="text-sm text-gray-600">Event Date</label>
+            <label className="text-sm text-gray-600">{t.dashboard.eventDate}</label>
             <p className="text-lg font-medium text-black">
               {new Date(eventDetails.eventDate).toLocaleDateString('en-US', {
                 year: 'numeric',
@@ -292,7 +294,7 @@ export default function EventsDayDetailsPage() {
             </p>
           </div>
           <div>
-            <label className="text-sm text-gray-600">Venue</label>
+            <label className="text-sm text-gray-600">{t.dashboard.venue}</label>
             <p className="text-lg font-medium text-black">{eventDetails.venue || 'Not specified'}</p>
           </div>
         </div>
@@ -303,7 +305,7 @@ export default function EventsDayDetailsPage() {
         <div className="flex-1">
           <div className="mb-6">
             <p className="text-lg text-gray-700 mb-4">
-              Copy the link and invite guests to your event details page
+              {t.dashboard.copyLinkAndInvite}
             </p>
             <div className="flex items-center gap-4 mb-4">
               <div className="text-2xl font-bold text-black bg-white p-4 rounded border flex-1">
@@ -313,23 +315,23 @@ export default function EventsDayDetailsPage() {
                 onClick={copyToClipboard}
                 className="bg-[#E5B574] text-white px-4 py-2 rounded font-semibold hover:bg-[#D59C58] transition-colors"
               >
-                Copy Link
+                {t.dashboard.copyLink}
               </button>
             </div>
 
             <p className="text-sm text-gray-700 mb-4">
-              Download the QR code and share the event's main page with your guests:
+              {t.dashboard.downloadQRAndShare}
             </p>
 
             {/* Feature Status */}
             <div className="bg-white p-4 rounded border">
-              <h3 className="font-semibold text-black mb-2">Available Features</h3>
+              <h3 className="font-semibold text-black mb-2">{t.dashboard.availableFeatures}</h3>
               <div className="flex gap-4">
                 <div className={`px-3 py-1 rounded text-sm ${eventDetails.galleryEnabled ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
-                  Gallery: {eventDetails.galleryEnabled ? 'Enabled' : 'Disabled'}
+                  {t.dashboard.gallery}: {eventDetails.galleryEnabled ? t.dashboard.enabled : t.dashboard.disabled}
                 </div>
                 <div className={`px-3 py-1 rounded text-sm ${eventDetails.rsvpEnabled ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
-                  RSVP: {eventDetails.rsvpEnabled ? 'Enabled' : 'Disabled'}
+                  {t.dashboard.rsvp}: {eventDetails.rsvpEnabled ? t.dashboard.enabled : t.dashboard.disabled}
                 </div>
               </div>
             </div>
@@ -358,7 +360,7 @@ export default function EventsDayDetailsPage() {
               onClick={downloadQRCode}
               className="text-[#E5B574] font-semibold hover:underline"
             >
-              Download QR Code
+              {t.dashboard.downloadQR}
             </button>
           </div>
         </div>

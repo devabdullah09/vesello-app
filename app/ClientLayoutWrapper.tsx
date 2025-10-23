@@ -9,12 +9,13 @@ import { EventProvider } from "@/components/event-context";
 export default function ClientLayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isDashboard = pathname?.startsWith("/dashboard");
+  const isDynamicEvent = pathname?.startsWith("/event-id/");
   return (
     <AuthProvider>
       <EventProvider>
-        {!isDashboard && <Header />}
+        {!isDashboard && !isDynamicEvent && <Header />}
         <main className={!isDashboard ? "pt-20" : undefined}>{children}</main>
-        {!isDashboard && <Footer />}
+        {!isDashboard && !isDynamicEvent && <Footer />}
       </EventProvider>
     </AuthProvider>
   );

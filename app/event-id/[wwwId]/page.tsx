@@ -22,6 +22,7 @@ import AdditionalInfoSection from "@/components/sections/AdditionalInfoSection";
 import { AdminEditProvider } from "@/components/admin-edit-provider";
 import AdminToggle from "@/components/inline-edit/AdminToggle";
 import EventHeader from "@/components/layout/EventHeader";
+import EventFooter from "@/components/layout/EventFooter";
 import EditableSection from "@/components/inline-edit/EditableSection";
 import HeroSectionEditor from "@/components/inline-edit/HeroSectionEditor";
 import TimelineSectionEditor from "@/components/inline-edit/TimelineSectionEditor";
@@ -85,6 +86,7 @@ interface EventData {
       location: string;
       details?: string;
       mapUrl?: string;
+      imageUrl?: string;
     };
     ceremonyVenueSection: {
       title: string;
@@ -92,6 +94,7 @@ interface EventData {
       address: string;
       description?: string;
       mapUrl?: string;
+      imageUrl?: string;
     };
     menuSection: {
       title: string;
@@ -634,6 +637,7 @@ export default function PublicEventPage() {
             location={eventData.sectionContent?.ceremonySection?.location || eventData.venue || 'Wedding Venue'}
             details={eventData.sectionContent?.ceremonySection?.details}
             mapUrl={eventData.sectionContent?.ceremonySection?.mapUrl}
+            imageUrl={eventData.sectionContent?.ceremonySection?.imageUrl}
           />
         </EditableSection>
       )}
@@ -648,6 +652,7 @@ export default function PublicEventPage() {
             address={eventData.sectionContent?.ceremonyVenueSection?.address || ''}
             description={eventData.sectionContent?.ceremonyVenueSection?.description}
             mapUrl={eventData.sectionContent?.ceremonyVenueSection?.mapUrl}
+            imageUrl={eventData.sectionContent?.ceremonyVenueSection?.imageUrl}
           />
         </EditableSection>
       )}
@@ -695,7 +700,7 @@ export default function PublicEventPage() {
           onEdit={() => setTeamEditorOpen(true)}
           sectionName="Team Section"
         >
-          <div id="team-section" className="pt-20">
+          <div id="team-section">
             <DynamicTeamSection 
               title={eventData.sectionContent?.teamSection?.title || 'Team'}
               description={eventData.sectionContent?.teamSection?.description}
@@ -743,6 +748,9 @@ export default function PublicEventPage() {
 
       {/* Admin Toggle Button */}
       <AdminToggle />
+
+      {/* Event Footer */}
+      <EventFooter />
 
       {/* Inline Editor Modals */}
       <HeroSectionEditor

@@ -1,5 +1,6 @@
 import React from 'react';
 import CollapsibleSection from '../CollapsibleSection';
+import { useLanguage } from '@/components/language-context';
 
 interface TransportationOption {
   id: string;
@@ -19,8 +20,10 @@ export default function TransportationSection({
   description = 'Information about getting to and from the venue.',
   options = []
 }: TransportationSectionProps) {
+  const { t } = useLanguage();
+  
   return (
-    <CollapsibleSection title={title}>
+    <CollapsibleSection title={t.transportation.title}>
       {/* Description */}
       {description && (
         <div className="text-center mb-6">
@@ -30,7 +33,7 @@ export default function TransportationSection({
                fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
                lineHeight: 1.5
              }}>
-            {description}
+            {t.transportation.description}
           </p>
         </div>
       )}
@@ -65,7 +68,7 @@ export default function TransportationSection({
                  fontFamily: 'Montserrat',
                  fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
                }}>
-              No transportation information available yet.
+              {t.transportation.noInfo}
             </p>
           </div>
         )}

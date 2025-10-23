@@ -1,67 +1,69 @@
 "use client";
 import React from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { useLanguage } from "@/components/language-context";
 
-const sidebarNav: Record<"superadmin" | "organizer", { label: string; href: string; subNav?: { label: string; href: string }[] }[]> = {
+const getSidebarNav = (t: any): Record<"superadmin" | "organizer", { label: string; href: string; subNav?: { label: string; href: string }[] }[]> => ({
   superadmin: [
-    { label: "EVENTS LIST", href: "/dashboard/events-list" },
+    { label: t.dashboard.eventsList, href: "/dashboard/events-list" },
     {
-      label: "EVENTS EDITION",
+      label: t.dashboard.eventsEdition,
       href: "/dashboard/events-edition",
       subNav: [
-        { label: "EVENT'S GENERAL INFO", href: "/dashboard/events-edition/general-info" },
-        { label: "EVENT'S DAY DETAILS MANAGEMENT", href: "/dashboard/events-edition/day-details" },
-        { label: "GALLERY MANAGEMENT", href: "/dashboard/events-edition/gallery" },
-        { label: "RSVP MANAGEMENT", href: "/dashboard/events-edition/rsvp" },
+        { label: t.dashboard.generalInfo, href: "/dashboard/events-edition/general-info" },
+        { label: t.dashboard.dayDetails, href: "/dashboard/events-edition/day-details" },
+        { label: t.dashboard.galleryManagement, href: "/dashboard/events-edition/gallery" },
+        { label: t.dashboard.rsvpManagement, href: "/dashboard/events-edition/rsvp" },
       ],
     },
-    { label: "ORGANIZERS", href: "/dashboard/organizers" },
-    { label: "CLIENTS LIST", href: "/dashboard/clients-list" },
-    { label: "MODULES LIST", href: "/dashboard/modules-list" },
-    { label: "WEBHOOKS LIST", href: "/dashboard/webhooks-list" },
+    { label: t.dashboard.organizers, href: "/dashboard/organizers" },
+    { label: t.dashboard.clientsList, href: "/dashboard/clients-list" },
+    { label: t.dashboard.modulesList, href: "/dashboard/modules-list" },
+    { label: t.dashboard.webhooksList, href: "/dashboard/webhooks-list" },
     {
-      label: "SUBSCRIPTION",
+      label: t.dashboard.subscription,
       href: "/dashboard/subscription",
       subNav: [
-        { label: "MANAGE SUBSCRIPTION", href: "/dashboard/subscription" },
-        { label: "BILLING HISTORY", href: "/dashboard/billing" },
+        { label: t.dashboard.manageSubscription, href: "/dashboard/subscription" },
+        { label: t.dashboard.billingHistory, href: "/dashboard/billing" },
       ],
     },
   ],
   organizer: [
-    { label: "DASHBOARD", href: "/dashboard/organizer" },
+    { label: t.dashboard.dashboard, href: "/dashboard/organizer" },
     {
-      label: "EVENT MANAGEMENT",
+      label: t.dashboard.eventManagement,
       href: "/dashboard/events-edition",
       subNav: [
-        { label: "EVENT SETTINGS", href: "/dashboard/events-edition/general-info" },
-        { label: "DAY DETAILS", href: "/dashboard/events-edition/day-details" },
-        { label: "GALLERY", href: "/dashboard/events-edition/gallery" },
-        { label: "RSVP", href: "/dashboard/events-edition/rsvp" },
+        { label: t.dashboard.eventSettings, href: "/dashboard/events-edition/general-info" },
+        { label: t.dashboard.dayDetails, href: "/dashboard/events-edition/day-details" },
+        { label: t.dashboard.gallery, href: "/dashboard/events-edition/gallery" },
+        { label: t.dashboard.rsvp, href: "/dashboard/events-edition/rsvp" },
       ],
     },
     {
-      label: "SUBSCRIPTION",
+      label: t.dashboard.subscription,
       href: "/dashboard/subscription",
       subNav: [
-        { label: "MANAGE SUBSCRIPTION", href: "/dashboard/subscription" },
-        { label: "BILLING HISTORY", href: "/dashboard/billing" },
+        { label: t.dashboard.manageSubscription, href: "/dashboard/subscription" },
+        { label: t.dashboard.billingHistory, href: "/dashboard/billing" },
       ],
     },
   ],
-};
+});
 
-type Role = keyof typeof sidebarNav;
+type Role = "superadmin" | "organizer";
 
 export default function Sidebar({ role }: { role: Role }) {
   const router = useRouter();
   const pathname = usePathname();
-  const navItems = sidebarNav[role] || sidebarNav.organizer;
+  const { t } = useLanguage();
+  const navItems = getSidebarNav(t)[role] || getSidebarNav(t).organizer;
   return (
     <aside className="w-72 bg-black text-white flex flex-col min-h-screen fixed left-0 top-20 z-40 overflow-y-auto">
       <div className="px-8 py-6 cursor-pointer select-none" onClick={() => router.push("/dashboard") }>
-        <div className="font-bold text-lg mb-1 hover:underline">ADMIN DASHBOARD</div>
-        <div className="text-xs text-gray-300 mb-6">({role === "superadmin" ? "Super Admin" : "Organizer"})</div>
+        <div className="font-bold text-lg mb-1 hover:underline">{t.dashboard.adminDashboard}</div>
+        <div className="text-xs text-gray-300 mb-6">({role === "superadmin" ? t.dashboard.superAdmin : t.dashboard.organizer})</div>
       </div>
       <nav className="flex flex-col gap-2 px-8 pb-8">
         {navItems.map((item: { label: string; href: string; subNav?: { label: string; href: string }[] }) => {

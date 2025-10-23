@@ -1,5 +1,6 @@
 import React from 'react';
 import CollapsibleSection from '../CollapsibleSection';
+import { useLanguage } from '@/components/language-context';
 
 interface TimelineEvent {
   id: string;
@@ -15,8 +16,23 @@ interface DynamicTimelineSectionProps {
 }
 
 export default function DynamicTimelineSection({ title, events }: DynamicTimelineSectionProps) {
+  const { t } = useLanguage();
+  
+  // Helper function to translate event titles
+  const translateEventTitle = (title: string) => {
+    const titleMap: { [key: string]: string } = {
+      'WELCOME TOAST': t.timeline.welcomeToast,
+      'CEREMONY': t.timeline.ceremony,
+      'WEDDING LUNCH': t.timeline.weddingLunch,
+      'CAKE CUTTING': t.timeline.cakeCutting,
+      'FIRST DANCE': t.timeline.firstDance,
+      'COCKTAIL HOUR': t.timeline.cocktailHour,
+    };
+    return titleMap[title] || title;
+  };
+  
   return (
-    <CollapsibleSection title="Wedding Day Timeline">
+    <CollapsibleSection title={t.timeline.title}>
       {/* Elegant gold line at top */}
       <div className="flex justify-center" style={{ marginTop: '-8px', marginBottom: '8px' }}>
         <img
@@ -34,7 +50,7 @@ export default function DynamicTimelineSection({ title, events }: DynamicTimelin
       <div className="flex flex-col items-center justify-center mb-2 relative z-9" style={{ marginTop: '-8px', marginBottom: '8px' }}>
         <span
           style={{
-            fontFamily: 'Sail',
+            fontFamily: 'Great Vibes, cursive',
             fontWeight: 500,
             fontSize: 'clamp(2rem, 8vw, 3rem)',
             background: 'linear-gradient(90deg, #E5B574 0%, #D59C58 43%, #C18037 100%)',
@@ -46,7 +62,7 @@ export default function DynamicTimelineSection({ title, events }: DynamicTimelin
             marginBottom: '0',
           }}
         >
-          {title}
+          {t.timeline.subtitle}
         </span>
       </div>
       {/* Timeline Content */}
@@ -139,7 +155,7 @@ export default function DynamicTimelineSection({ title, events }: DynamicTimelin
                   lineHeight: 1.2,
                   textAlign: 'left'
                 }}>
-                  {event.title}
+                  {translateEventTitle(event.title)}
                 </span>
               </div>
             </div>

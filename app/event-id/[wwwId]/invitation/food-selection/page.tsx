@@ -4,14 +4,15 @@ import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import { useInvitation } from '@/components/invitation-context';
 import { useInvitationFlow } from '@/hooks/use-invitation-flow';
+import { useLanguage } from '@/components/language-context';
 import EventHeader from '@/components/layout/EventHeader';
-
-const options = ['Regular', 'Vegetarian', 'Vegan'];
+import EventFooter from '@/components/layout/EventFooter';
 
 export default function DynamicFoodSelectionPage() {
   const params = useParams();
   const wwwId = params?.wwwId as string;
   const { state, dispatch } = useInvitation();
+  const { t } = useLanguage();
   const [selections, setSelections] = useState<{ [guestName: string]: 'Regular' | 'Vegetarian' | 'Vegan' }>({});
   const [eventData, setEventData] = useState<{coupleNames: string, eventDate: string, venue: string, galleryEnabled: boolean, rsvpEnabled: boolean} | null>(null);
   const router = useRouter();
@@ -58,6 +59,12 @@ export default function DynamicFoodSelectionPage() {
     });
     setSelections(initialSelections);
   }, [guests, state.foodPreferences]);
+
+  const options = [
+    { label: t.invitation.regular, value: 'Regular' as const },
+    { label: t.invitation.vegetarian, value: 'Vegetarian' as const },
+    { label: t.invitation.vegan, value: 'Vegan' as const }
+  ];
 
   const handleSelect = (guestName: string, option: 'Regular' | 'Vegetarian' | 'Vegan') => {
     const newSelections = { ...selections, [guestName]: option };
@@ -110,8 +117,8 @@ export default function DynamicFoodSelectionPage() {
           <div className="w-full max-w-[1200px] mx-auto flex flex-col items-center mb-8 mt-2 z-10 px-16 pt-12 pb-8">
             <div className="text-center w-full mb-10">
               <div className="flex flex-col items-center">
-                <span className="text-3xl md:text-4xl" style={{ fontFamily: 'Sail, cursive', fontWeight: 400, color: '#E5B574', letterSpacing: '0.5px', lineHeight: 1.1 }}>What's Your</span>
-                <span className="text-4xl md:text-5xl" style={{ fontFamily: 'Sail, cursive', fontWeight: 400, color: '#08080A', letterSpacing: '0.5px', lineHeight: 1.1, marginTop: '0.5rem' }}>Meal Preference?</span>
+                <span className="text-3xl md:text-4xl" style={{ fontFamily: 'Great Vibes, cursive', fontWeight: 500, color: '#E5B574', letterSpacing: '0.5px', lineHeight: 1.1 }}>{t.invitation.whatsYour}</span>
+                <span className="text-4xl md:text-5xl" style={{ fontFamily: 'Great Vibes, cursive', fontWeight: 500, color: '#08080A', letterSpacing: '0.5px', lineHeight: 1.1, marginTop: '0.5rem' }}>{t.invitation.mealPreference}</span>
                 <div className="w-24 h-[2px] bg-[#B7B7B7] mx-auto my-4" />
               </div>
             </div>
@@ -123,12 +130,12 @@ export default function DynamicFoodSelectionPage() {
                   <div className="flex flex-col gap-4 w-full">
                     {options.map(option => (
                       <button
-                        key={option}
-                        className={`w-full py-3 rounded-md text-base transition-colors focus:outline-none ${idx % 2 === 0 ? 'text-left pl-6' : 'text-right pr-6'} ${selections[guestName] === option ? 'bg-[#08080A] text-white' : 'bg-[#F5F5F5] text-[#08080A]'}`}
+                        key={option.value}
+                        className={`w-full py-3 rounded-md text-base transition-colors focus:outline-none ${idx % 2 === 0 ? 'text-left pl-6' : 'text-right pr-6'} ${selections[guestName] === option.value ? 'bg-[#08080A] text-white' : 'bg-[#F5F5F5] text-[#08080A]'}`}
                         style={{ fontFamily: 'Montserrat', fontSize: '15px' }}
-                        onClick={() => handleSelect(guestName, option as 'Regular' | 'Vegetarian' | 'Vegan')}
+                        onClick={() => handleSelect(guestName, option.value)}
                       >
-                        {option}
+                        {option.label}
                       </button>
                     ))}
                   </div>
@@ -141,10 +148,14 @@ export default function DynamicFoodSelectionPage() {
               style={{ fontFamily: 'Montserrat' }}
               onClick={handleContinue}
             >
-              Continue
+{t.invitation.continue}
             </button>
           </div>
         </div>
+      </div>
+      {/* Event Footer */}
+      <div className="mt-auto">
+        <EventFooter />
       </div>
     </div>
     </>

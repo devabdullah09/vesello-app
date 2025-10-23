@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import EventHeader from '@/components/layout/EventHeader';
+import EventFooter from '@/components/layout/EventFooter';
 import { fetchGalleryContent, GalleryContent, defaultGalleryContent } from '@/lib/gallery-content';
 import { useEvent } from '@/components/event-context';
 
@@ -77,8 +78,9 @@ export default function DynamicGalleryPage() {
         rsvpEnabled={eventData?.rsvpEnabled || false}
         currentPage="gallery"
       />
-      <div className="min-h-screen flex flex-col items-center justify-center bg-white py-10 px-2 md:px-0 relative overflow-x-hidden pt-20" style={{ fontFamily: 'Montserrat, Arial, Helvetica, sans-serif' }}>
-      <div className="relative w-full max-w-3xl bg-white rounded-2xl border border-[#C7B299] p-8 md:p-16 shadow-md mx-auto z-10" style={{ minHeight: 700 }}>
+      <div className="min-h-screen bg-white py-10 px-2 md:px-0 relative overflow-x-hidden pt-20" style={{ fontFamily: 'Montserrat, Arial, Helvetica, sans-serif' }}>
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
+        <div className="relative w-full max-w-3xl bg-white rounded-2xl border border-[#C7B299] p-8 md:p-16 shadow-md mx-auto z-10" style={{ minHeight: 700 }}>
         {/* Admin Toggle */}
         {admin && (
           <div className="flex items-center mb-6 justify-end">
@@ -152,7 +154,11 @@ export default function DynamicGalleryPage() {
         <Image src="/images/Gallery/bottom-right-sparkle.png" alt="bottom right sparkle" width={202} height={32} className="absolute right-4 bottom-4 z-0" />
         <Image src="/images/Gallery/middle-right-sparkle.png" alt="middle right sparkle" width={280} height={42} className="absolute right-5 top-1/4 z-0" />
         <Image src="/images/Gallery/over-leaf-sparkle.png" alt="over leaf sparkle" width={252} height={32} className="absolute left-5 top-20 z-0" />
+        </div>
       </div>
+      
+      {/* Event Footer */}
+      <EventFooter />
     </div>
     </>
   );
