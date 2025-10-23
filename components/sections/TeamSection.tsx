@@ -1,6 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import CollapsibleSection from '../CollapsibleSection';
+import { useLanguage } from '@/components/language-context';
 
 const socialIconKeys = ['facebook', 'instagram', 'twitter'] as const;
 type SocialKey = typeof socialIconKeys[number];
@@ -76,12 +77,13 @@ const socialIcons: Record<SocialKey, React.ReactNode> = {
 };
 
 export default function TeamSection() {
+  const { t } = useLanguage();
   // Split team members into two rows
   const firstRow = teamMembers.slice(0, 4);
   const secondRow = teamMembers.slice(4, 7);
 
   return (
-    <CollapsibleSection title="Our Wedding Team">
+    <CollapsibleSection title={t.team.title}>
       {/* Main Title */}
       <div className="text-center mb-4 sm:mb-6 mt-2">
         <span

@@ -1,7 +1,9 @@
 import React from 'react';
 import CollapsibleSection from '../CollapsibleSection';
+import { useLanguage } from '@/components/language-context';
 
 export default function WeddingTimeline() {
+  const { t } = useLanguage();
   const events = [
     { time: '11:00 AM', icon: '/images/toast.png', label: 'WELCOME TOAST' },
     { time: '12:00 AM', icon: '/images/ceremony.png', label: 'CEREMONY' },
@@ -14,7 +16,7 @@ export default function WeddingTimeline() {
   ];
 
   return (
-    <CollapsibleSection title="Wedding Day Timeline">
+    <CollapsibleSection title={t.timeline.title}>
       {/* Elegant gold line at top */}
       <div className="flex justify-center" style={{ marginTop: '-8px', marginBottom: '8px' }}>
         <img
@@ -44,7 +46,7 @@ export default function WeddingTimeline() {
             marginBottom: '0',
           }}
         >
-          Wedding Day
+{t.timeline.subtitle}
         </span>
       </div>
       {/* Timeline Content */}

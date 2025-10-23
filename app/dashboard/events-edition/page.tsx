@@ -1,42 +1,37 @@
 "use client";
 import { useRouter } from "next/navigation";
-
-const subNav = [
-  "EVENT'S GENERAL INFO",
-  "EVENT'S DAY DETAILS MANAGEMENT",
-  "GALLERY MANAGEMENT",
-  "RSVP MANAGEMENT",
-];
-
-const cards = [
-  {
-    title: "EVENT'S GENERAL INFO",
-    description: "",
-    href: "/dashboard/events-edition/general-info",
-  },
-  {
-    title: "EVENT'S DAY DETAILS MANAGEMENT",
-    description: "",
-    href: "/dashboard/events-edition/day-details",
-  },
-  {
-    title: "GALLERY MANAGEMENT",
-    description: "",
-    href: "/dashboard/events-edition/gallery",
-  },
-  {
-    title: "RSVP MANAGEMENT",
-    description: "",
-    href: "/dashboard/events-edition/rsvp",
-  },
-];
+import { useLanguage } from "@/components/language-context";
 
 export default function EventsEditionPage() {
   const router = useRouter();
+  const { t } = useLanguage();
+
+  const cards = [
+    {
+      title: t.dashboard.generalInfo,
+      description: "",
+      href: "/dashboard/events-edition/general-info",
+    },
+    {
+      title: t.dashboard.dayDetails,
+      description: "",
+      href: "/dashboard/events-edition/day-details",
+    },
+    {
+      title: t.dashboard.galleryManagement,
+      description: "",
+      href: "/dashboard/events-edition/gallery",
+    },
+    {
+      title: t.dashboard.rsvpManagement,
+      description: "",
+      href: "/dashboard/events-edition/rsvp",
+    },
+  ];
 
   return (
     <div className="flex-1 p-12">
-      <h1 className="text-3xl font-bold text-black mb-10">EVENTS EDITION</h1>
+      <h1 className="text-3xl font-bold text-black mb-10">{t.dashboard.eventsEdition}</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {cards.map((card, idx) => (
           <div
@@ -50,7 +45,7 @@ export default function EventsEditionPage() {
               className="bg-gradient-to-r from-[#E5B574] via-[#D59C58] to-[#C18037] text-white font-semibold px-8 py-2 rounded-md shadow-md hover:from-[#D59C58] hover:to-[#E5B574] transition-colors"
               onClick={() => router.push(card.href)}
             >
-              Manage
+              {t.dashboard.manage}
             </button>
           </div>
         ))}

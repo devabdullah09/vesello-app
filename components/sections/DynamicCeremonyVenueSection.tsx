@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { MapPin } from 'lucide-react';
 import CollapsibleSection from '../CollapsibleSection';
+import { useLanguage } from '@/components/language-context';
 
 interface DynamicCeremonyVenueSectionProps {
   title: string;
@@ -8,6 +9,7 @@ interface DynamicCeremonyVenueSectionProps {
   address: string;
   description?: string;
   mapUrl?: string;
+  imageUrl?: string;
 }
 
 export default function DynamicCeremonyVenueSection({ 
@@ -15,15 +17,18 @@ export default function DynamicCeremonyVenueSection({
   venueName, 
   address, 
   description,
-  mapUrl 
+  mapUrl,
+  imageUrl 
 }: DynamicCeremonyVenueSectionProps) {
+  const { t } = useLanguage();
+  
   return (
-    <CollapsibleSection title="Wedding Venue">
+    <CollapsibleSection title={t.venue.title}>
       <div className="flex flex-col md:flex-row items-center md:items-stretch">
         {/* Left: Image Content */}
         <div className="flex-1 flex items-center justify-center px-4 sm:px-6 md:px-10 py-6 md:py-0">
           <Image
-            src="/images/Group 39.png"
+            src={imageUrl || "/images/Group 39.png"}
             alt="Wedding Venue"
             width={420}
             height={320}
@@ -39,7 +44,8 @@ export default function DynamicCeremonyVenueSection({
         <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 md:px-10 py-6 md:py-0">
           <div className="mb-2"
             style={{ 
-              fontFamily: 'Sail', 
+              fontFamily: 'Great Vibes, cursive',
+              fontWeight: 500, 
               fontSize: 'clamp(1.5rem, 5vw, 2.2rem)', 
               background: 'linear-gradient(90deg, #E5B574 0%, #C18037 100%)', 
               WebkitBackgroundClip: 'text', 
@@ -48,7 +54,7 @@ export default function DynamicCeremonyVenueSection({
               letterSpacing: '1px', 
               lineHeight: 1.1 
             }}>
-            {title}
+            {t.venue.title}
           </div>
           <div className="mb-4 sm:mb-5">
             <span className="font-bold text-[#08080A]" 
@@ -66,7 +72,7 @@ export default function DynamicCeremonyVenueSection({
                    fontWeight: 400,
                    fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
                  }}>
-              {address}
+              {t.venue.description}
             </div>
           </div>
           {description && (
@@ -95,7 +101,7 @@ export default function DynamicCeremonyVenueSection({
                 fontWeight: 500, 
                 fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' 
               }}>
-                View on Map
+                {t.venue.viewOnMap}
               </span>
             </a>
           ) : (
@@ -106,7 +112,7 @@ export default function DynamicCeremonyVenueSection({
                 fontWeight: 500, 
                 fontSize: 'clamp(0.75rem, 2vw, 0.875rem)' 
               }}>
-                View on Map
+                {t.venue.viewOnMap}
               </span>
             </div>
           )}

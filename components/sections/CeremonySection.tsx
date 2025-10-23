@@ -1,10 +1,12 @@
 import React from 'react';
 import { MapPin } from 'lucide-react';
 import CollapsibleSection from '../CollapsibleSection';
+import { useLanguage } from '@/components/language-context';
 
 export default function CeremonySection() {
+  const { t } = useLanguage();
   return (
-    <CollapsibleSection title="Ceremony">
+    <CollapsibleSection title={t.ceremony.title}>
       <div className="flex flex-col md:flex-row items-center md:items-stretch">
         {/* Left: Text Content */}
         <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 md:px-10 py-6 md:py-0">

@@ -1,10 +1,12 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { useAuth } from '@/components/supabase-auth-provider';
 import { supabase } from "@/lib/supabase";
 
 export default function EventsGeneralInfoPage() {
   const router = useRouter();
+  const { user, userProfile, loading: authLoading } = useAuth();
   const [wwwId, setWwwId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,9 +21,70 @@ export default function EventsGeneralInfoPage() {
     wwwId?: string;
   } | null>(null);
   const [editDate, setEditDate] = useState("");
+  const [organizerEvents, setOrganizerEvents] = useState<any[]>([]);
+  const [checkingOrganizer, setCheckingOrganizer] = useState(true);
 
   const handleBack = () => {
     router.push("/dashboard/events-edition");
+  };
+
+  // Check if organizer has events and auto-load single event
+  useEffect(() => {
+    if (!authLoading && user && userProfile?.role === 'organizer') {
+      fetchOrganizerEvents();
+    } else if (!authLoading && user && userProfile?.role !== 'organizer') {
+      setCheckingOrganizer(false);
+    }
+  }, [user, userProfile, authLoading]);
+
+  const fetchOrganizerEvents = async () => {
+    try {
+      setCheckingOrganizer(true);
+      console.log('Fetching organizer events...');
+      
+      // Get the session token from Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token || '';
+      
+      // Get organizer's assigned events
+      const response = await fetch('/api/dashboard/organizer/event', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch events data');
+      }
+
+      const result = await response.json();
+      console.log('Organizer events result:', result);
+      
+      if (result.success && result.data) {
+        console.log('Setting organizer events:', result.data);
+        
+        // Handle both array and single object responses
+        const eventsArray = Array.isArray(result.data) ? result.data : [result.data];
+        setOrganizerEvents(eventsArray);
+        
+        // If organizer has only one event, automatically load its info
+        if (eventsArray.length === 1) {
+          const event = eventsArray[0];
+          console.log('Single event found, auto-loading:', event.www_id);
+          setWwwId(event.www_id);
+          await loadGeneralInfo(event.www_id);
+          return;
+        } else {
+          console.log('Multiple events found:', eventsArray.length);
+        }
+      } else {
+        console.log('No events found or error:', result);
+      }
+    } catch (error) {
+      console.error('Error fetching organizer events:', error);
+    } finally {
+      setCheckingOrganizer(false);
+    }
   };
 
   const formattedDate = useMemo(() => {
@@ -41,6 +104,7 @@ export default function EventsGeneralInfoPage() {
 
   const loadGeneralInfo = async (id: string) => {
     if (!id) return;
+    console.log('Loading general info for:', id);
     setLoading(true);
     setError(null);
     try {
@@ -56,6 +120,7 @@ export default function EventsGeneralInfoPage() {
         throw new Error(body?.error || "Failed to load event info");
       }
       const result = await res.json();
+      console.log('General info loaded:', result.data);
       setGeneralInfo(result.data);
       // initialize editable date
       const iso = result?.data?.eventDate as string | undefined;
@@ -65,6 +130,8 @@ export default function EventsGeneralInfoPage() {
       } else {
         setEditDate("");
       }
+      // Auto-show modal for single event organizers
+      console.log('Setting showModal to true');
       setShowModal(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unable to fetch event info");
@@ -101,6 +168,159 @@ export default function EventsGeneralInfoPage() {
       setLoading(false);
     }
   };
+
+  // Show loading while checking organizer events
+  if (checkingOrganizer) {
+    return (
+      <div className="flex-1 p-12 bg-gray-100 min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
+
+  // If organizer has multiple events, show event selection
+  if (userProfile?.role === 'organizer' && organizerEvents && organizerEvents.length > 1) {
+    return (
+      <div className="flex-1 p-12 bg-gray-100 min-h-screen">
+        <div className="flex justify-between items-start mb-8">
+          <button
+            onClick={handleBack}
+            className="bg-black text-white px-6 py-2 rounded font-semibold hover:bg-gray-800 transition-colors"
+          >
+            Back
+          </button>
+          <div className="text-black font-semibold">
+            Logout
+          </div>
+        </div>
+        
+        <h1 className="text-3xl font-bold text-black mb-10">SELECT EVENT TO MANAGE</h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {organizerEvents.map((event) => (
+            <div
+              key={event.id}
+              className="bg-white border border-gray-200 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+              onClick={() => {
+                setWwwId(event.www_id);
+                loadGeneralInfo(event.www_id);
+              }}
+            >
+              <div className="text-xl font-bold text-black mb-4">
+                {event.title}
+              </div>
+              <div className="text-gray-600 mb-2">
+                <strong>Couple:</strong> {event.couple_names}
+              </div>
+              <div className="text-gray-600 mb-2">
+                <strong>Date:</strong> {new Date(event.event_date).toLocaleDateString()}
+              </div>
+              <div className="text-gray-600 mb-4">
+                <strong>Event ID:</strong> {event.www_id}
+              </div>
+              <div className="flex items-center gap-4">
+                <span className={`px-2 py-1 rounded text-sm ${
+                  event.gallery_enabled ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
+                }`}>
+                  {event.gallery_enabled ? 'Gallery' : 'No Gallery'}
+                </span>
+                <span className={`px-2 py-1 rounded text-sm ${
+                  event.rsvp_enabled ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
+                }`}>
+                  {event.rsvp_enabled ? 'RSVP' : 'No RSVP'}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Debug logging
+  console.log('Render check:', {
+    role: userProfile?.role,
+    eventsLength: organizerEvents.length,
+    showModal,
+    hasGeneralInfo: !!generalInfo,
+    organizerEvents
+  });
+
+  // If organizer has single event and we have general info, show it directly
+  if (userProfile?.role === 'organizer' && organizerEvents && organizerEvents.length === 1 && generalInfo) {
+    return (
+      <div className="flex-1 p-12 bg-gray-100 min-h-screen">
+        <div className="flex justify-between items-start mb-8">
+          <button
+            onClick={handleBack}
+            className="bg-black text-white px-6 py-2 rounded font-semibold hover:bg-gray-800 transition-colors"
+          >
+            Back
+          </button>
+          <div className="text-black font-semibold">
+            Logout
+          </div>
+        </div>
+        
+        <h1 className="text-3xl font-bold text-black mb-10">EVENTS GENERAL INFO</h1>
+        
+        {/* Show the modal content directly instead of as an overlay */}
+        <div className="bg-white w-full max-w-2xl mx-auto rounded-xl shadow-xl p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-black">Event's General Info</h2>
+            <button
+              onClick={() => setShowModal(false)}
+              className="text-gray-500 hover:text-gray-700 text-2xl"
+            >
+              ×
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Event URL</label>
+              <div className="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                {generalInfo.eventUrl || `http://localhost:3000/event-id/${generalInfo.wwwId}`}
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Couple Names</label>
+              <div className="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                {generalInfo.coupleNames}
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Venue</label>
+              <div className="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                {generalInfo.venue || 'Not specified'}
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Event Date</label>
+              <div className="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                {formattedDate}
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-6 flex justify-between items-center">
+            <div className="text-sm text-gray-500">
+              WWW ID: {generalInfo.wwwId}
+            </div>
+            <button
+              onClick={() => setShowModal(false)}
+              className="bg-black text-white px-4 py-2 rounded font-semibold hover:bg-gray-800 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 p-12 bg-gray-100 min-h-screen">

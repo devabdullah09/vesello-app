@@ -1,9 +1,11 @@
 import Image from 'next/image';
 import CollapsibleSection from '../CollapsibleSection';
+import { useLanguage } from '@/components/language-context';
 
 export default function MenuSection() {
+  const { t } = useLanguage();
   return (
-    <CollapsibleSection title="Wedding Food Menu">
+    <CollapsibleSection title={t.menu.title}>
       {/* Side Borders */}
       <div className="relative flex justify-center items-stretch">
         {/* Left Side Border */}

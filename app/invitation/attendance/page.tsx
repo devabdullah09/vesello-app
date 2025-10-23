@@ -4,8 +4,10 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useInvitation } from '@/components/invitation-context';
 import { useInvitationFlow } from '@/hooks/use-invitation-flow';
+import { useLanguage } from '@/components/language-context';
 
 export default function AttendancePage() {
+  const { t } = useLanguage();
   const { state, dispatch } = useInvitation();
   const [attendance, setAttendance] = useState<{ [guestName: string]: 'will' | 'cant' }>({});
   const router = useRouter();
@@ -92,14 +94,14 @@ export default function AttendancePage() {
                     style={{ fontFamily: 'Montserrat' }}
                     onClick={() => handleSelect(guestName, 'will')}
                   >
-                    Will Attend
+{t.invitation.attendance}
                   </button>
                   <button
                     className={`w-full py-3 rounded-md text-base transition-colors focus:outline-none ${attendance[guestName] === 'cant' ? 'bg-[#08080A] text-white' : 'bg-[#F5F5F5] text-[#08080A]'}`}
                     style={{ fontFamily: 'Montserrat' }}
                     onClick={() => handleSelect(guestName, 'cant')}
                   >
-                    Can't Attend
+{t.invitation.decline}
                   </button>
                 </React.Fragment>
               ))}
@@ -111,7 +113,7 @@ export default function AttendancePage() {
               style={{ fontFamily: 'Montserrat' }}
               onClick={handleContinue}
             >
-              Continue
+{t.invitation.next}
             </button>
           </div>
         </div>

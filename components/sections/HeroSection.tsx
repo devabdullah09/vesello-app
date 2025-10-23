@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useLanguage } from '@/components/language-context';
 
 export default function HeroSection() {
+  const { t } = useLanguage();
   const [timeLeft, setTimeLeft] = useState({
     days: 2,
     hours: 11,
@@ -61,7 +63,7 @@ export default function HeroSection() {
                   fontSize: 'clamp(1.8rem, 6vw, 2.7rem)',
                 }}
               >
-                Save The Date
+{t.hero.saveTheDate}
               </h2>
             </div>
 
@@ -73,16 +75,16 @@ export default function HeroSection() {
                    letterSpacing: '0.12em',
                    fontSize: 'clamp(0.875rem, 2.5vw, 1.125rem)'
                  }}>
-                WE'RE GETTING MARRIED!
+{t.hero.gettingMarried}
               </p>
             </div>
 
             <div className="flex gap-2 sm:gap-3 md:gap-4 mb-2">
               {[
-                { value: timeLeft.days, label: 'DAYS' },
-                { value: timeLeft.hours, label: 'HOURS' },
-                { value: timeLeft.minutes, label: 'MINUTES' },
-                { value: timeLeft.seconds, label: 'SECONDS' },
+                { value: timeLeft.days, label: t.hero.days },
+                { value: timeLeft.hours, label: t.hero.hours },
+                { value: timeLeft.minutes, label: t.hero.minutes },
+                { value: timeLeft.seconds, label: t.hero.seconds },
               ].map((item, idx) => (
                 <div key={item.label} className="text-center">
                   <div

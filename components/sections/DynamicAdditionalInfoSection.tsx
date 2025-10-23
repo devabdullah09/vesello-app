@@ -1,5 +1,6 @@
 import React from 'react';
 import CollapsibleSection from '../CollapsibleSection';
+import { useLanguage } from '@/components/language-context';
 
 interface InfoItem {
   id: string;
@@ -18,15 +19,18 @@ export default function DynamicAdditionalInfoSection({
   content, 
   items 
 }: DynamicAdditionalInfoSectionProps) {
+  const { t } = useLanguage();
+  
   return (
-    <CollapsibleSection title="Additional Information">
+    <CollapsibleSection title={t.additionalInfo.title}>
       <div className="flex flex-col items-center justify-center px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12">
           <div
             className="font-normal mb-4"
             style={{
-              fontFamily: 'Sail',
+              fontFamily: 'Great Vibes, cursive',
+              fontWeight: 500,
               background: 'linear-gradient(90deg, #E5B574 0%, #C18037 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
@@ -36,7 +40,7 @@ export default function DynamicAdditionalInfoSection({
               fontSize: 'clamp(2.5rem, 10vw, 4rem)',
             }}
           >
-            {title}
+            {t.additionalInfo.title}
           </div>
         </div>
 
@@ -50,7 +54,7 @@ export default function DynamicAdditionalInfoSection({
                      fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
                      lineHeight: 1.6
                    }}>
-                {content}
+                {t.additionalInfo.description}
               </div>
             </div>
           )}

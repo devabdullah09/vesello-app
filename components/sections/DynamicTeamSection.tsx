@@ -1,6 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import CollapsibleSection from '../CollapsibleSection';
+import { useLanguage } from '@/components/language-context';
 
 interface TeamMember {
   id: string;
@@ -28,6 +29,7 @@ export default function DynamicTeamSection({
   description, 
   members 
 }: DynamicTeamSectionProps) {
+  const { t } = useLanguage();
   // Default members if none provided
   const defaultMembers: TeamMember[] = [
     { id: '1', role: 'Entertainment Company', name: 'David Harris', photo: '/images/team-placeholder.jpeg' },
@@ -41,21 +43,16 @@ export default function DynamicTeamSection({
   const displayMembers = members.length > 0 ? members : defaultMembers;
 
   return (
-    <CollapsibleSection title="Wedding Team">
+    <CollapsibleSection title={t.team.title}>
       <div className="flex flex-col items-center justify-center px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12">
-          <div className="text-black" 
-               style={{ 
-                 fontFamily: 'Montserrat',
-                 fontSize: 'clamp(0.875rem, 2.5vw, 1.125rem)'
-               }}>
-            Our Wedding
-          </div>
+         
           <div
             className="font-normal mb-4"
             style={{
-              fontFamily: 'Sail',
+              fontFamily: 'Great Vibes, cursive',
+              fontWeight: 500,
               background: 'linear-gradient(90deg, #E5B574 0%, #C18037 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
@@ -65,7 +62,7 @@ export default function DynamicTeamSection({
               fontSize: 'clamp(3rem, 12vw, 5.25rem)',
             }}
           >
-            {title}
+            {t.team.title}
           </div>
           {description && (
             <div className="text-black max-w-2xl mx-auto" 
@@ -74,7 +71,7 @@ export default function DynamicTeamSection({
                    fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
                    lineHeight: 1.5
                  }}>
-              {description}
+              {t.team.description}
             </div>
           )}
         </div>

@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import CollapsibleSection from '../CollapsibleSection';
+import { useLanguage } from '@/components/language-context';
 
 interface MenuItem {
   name: string;
@@ -24,6 +25,7 @@ export default function DynamicMenuSection({
   description, 
   courses 
 }: DynamicMenuSectionProps) {
+  const { t } = useLanguage();
   // Default courses if none provided
   const defaultCourses = [
     {
@@ -55,7 +57,7 @@ export default function DynamicMenuSection({
   const displayCourses = courses.length > 0 ? courses : defaultCourses;
 
   return (
-    <CollapsibleSection title="Wedding Food Menu">
+    <CollapsibleSection title={t.menu.title}>
       {/* Side Borders */}
       <div className="relative flex justify-center items-stretch">
         {/* Left Side Border */}
@@ -72,17 +74,12 @@ export default function DynamicMenuSection({
         <div className="flex-1 flex flex-col items-center justify-center px-2 sm:px-6 md:px-12 py-4">
           {/* Title */}
           <div className="text-center mb-6 sm:mb-8 mt-2">
-            <div className="text-black ml-6" 
-                 style={{ 
-                   fontFamily: 'Montserrat',
-                   fontSize: 'clamp(0.875rem, 2.5vw, 1.125rem)'
-                 }}>
-              Our Wedding
-            </div>
+           
             <div
               className="font-normal mb-2"
               style={{
-                fontFamily: 'Sail',
+                fontFamily: 'Great Vibes, cursive',
+                fontWeight: 400,
                 background: 'linear-gradient(90deg, #E5B574 0%, #C18037 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
@@ -92,7 +89,7 @@ export default function DynamicMenuSection({
                 fontSize: 'clamp(3rem, 12vw, 5.25rem)',
               }}
             >
-              {title}
+              {t.menu.title}
             </div>
             {description && (
               <div className="text-black" 
@@ -101,7 +98,7 @@ export default function DynamicMenuSection({
                      fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
                      lineHeight: 1.5
                    }}>
-                {description}
+                {t.menu.description}
               </div>
             )}
           </div>

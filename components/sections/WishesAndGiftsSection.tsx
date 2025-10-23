@@ -1,6 +1,7 @@
 'use client';
 
 import CollapsibleSection from '../CollapsibleSection';
+import { useLanguage } from '@/components/language-context';
 
 
 interface WishesAndGiftsSectionProps {
@@ -20,14 +21,17 @@ export default function WishesAndGiftsSection({
   when = 'After ceremony next to church',
   giftSuggestions = 'flowers, bottle of wine, lottery coupon'
 }: WishesAndGiftsSectionProps) {
+  const { t } = useLanguage();
+  
   return (
-    <CollapsibleSection title={title}>
+    <CollapsibleSection title={t.wishesGifts.title}>
       {/* Header */}
       <div className="text-center mb-6 sm:mb-8 md:mb-10 mt-2">
         <span
           className="block font-normal mb-2"
           style={{
-            fontFamily: 'Sail',
+            fontFamily: 'Great Vibes, cursive',
+            fontWeight: 500,
             background: 'linear-gradient(90deg, #E5B574 0%, #C18037 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
@@ -37,7 +41,7 @@ export default function WishesAndGiftsSection({
             fontSize: 'clamp(2.5rem, 10vw, 4rem)',
           }}
         >
-          {title}
+          {t.wishesGifts.title}
         </span>
       </div>
       
@@ -50,7 +54,7 @@ export default function WishesAndGiftsSection({
                fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
                lineHeight: 1.5
              }}>
-            {description}
+            {t.wishesGifts.description}
           </p>
         </div>
       )}
@@ -67,7 +71,7 @@ export default function WishesAndGiftsSection({
                     fontFamily: 'Montserrat',
                     fontSize: 'clamp(1rem, 3vw, 1.25rem)'
                   }}>
-              Place
+              {t.wishesGifts.place}
             </span>
             <div className="flex-1 h-px bg-black opacity-20"></div>
           </div>
@@ -90,7 +94,7 @@ export default function WishesAndGiftsSection({
                     fontFamily: 'Montserrat',
                     fontSize: 'clamp(1rem, 3vw, 1.25rem)'
                   }}>
-              When
+              {t.wishesGifts.when}
             </span>
             <div className="flex-1 h-px bg-black opacity-20"></div>
           </div>
@@ -114,7 +118,7 @@ export default function WishesAndGiftsSection({
                       fontFamily: 'Montserrat',
                       fontSize: 'clamp(1rem, 3vw, 1.25rem)'
                     }}>
-                Gifts preferences
+                {t.wishesGifts.giftsPreferences}
               </span>
               <div className="flex-1 h-px bg-black opacity-20"></div>
             </div>
@@ -139,7 +143,7 @@ export default function WishesAndGiftsSection({
                  color: '#E5B574',
                  fontSize: 'clamp(1.25rem, 4vw, 1.5rem)'
                }}>
-            Wishes
+            {t.wishesGifts.wishes}
           </div>
           <div className="text-black" 
                style={{ 
@@ -147,7 +151,7 @@ export default function WishesAndGiftsSection({
                  fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
                  lineHeight: 1.5
                }}>
-            {wishesMessage}
+            {t.wishesGifts.gratitudeMessage}
           </div>
         </div>
       )}

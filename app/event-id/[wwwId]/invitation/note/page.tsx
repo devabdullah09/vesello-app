@@ -4,12 +4,15 @@ import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import { useInvitation } from '@/components/invitation-context';
 import { useInvitationFlow } from '@/hooks/use-invitation-flow';
+import { useLanguage } from '@/components/language-context';
 import EventHeader from '@/components/layout/EventHeader';
+import EventFooter from '@/components/layout/EventFooter';
 
 export default function DynamicNotePage() {
   const params = useParams();
   const wwwId = params?.wwwId as string;
   const { state, dispatch } = useInvitation();
+  const { t } = useLanguage();
   const [notes, setNotes] = useState<{ [guestName: string]: string }>({});
   const [eventData, setEventData] = useState<{coupleNames: string, eventDate: string, venue: string, galleryEnabled: boolean, rsvpEnabled: boolean} | null>(null);
   const router = useRouter();
@@ -115,8 +118,8 @@ export default function DynamicNotePage() {
           <div className="w-full max-w-[900px] mx-auto flex flex-col items-center mb-8 mt-2 z-10 px-16 pt-12 pb-8">
             <div className="text-center w-full mb-6">
               <div className="flex flex-col items-center">
-                <span className="text-4xl md:text-5xl" style={{ fontFamily: 'Sail, cursive', fontWeight: 400, color: '#E5B574', letterSpacing: '0.5px', lineHeight: 1.1 }}>Send A Note</span>
-                <span className="text-3xl md:text-4xl" style={{ fontFamily: 'Sail, cursive', fontWeight: 400, color: '#08080A', letterSpacing: '0.5px', lineHeight: 1.1, fontStyle: 'italic', marginTop: '.5rem' }}>To The Couple</span>
+                <span className="text-4xl md:text-5xl" style={{ fontFamily: 'Great Vibes, cursive', fontWeight: 500, color: '#E5B574', letterSpacing: '0.5px', lineHeight: 1.1 }}>{t.invitation.sendNote}</span>
+                <span className="text-3xl md:text-4xl" style={{ fontFamily: 'Great Vibes, cursive', fontWeight: 500, color: '#08080A', letterSpacing: '0.5px', lineHeight: 1.1, fontStyle: 'italic', marginTop: '.5rem' }}>{t.invitation.toTheCouple}</span>
                 <div className="w-24 h-[2px] bg-[#B7B7B7] mx-auto my-4" />
               </div>
             </div>
@@ -130,7 +133,7 @@ export default function DynamicNotePage() {
                     style={{ fontFamily: 'Montserrat', fontSize: '15px' }}
                     value={notes[guestName] || ''}
                     onChange={e => handleNoteChange(guestName, e.target.value)}
-                    placeholder="Write your message here..."
+                    placeholder={t.invitation.writeMessage}
                   />
                 </div>
               ))}
@@ -142,18 +145,23 @@ export default function DynamicNotePage() {
                 style={{ fontFamily: 'Montserrat' }}
                 onClick={handleContinue}
               >
-                Continue
+{t.invitation.continue}
               </button>
               <button
                 className="w-full bg-[#08080A] text-white py-5 rounded-md text-lg hover:bg-[#222] transition-colors focus:outline-none"
                 style={{ fontFamily: 'Montserrat' }}
                 onClick={handleSkip}
               >
-                Skip
+{t.invitation.skip}
               </button>
             </div>
           </div>
         </div>
+      </div>
+      
+      {/* Event Footer */}
+      <div className="mt-auto">
+        <EventFooter />
       </div>
     </div>
     </>

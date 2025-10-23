@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useLanguage } from '@/components/language-context';
 
 interface CollapsibleSectionProps {
   title: string;
@@ -8,7 +9,8 @@ interface CollapsibleSectionProps {
 }
 
 export default function CollapsibleSection({ title, children, className = '' }: CollapsibleSectionProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
+  const { t } = useLanguage();
 
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
@@ -27,10 +29,17 @@ export default function CollapsibleSection({ title, children, className = '' }: 
           className="flex justify-between items-center w-full px-4 sm:px-6 py-3 sm:py-4 cursor-pointer bg-white hover:bg-gray-50 transition-colors"
           onClick={toggleCollapse}
         >
-          <h2 className="text-black font-medium" 
+          <h2 
               style={{ 
-                fontFamily: 'Montserrat',
-                fontSize: 'clamp(1.125rem, 4vw, 1.5rem)'
+                fontFamily: 'Great Vibes, cursive',
+                fontWeight: 400,
+                background: 'linear-gradient(90deg, #E5B574 0%, #C18037 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                display: 'inline-block',
+                letterSpacing: '1px',
+                lineHeight: 1.1,
+                fontSize: 'clamp(1.5rem, 5vw, 2.5rem)'
               }}>
             {title}
           </h2>

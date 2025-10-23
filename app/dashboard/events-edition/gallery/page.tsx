@@ -1,27 +1,29 @@
 "use client";
 import { useRouter } from "next/navigation";
-
-const galleryCards = [
-  {
-    title: "QR CODE/LINK",
-    href: "/dashboard/events-edition/gallery/qr-code",
-  },
-  {
-    title: "PRINT TEMPLATES",
-    href: "/dashboard/events-edition/gallery/print-templates",
-  },
-  {
-    title: "EDIT ALBUM PAGE",
-    href: "/dashboard/events-edition/gallery/edit-album-page", // Route to new admin edit album page
-  },
-  {
-    title: "ALBUMS MANAGEMENT",
-    href: "/dashboard/events-edition/gallery/albums",
-  },
-];
+import { useLanguage } from "@/components/language-context";
 
 export default function GalleryManagementPage() {
   const router = useRouter();
+  const { t } = useLanguage();
+
+  const galleryCards = [
+    {
+      title: "QR CODE/LINK",
+      href: "/dashboard/events-edition/gallery/qr-code",
+    },
+    {
+      title: "PRINT TEMPLATES",
+      href: "/dashboard/events-edition/gallery/print-templates",
+    },
+    {
+      title: "EDIT ALBUM PAGE",
+      href: "/dashboard/events-edition/gallery/edit-album-page", // Route to new admin edit album page
+    },
+    {
+      title: "ALBUMS MANAGEMENT",
+      href: "/dashboard/events-edition/gallery/albums",
+    },
+  ];
 
   const handleBack = () => {
     router.push("/dashboard/events-edition");
@@ -34,12 +36,12 @@ export default function GalleryManagementPage() {
           onClick={handleBack}
           className="bg-black text-white px-6 py-2 rounded font-semibold hover:bg-gray-800 transition-colors"
         >
-          Back
+          {t.dashboard.back}
         </button>
         
       </div>
       
-      <h1 className="text-3xl font-bold text-black mb-10">GALLERY MANAGEMENT</h1>
+      <h1 className="text-3xl font-bold text-black mb-10">{t.dashboard.galleryManagement}</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {galleryCards.map((card, idx) => (
@@ -54,7 +56,7 @@ export default function GalleryManagementPage() {
               className="bg-gradient-to-r from-[#E5B574] via-[#D59C58] to-[#C18037] text-white font-semibold px-8 py-2 rounded-md shadow-md hover:from-[#D59C58] hover:to-[#E5B574] transition-colors"
               onClick={() => router.push(card.href)}
             >
-              Manage
+              {t.dashboard.manage}
             </button>
           </div>
         ))}

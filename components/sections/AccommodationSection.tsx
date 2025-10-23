@@ -1,5 +1,6 @@
 import React from 'react';
 import CollapsibleSection from '../CollapsibleSection';
+import { useLanguage } from '@/components/language-context';
 
 interface Hotel {
   id: string;
@@ -22,8 +23,10 @@ export default function AccommodationSection({
   description = 'Here are some hotel options for out-of-town guests.',
   hotels = []
 }: AccommodationSectionProps) {
+  const { t } = useLanguage();
+  
   return (
-    <CollapsibleSection title={title}>
+    <CollapsibleSection title={t.accommodation.title}>
       {/* Description */}
       {description && (
         <div className="text-center mb-6">
@@ -33,7 +36,7 @@ export default function AccommodationSection({
                fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
                lineHeight: 1.5
              }}>
-            {description}
+            {t.accommodation.description}
           </p>
         </div>
       )}
@@ -91,7 +94,7 @@ export default function AccommodationSection({
                  fontFamily: 'Montserrat',
                  fontSize: 'clamp(0.875rem, 2.5vw, 1rem)'
                }}>
-              No accommodation information available yet.
+              {t.accommodation.noInfo}
             </p>
           </div>
         )}

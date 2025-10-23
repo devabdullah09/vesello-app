@@ -6,6 +6,8 @@ import UploadSuccessOverlay from '@/components/gallery/UploadSuccessOverlay';
 import { useRouter, useParams } from 'next/navigation';
 // Removed direct bunny-net imports - now using API endpoints
 import EventHeader from '@/components/layout/EventHeader';
+import EventFooter from '@/components/layout/EventFooter';
+import { useLanguage } from '@/components/language-context';
 
 const downloadIcon = (
   <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="inline ml-1 text-[#C18037]">
@@ -16,6 +18,7 @@ const downloadIcon = (
 export default function EventWeddingDayGallery() {
   const params = useParams();
   const router = useRouter();
+  const { t } = useLanguage();
   const wwwId = params.wwwId as string;
   const [tab, setTab] = useState<'photos' | 'videos'>('photos');
   const [eventData, setEventData] = useState<{galleryEnabled: boolean, rsvpEnabled: boolean} | null>(null);
@@ -159,7 +162,7 @@ export default function EventWeddingDayGallery() {
   };
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col">
       <EventHeader 
         eventId={wwwId}
         galleryEnabled={eventData?.galleryEnabled || false}
@@ -186,7 +189,7 @@ export default function EventWeddingDayGallery() {
           }}
         />
       )}
-      <div className="min-h-screen flex flex-col items-center justify-center bg-white py-10 px-2 md:px-0 relative overflow-x-hidden pt-20" style={{ fontFamily: 'Montserrat, Arial, Helvetica, sans-serif' }}>
+      <div className="flex-1 flex flex-col items-center justify-center bg-white py-10 px-2 md:px-0 relative overflow-x-hidden pt-20" style={{ fontFamily: 'Montserrat, Arial, Helvetica, sans-serif' }}>
         <div className="relative w-full max-w-5xl bg-white rounded-2xl border border-[#C7B299] p-8 md:p-12 shadow-md mx-auto z-10" style={{ minHeight: 500 }}>
           {/* Decorative Corners and Sparkles */}
           <Image src="/images/Gallery/bottom-left-sparkle.png" alt="bottom left sparkle" width={202} height={32} className="absolute left-3 bottom-4 z-0" />
@@ -197,24 +200,24 @@ export default function EventWeddingDayGallery() {
           <div className="flex flex-col relative z-10">
             <div className="flex flex-row justify-between items-start mb-4">
               <div className="text-2xl md:text-3xl font-semibold text-[#08080A]" style={{ fontFamily: 'Montserrat', fontWeight: 500 }}>
-                Wedding Day
+                {t.gallery.weddingDay}
               </div>
               <div className="flex flex-col items-end gap-2">
                 <div className="text-base md:text-lg font-semibold text-[#08080A] flex items-center" style={{ fontFamily: 'Montserrat', fontWeight: 500 }}>
-                  UPLOAD PHOTOS/VIDEOS {downloadIcon}
+                  {t.gallery.uploadPhotosVideos} {downloadIcon}
                 </div>
                 <div className="text-xs text-[#888] mt-1" style={{ fontFamily: 'Montserrat', fontWeight: 400 }}>
-                  Uploaded By {new Date().toLocaleDateString('en-GB')}
+                  {t.gallery.uploadedBy} {new Date().toLocaleDateString('en-GB')}
                 </div>
               </div>
             </div>
             {/* Tabs */}
             <div className="flex flex-row border-b border-[#C7B299] mb-4">
               <button onClick={() => setTab('photos')} className={`font-semibold mr-6 pb-2 border-b-2 ${tab === 'photos' ? 'text-[#C18037] border-[#C18037]' : 'text-[#08080A] border-transparent'}`} style={{ fontFamily: 'Montserrat', fontWeight: 500 }}>
-                Photos
+                {t.gallery.photos}
               </button>
               <button onClick={() => setTab('videos')} className={`font-semibold pb-2 border-b-2 ${tab === 'videos' ? 'text-[#C18037] border-[#C18037]' : 'text-[#08080A] border-transparent'}`} style={{ fontFamily: 'Montserrat', fontWeight: 500 }}>
-                Videos
+                {t.gallery.videos}
               </button>
             </div>
             {/* Image/Video Grid */}
@@ -223,7 +226,7 @@ export default function EventWeddingDayGallery() {
               <div className={`relative w-[180px] h-[180px] rounded-lg overflow-hidden group border ${tab === 'photos' ? 'border-[#E5B574]' : 'border-[#C18037]'}`}>
                 <Image src="/images/Gallery/maingallery.jpg" alt="Upload" fill style={{ objectFit: 'cover' }} />
                 <div className={`absolute inset-0 ${tab === 'photos' ? 'bg-[#E5B574]/70' : 'bg-[#C18037]/70'} flex flex-col items-center justify-center opacity-100 group-hover:opacity-100 transition-opacity duration-300`}>
-                  <button onClick={() => fileInputRef.current?.click()} className="border border-white text-white rounded px-6 py-1 bg-transparent hover:bg-white hover:text-[#C18037] transition font-semibold" style={{ fontFamily: 'Montserrat', fontWeight: 600, fontSize: '16px', letterSpacing: '0.01em', lineHeight: 1.4 }}>Upload</button>
+                  <button onClick={() => fileInputRef.current?.click()} className="border border-white text-white rounded px-6 py-1 bg-transparent hover:bg-white hover:text-[#C18037] transition font-semibold" style={{ fontFamily: 'Montserrat', fontWeight: 600, fontSize: '16px', letterSpacing: '0.01em', lineHeight: 1.4 }}>{t.gallery.upload}</button>
                   <input ref={fileInputRef} type="file" accept={tab === 'photos' ? 'image/*' : 'video/*'} multiple className="hidden" onChange={handleUpload} />
                 </div>
               </div>
@@ -241,6 +244,11 @@ export default function EventWeddingDayGallery() {
           </div>
         </div>
       </div>
-    </>
+      
+      {/* Event Footer - Sticky to bottom */}
+      <div className="mt-auto">
+        <EventFooter />
+      </div>
+    </div>
   );
 }

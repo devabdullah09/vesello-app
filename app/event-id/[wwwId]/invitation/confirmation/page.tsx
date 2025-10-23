@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
 import { useInvitation } from "@/components/invitation-context";
 import EventHeader from "@/components/layout/EventHeader";
+import EventFooter from "@/components/layout/EventFooter";
 
 export default function DynamicConfirmationPage() {
   const params = useParams();
@@ -217,6 +218,8 @@ export default function DynamicConfirmationPage() {
         </div>
       </div>
       
+      {/* Event Footer */}
+      <EventFooter />
     </div>
     </>
   );

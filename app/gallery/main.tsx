@@ -1,8 +1,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
+import { useLanguage } from '@/components/language-context';
 
 export default function MainGalleryPage() {
+  const { t } = useLanguage();
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white py-10 px-2 md:px-0 relative overflow-x-hidden" style={{ fontFamily: 'Montserrat, Arial, Helvetica, sans-serif' }}>
       <div className="relative w-full max-w-5xl bg-white rounded-2xl border border-[#C7B299] p-8 md:p-16 shadow-md mx-auto z-10" style={{ minHeight: 700 }}>
@@ -16,7 +18,7 @@ export default function MainGalleryPage() {
 
         {/* Main Content */}
         <div className="flex flex-col items-center justify-center relative z-10">
-          <div className="text-xl md:text-2xl font-semibold mb-4 text-[#08080A] text-center">Welcome To The Wedding Gallery</div>
+          <div className="text-xl md:text-2xl font-semibold mb-4 text-[#08080A] text-center">{t.gallery.title}</div>
           <div className="text-center mt-2 mb-8">
             <div className="text-base md:text-lg" style={{ fontFamily: 'Montserrat', fontWeight: 400 }}>Welcome To</div>
             <div className="text-4xl md:text-5xl font-sail" style={{ fontWeight: 400, marginTop: 4, marginBottom: 0, letterSpacing: '0.5px', lineHeight: 1.1 }}>
@@ -35,9 +37,9 @@ export default function MainGalleryPage() {
               <div className="relative w-[270px] h-[220px] md:w-[320px] md:h-[260px] mb-2">
                 <Image src="/images/gallery/weddingDay.png" alt="Wedding Day" fill style={{ objectFit: 'cover', borderRadius: '0 0 180px 180px/0 0 220px 220px' }} className="shadow-lg" />
                 <div className="absolute inset-0 bg-[#E5B574]/70 rounded-b-full flex flex-col items-center justify-center">
-                  <div className="text-white text-center font-semibold mb-2">Got Photos?<br />Add Them Now!</div>
+                  <div className="text-white text-center font-semibold mb-2">{t.gallery.uploadPhotos}</div>
                   <Link href="/gallery/upload">
-                    <button className="border border-white text-white rounded px-6 py-1 bg-transparent hover:bg-white hover:text-[#C18037] transition font-medium">Upload</button>
+                    <button className="border border-white text-white rounded px-6 py-1 bg-transparent hover:bg-white hover:text-[#C18037] transition font-medium">{t.gallery.uploadPhotos}</button>
                   </Link>
                 </div>
               </div>
@@ -48,9 +50,9 @@ export default function MainGalleryPage() {
               <div className="relative w-[270px] h-[220px] md:w-[320px] md:h-[260px] mb-2">
                 <Image src="/images/gallery/afterPArty.png" alt="Party Day" fill style={{ objectFit: 'cover', borderRadius: '0 0 180px 180px/0 0 220px 220px' }} className="shadow-lg" />
                 <div className="absolute inset-0 bg-[#C18037]/70 rounded-b-full flex flex-col items-center justify-center">
-                  <div className="text-white text-center font-semibold mb-2">Got Photos?<br />Add Them Now!</div>
+                  <div className="text-white text-center font-semibold mb-2">{t.gallery.uploadPhotos}</div>
                   <Link href="/gallery/upload">
-                    <button className="border border-white text-white rounded px-6 py-1 bg-transparent hover:bg-white hover:text-[#C18037] transition font-medium">Upload</button>
+                    <button className="border border-white text-white rounded px-6 py-1 bg-transparent hover:bg-white hover:text-[#C18037] transition font-medium">{t.gallery.uploadPhotos}</button>
                   </Link>
                 </div>
               </div>

@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { useLanguage } from '@/components/language-context';
 
 export default function RSVPSection() {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -50,22 +52,22 @@ export default function RSVPSection() {
     <section id="rsvp" className="py-20 px-4 bg-amber-50">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-serif text-amber-600 mb-4">RSVP</h2>
-          <p className="text-xl text-gray-600">We hope you can join us on our special day</p>
+          <h2 className="text-4xl md:text-5xl font-serif text-amber-600 mb-4">{t.rsvp.title}</h2>
+          <p className="text-xl text-gray-600">{t.rsvp.subtitle}</p>
         </div>
 
         <div className="bg-white p-8 rounded-lg shadow-md">
           {isSuccess ? (
             <div className="text-center py-12">
               <div className="text-green-500 text-6xl mb-4">✓</div>
-              <h3 className="text-2xl font-serif text-amber-600 mb-2">Thank You!</h3>
-              <p className="text-gray-600">We've received your RSVP. We look forward to celebrating with you!</p>
+              <h3 className="text-2xl font-serif text-amber-600 mb-2">{t.rsvp.thankYou}</h3>
+              <p className="text-gray-600">{t.rsvp.receivedRsvp}</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="name" className="block text-gray-700 mb-2">Your Name *</label>
+                  <label htmlFor="name" className="block text-gray-700 mb-2">{t.rsvp.yourName} *</label>
                   <input
                     type="text"
                     id="name"
@@ -78,7 +80,7 @@ export default function RSVPSection() {
                 </div>
                 
                 <div>
-                  <label htmlFor="email" className="block text-gray-700 mb-2">Email Address *</label>
+                  <label htmlFor="email" className="block text-gray-700 mb-2">{t.rsvp.emailAddress} *</label>
                   <input
                     type="email"
                     id="email"
@@ -93,7 +95,7 @@ export default function RSVPSection() {
               
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="guests" className="block text-gray-700 mb-2">Number of Guests *</label>
+                  <label htmlFor="guests" className="block text-gray-700 mb-2">{t.rsvp.numberOfGuests} *</label>
                   <select
                     id="guests"
                     name="guests"
@@ -104,14 +106,14 @@ export default function RSVPSection() {
                   >
                     {[1, 2, 3, 4, 5].map(num => (
                       <option key={num} value={num}>
-                        {num} {num === 1 ? 'Guest' : 'Guests'}
+                        {num} {num === 1 ? t.rsvp.guest : t.rsvp.guests}
                       </option>
                     ))}
                   </select>
                 </div>
                 
                 <div>
-                  <label className="block text-gray-700 mb-2">Will you attend? *</label>
+                  <label className="block text-gray-700 mb-2">{t.rsvp.willYouAttend} *</label>
                   <div className="flex space-x-4">
                     <label className="inline-flex items-center">
                       <input
@@ -123,7 +125,7 @@ export default function RSVPSection() {
                         className="text-amber-600 focus:ring-amber-500"
                         required
                       />
-                      <span className="ml-2">Accept with pleasure</span>
+                      <span className="ml-2">{t.rsvp.acceptWithPleasure}</span>
                     </label>
                     <label className="inline-flex items-center">
                       <input
@@ -134,14 +136,14 @@ export default function RSVPSection() {
                         onChange={handleChange}
                         className="text-amber-600 focus:ring-amber-500"
                       />
-                      <span className="ml-2">Decline with regret</span>
+                      <span className="ml-2">{t.rsvp.declineWithRegret}</span>
                     </label>
                   </div>
                 </div>
               </div>
               
               <div>
-                <label htmlFor="message" className="block text-gray-700 mb-2">Leave us a message (optional)</label>
+                <label htmlFor="message" className="block text-gray-700 mb-2">{t.rsvp.leaveMessage}</label>
                 <textarea
                   id="message"
                   name="message"
@@ -149,7 +151,7 @@ export default function RSVPSection() {
                   value={formData.message}
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  placeholder="Any dietary restrictions or special requests?"
+                  placeholder={t.rsvp.dietaryRestrictions}
                 ></textarea>
               </div>
               
@@ -159,7 +161,7 @@ export default function RSVPSection() {
                   disabled={isSubmitting}
                   className="w-full md:w-auto bg-amber-600 text-white py-3 px-8 rounded-md hover:bg-amber-700 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? 'Sending...' : 'Submit RSVP'}
+                  {isSubmitting ? t.rsvp.sending : t.rsvp.submitRsvp}
                 </button>
               </div>
             </form>

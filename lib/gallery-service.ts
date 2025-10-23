@@ -8,6 +8,7 @@ import {
   GalleryFilters,
   PaginatedResponse 
 } from './dashboard-types'
+import { uploadFiles, getCdnUrl } from './bunny-net'
 
 // Gallery Albums
 
@@ -432,3 +433,78 @@ const mapImageFromDB = (dbImage: any): GalleryImage => ({
   metadata: dbImage.metadata,
   createdAt: dbImage.created_at
 })
+
+// Store custom album files (upload to Bunny.net and store metadata in database)
+export const storeCustomAlbumFiles = async (
+  files: File[],
+  albumId: string,
+  wwwId: string,
+  mediaType: 'photos' | 'videos'
+): Promise<{ files: any[], cdnUrls: string[], message: string }> => {
+  try {
+    // First, upload files to Bunny.net using the album ID as the folder name
+    const uploadResult = await uploadFiles(
+      files,
+      albumId as any, // We'll modify uploadFiles to accept custom album IDs
+      mediaType,
+      wwwId
+    );
+
+    // Get the event ID from wwwId
+    const serverSupabase = createServerClient();
+    const { data: event, error: eventError } = await serverSupabase
+      .from('events')
+      .select('id')
+      .eq('www_id', wwwId)
+      .single();
+
+    if (eventError || !event) {
+      throw new Error('Event not found');
+    }
+
+    // Store file metadata in database
+    const imageRecords = files.map((file, index) => {
+      const record = {
+        album_id: albumId,
+        event_id: event.id,
+        filename: uploadResult.files[index] || file.name,
+        original_filename: file.name,
+        file_size: file.size,
+        mime_type: file.type,
+        image_url: uploadResult.cdnUrls[index],
+        thumbnail_url: uploadResult.cdnUrls[index], // For now, use same URL as thumbnail
+        uploaded_by: null, // Will be set by the calling function if needed
+        is_approved: true, // Auto-approve custom album uploads
+        metadata: {
+          uploadedAt: new Date().toISOString(),
+          mediaType: mediaType
+        }
+      };
+      console.log('Creating image record:', record);
+      return record;
+    });
+
+    // Insert all records at once
+    const { data: insertedRecords, error: insertError } = await serverSupabase
+      .from('gallery_images')
+      .insert(imageRecords)
+      .select();
+
+    if (insertError) {
+      console.error('Error storing custom album files in database:', insertError);
+      throw insertError;
+    }
+
+    console.log('Successfully inserted records:', insertedRecords);
+
+    return {
+      files: uploadResult.files,
+      cdnUrls: uploadResult.cdnUrls,
+      message: `${files.length} file(s) uploaded successfully to custom album`
+    };
+
+  } catch (error) {
+    console.error('Error storing custom album files:', error);
+    throw error;
+  }
+}

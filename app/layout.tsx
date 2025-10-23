@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from '@/components/layout/Header';
 import Footer from "@/components/layout/Footer";
 import ClientLayoutWrapper from "./ClientLayoutWrapper";
+import { LanguageProvider } from "@/components/language-context";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -27,12 +28,14 @@ export default function RootLayout({
           rel="stylesheet"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Sail&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Sail&family=Great+Vibes&display=swap"
           rel="stylesheet"
         />
       </head>
       <body className={inter.className}>
-        <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
+        <LanguageProvider>
+          <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
+        </LanguageProvider>
       </body>
     </html>
   );

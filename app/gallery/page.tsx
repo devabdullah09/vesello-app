@@ -2,6 +2,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useLanguage } from '@/components/language-context';
 
 function isAdmin() {
   if (typeof window === 'undefined') return false;
@@ -9,6 +10,7 @@ function isAdmin() {
 }
 
 export default function GalleryPage() {
+  const { t } = useLanguage();
   const [visible, setVisible] = useState(true);
   const [admin, setAdmin] = useState(false);
 
@@ -60,7 +62,7 @@ export default function GalleryPage() {
             <Link href="/gallery/upload" className="w-200 border border-[#E5B574] rounded-md py-10 px-4 flex flex-col items-center mb-8 bg-white hover:shadow-lg transition cursor-pointer" style={{ minHeight: 180, textDecoration: 'none' }}>
               <Image src="/images/Gallery/photo_icon.png" alt="Add Photos" width={50} height={50} className="mb-3" />
               <div className="text-base text-[#08080A] mt-2" style={{ fontFamily: 'Montserrat', fontWeight: 500 }}>
-                Add Your Photos & Videos Now
+                {t.gallery.uploadPhotos}
               </div>
             </Link>
 
@@ -68,7 +70,7 @@ export default function GalleryPage() {
             <Link href="/gallery/main">
               <button className="bg-gradient-to-r from-[#E5B574] to-[#C18037] text-white font-semibold rounded-md px-8 py-2 mb-10 shadow hover:opacity-90 transition" 
                style={{ fontFamily: 'Montserrat', fontWeight: 600, fontSize: '1rem', minWidth: 160 }}>
-                View Gallery
+{t.gallery.title}
               </button>
             </Link>
 
@@ -88,8 +90,8 @@ export default function GalleryPage() {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
-            <div className="text-2xl font-bold text-gray-700 mb-4">This section is currently unavailable</div>
-            <div className="text-gray-500">Please check back later.</div>
+            <div className="text-2xl font-bold text-gray-700 mb-4">{t.status.notFound}</div>
+            <div className="text-gray-500">{t.status.tryAgain}</div>
           </div>
         )}
         {/* Decorative Corners and Sparkles (inside card) */}

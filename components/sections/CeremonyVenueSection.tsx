@@ -1,10 +1,12 @@
 import Image from 'next/image';
 import { MapPin } from 'lucide-react';
 import CollapsibleSection from '../CollapsibleSection';
+import { useLanguage } from '@/components/language-context';
 
 export default function CeremonyVenueSection() {
+  const { t } = useLanguage();
   return (
-    <CollapsibleSection title="Wedding Venue">
+    <CollapsibleSection title={t.venue.title}>
       <div className="flex flex-col md:flex-row items-center md:items-stretch">
         {/* Left: Image Content */}
         <div className="flex-1 flex items-center justify-center px-4 sm:px-6 md:px-10 py-6 md:py-0">

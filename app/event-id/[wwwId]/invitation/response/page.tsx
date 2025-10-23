@@ -2,13 +2,16 @@
 import React from "react";
 import Image from "next/image";
 import { useInvitation } from "@/components/invitation-context";
+import { useLanguage } from '@/components/language-context';
 import { useParams } from "next/navigation";
 import EventHeader from "@/components/layout/EventHeader";
+import EventFooter from "@/components/layout/EventFooter";
 
 export default function DynamicRSVPResponsePage() {
   const params = useParams();
   const wwwId = params?.wwwId as string;
   const { state } = useInvitation();
+  const { t } = useLanguage();
 
   // Get all guest names from context
   const allGuestNames = [state.mainGuest.name, ...state.additionalGuests.map(g => g.name)].filter(name => name.trim() !== '');
@@ -43,18 +46,18 @@ export default function DynamicRSVPResponsePage() {
           <div className="w-full max-w-[600px] mx-auto flex flex-col items-center mb-8 mt-2 z-10 px-4 sm:px-8 pt-10 sm:pt-16 pb-8">
             <div className="text-center w-full mb-2">
               <span className="text-sm sm:text-base md:text-lg" style={{ color: '#08080A', fontWeight: 400, fontFamily: 'Montserrat', letterSpacing: '0.01em' }}>
-                All Set! Here's what we sent Lucas & Mia.
+                {t.invitation.allSet} {t.invitation.heresWhatWeSent}
               </span>
               <div className="w-24 h-[2px] bg-[#B7B7B7] mx-auto my-4" />
               <span className="text-sm sm:text-base md:text-lg" style={{ color: '#08080A', fontWeight: 400, fontFamily: 'Montserrat', letterSpacing: '0.01em' }}>
-                Your RSVP Response
+                {t.invitation.yourRsvpResponse}
               </span>
             </div>
             {/* RSVP Summary */}
             <div className="w-full flex flex-col items-center mt-8 mb-8 gap-8">
               {/* Wedding Day */}
               <div className="flex flex-col items-center">
-                <span className="font-semibold text-base sm:text-lg mb-2" style={{ fontFamily: 'Montserrat', color: '#08080A' }}>Wedding Day</span>
+                <span className="font-semibold text-base sm:text-lg mb-2" style={{ fontFamily: 'Montserrat', color: '#08080A' }}>{t.invitation.weddingDay}</span>
                 <div className="flex flex-col items-start">
                   {weddingDayGuests.length > 0 ? (
                     weddingDayGuests.map((guest) => (
@@ -64,13 +67,13 @@ export default function DynamicRSVPResponsePage() {
                       </div>
                     ))
                   ) : (
-                    <div className="text-sm text-gray-500 italic">No guests attending</div>
+                    <div className="text-sm text-gray-500 italic">{t.invitation.noGuestsAttending}</div>
                   )}
                 </div>
               </div>
               {/* After Day Party */}
               <div className="flex flex-col items-center">
-                <span className="font-semibold text-base sm:text-lg mb-2" style={{ fontFamily: 'Montserrat', color: '#08080A' }}>Wedding After Day Party</span>
+                <span className="font-semibold text-base sm:text-lg mb-2" style={{ fontFamily: 'Montserrat', color: '#08080A' }}>{t.invitation.weddingAfterDayParty}</span>
                 <div className="flex flex-col items-start">
                   {afterPartyGuests.length > 0 ? (
                     afterPartyGuests.map((guest) => (
@@ -80,21 +83,25 @@ export default function DynamicRSVPResponsePage() {
                       </div>
                     ))
                   ) : (
-                    <div className="text-sm text-gray-500 italic">No guests attending</div>
+                    <div className="text-sm text-gray-500 italic">{t.invitation.noGuestsAttending}</div>
                   )}
                 </div>
               </div>
             </div>
             {/* Thank You */}
             <div className="w-full flex flex-col items-center mt-8">
-              <span className="text-4xl sm:text-5xl md:text-6xl" style={{ fontFamily: 'Sail, cursive', fontWeight: 400, color: '#08080A', letterSpacing: '0.5px', lineHeight: 1.1 }}>
-                Thank You
+              <span className="text-4xl sm:text-5xl md:text-6xl" style={{ fontFamily: 'Great Vibes, cursive', fontWeight: 500, color: '#08080A', letterSpacing: '0.5px', lineHeight: 1.1 }}>
+                {t.invitation.thankYou}
               </span>
             </div>
           </div>
         </div>
       </div>
      
+      {/* Event Footer */}
+      <div className="mt-auto">
+        <EventFooter />
+      </div>
     </div>
     </>
   );
