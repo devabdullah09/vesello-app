@@ -1,10 +1,21 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/components/language-context";
+import { useEventEdition } from "@/components/event-edition-context";
+import { useEffect } from "react";
 
 export default function GalleryManagementPage() {
   const router = useRouter();
   const { t } = useLanguage();
+  const { selectedEvent, setSelectedEvent } = useEventEdition();
+
+  useEffect(() => {
+    if (!selectedEvent) {
+      router.push("/dashboard/events-edition/select-event");
+    } else if (!selectedEvent.galleryEnabled) {
+      router.push("/dashboard/events-edition");
+    }
+  }, [selectedEvent, router]);
 
   const galleryCards = [
     {
@@ -29,6 +40,15 @@ export default function GalleryManagementPage() {
     router.push("/dashboard/events-edition");
   };
 
+  const handleSwitchEvent = () => {
+    setSelectedEvent(null);
+    router.push("/dashboard/events-edition/select-event");
+  };
+
+  if (!selectedEvent || !selectedEvent.galleryEnabled) {
+    return null;
+  }
+
   return (
     <div className="flex-1 p-12 bg-white min-h-screen">
       <div className="flex justify-between items-start mb-8">
@@ -38,7 +58,12 @@ export default function GalleryManagementPage() {
         >
           {t.dashboard.back}
         </button>
-        
+        <button
+          onClick={handleSwitchEvent}
+          className="bg-gray-200 text-black px-4 py-2 rounded font-semibold hover:bg-gray-300 transition-colors"
+        >
+          Switch Event
+        </button>
       </div>
       
       <h1 className="text-3xl font-bold text-black mb-10">{t.dashboard.galleryManagement}</h1>

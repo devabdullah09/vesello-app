@@ -1,8 +1,9 @@
 "use client";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from '@/components/supabase-auth-provider';
 import supabase from '@/lib/supabase';
+import { useEventEdition } from "@/components/event-edition-context";
 
 interface EventData {
   id: string;
@@ -41,26 +42,24 @@ const sectionConfig = [
 
 export default function ContentEditorPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { user } = useAuth();
+  const { selectedEvent, setSelectedEvent } = useEventEdition();
   const [eventData, setEventData] = useState<EventData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const wwwId = searchParams.get('wwwId');
-
   useEffect(() => {
-    if (!wwwId) {
-      setError('Event ID is required');
+    if (selectedEvent) {
+      fetchEventData();
+    } else {
       setLoading(false);
-      return;
     }
-
-    fetchEventData();
-  }, [wwwId]);
+  }, [selectedEvent]);
 
   const fetchEventData = async () => {
+    if (!selectedEvent?.wwwId) return;
+
     try {
       setLoading(true);
       setError(null);
@@ -71,7 +70,7 @@ export default function ContentEditorPage() {
         return;
       }
 
-      const response = await fetch(`/api/dashboard/events/day-details?wwwId=${wwwId}`, {
+      const response = await fetch(`/api/dashboard/events/day-details?wwwId=${selectedEvent.wwwId}`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
@@ -93,7 +92,7 @@ export default function ContentEditorPage() {
   };
 
   const handleSectionToggle = async (sectionKey: string, isEnabled: boolean) => {
-    if (!eventData) return;
+    if (!eventData || !selectedEvent) return;
 
     try {
       setSaving(true);
@@ -115,7 +114,7 @@ export default function ContentEditorPage() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          wwwId,
+          wwwId: selectedEvent.wwwId,
           sectionVisibility: updatedVisibility
         })
       });
@@ -138,7 +137,12 @@ export default function ContentEditorPage() {
   };
 
   const handleBack = () => {
-    router.push(`/dashboard/events-edition/day-details?wwwId=${wwwId}`);
+    router.push(`/dashboard/events-edition/day-details`);
+  };
+
+  const handleSwitchEvent = () => {
+    setSelectedEvent(null);
+    router.push("/dashboard/events-edition/select-event");
   };
 
   if (loading) {
@@ -157,10 +161,18 @@ export default function ContentEditorPage() {
     );
   }
 
-  if (!eventData) {
+  if (!selectedEvent || !eventData) {
     return (
       <div className="flex-1 p-12 bg-gray-100 min-h-screen flex items-center justify-center">
-        <div className="text-lg">No event details found</div>
+        <div className="text-center">
+          <div className="text-lg mb-4">No event selected</div>
+          <button
+            onClick={() => router.push("/dashboard/events-edition/select-event")}
+            className="bg-gradient-to-r from-[#E5B574] via-[#D59C58] to-[#C18037] text-white font-semibold px-6 py-3 rounded-md shadow-md hover:from-[#D59C58] hover:to-[#E5B574] transition-colors"
+          >
+            Select Event
+          </button>
+        </div>
       </div>
     );
   }
@@ -174,6 +186,14 @@ export default function ContentEditorPage() {
         >
           Back
         </button>
+        <button
+          onClick={handleSwitchEvent}
+          className="bg-gray-200 text-black px-4 py-2 rounded font-semibold hover:bg-gray-300 transition-colors"
+        >
+          Switch Event
+        </button>
+      </div>
+      <div className="flex justify-between items-start mb-8">
         <div className="text-right">
           <h1 className="text-3xl font-bold text-black">Section Visibility</h1>
           <p className="text-gray-600 mt-2">Control which sections appear on your event page</p>
@@ -274,7 +294,7 @@ export default function ContentEditorPage() {
           View your event page and use the inline editor to customize all content.
         </p>
         <a
-          href={`/event-id/${wwwId}`}
+          href={`/event-id/${selectedEvent.wwwId}`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center space-x-2 bg-[#E5B574] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#D59C58] transition-colors"

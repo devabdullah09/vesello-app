@@ -11,7 +11,7 @@ import EventFooter from "@/components/layout/EventFooter";
 
 const childAges = [
   "1 Year Old",
-  "2 Year Old",
+  "2 Year Old", 
   "3 Year Old",
   "4 Year Old",
   "5 Year Old",
@@ -122,13 +122,13 @@ export default function DynamicInvitationReplyPage() {
         currentPage="rsvp"
       />
       <div className="min-h-screen flex flex-col justify-between bg-[#fff] pt-20" style={{ fontFamily: 'Montserrat, Arial, Helvetica, sans-serif' }}>
-      <div className="flex-1 flex flex-col items-center justify-center py-16 relative">
-        <div className="relative w-full max-w-3xl bg-white rounded-2xl border border-[#C7B299] p-8 md:p-12 shadow-md mx-auto z-10" style={{ minHeight: 700 }}>
+      <div className="flex-1 flex flex-col items-center justify-center py-8 md:py-16 px-4 relative">
+        <div className="relative w-full max-w-3xl bg-white rounded-2xl border border-[#C7B299] p-4 md:p-8 lg:p-12 shadow-md mx-auto z-10" style={{ minHeight: 700 }}>
           {/* Decorative Corners and Sparkles (inside card) */}
-          <Image src="/images/invitation/leaf_left.png" alt="leaf left" width={180} height={180} className="absolute left-0 top-10 z-0" style={{ pointerEvents: 'none' }} />
-          <Image src="/images/invitation/leaf_right.png" alt="leaf right" width={180} height={180} className="absolute right-0 bottom-10 z-0" style={{ pointerEvents: 'none' }} />
-          <Image src="/images/invitation/sparkle_left.png" alt="sparkle left" width={120} height={40} className="absolute left-8 top-40 z-0" style={{ pointerEvents: 'none' }} />
-          <Image src="/images/invitation/sparkle_right.png" alt="sparkle right" width={120} height={40} className="absolute right-8 bottom-40 z-0" style={{ pointerEvents: 'none' }} />
+          <Image src="/images/invitation/leaf_left.png" alt="leaf left" width={180} height={180} className="absolute left-0 top-10 z-0 hidden md:block" style={{ pointerEvents: 'none' }} />
+          <Image src="/images/invitation/leaf_right.png" alt="leaf right" width={180} height={180} className="absolute right-0 bottom-10 z-0 hidden md:block" style={{ pointerEvents: 'none' }} />
+          <Image src="/images/invitation/sparkle_left.png" alt="sparkle left" width={120} height={40} className="absolute left-8 top-40 z-0 hidden md:block" style={{ pointerEvents: 'none' }} />
+          <Image src="/images/invitation/sparkle_right.png" alt="sparkle right" width={120} height={40} className="absolute right-8 bottom-40 z-0 hidden md:block" style={{ pointerEvents: 'none' }} />
 
           {/* Main Content */}
           <div className="w-full flex flex-col items-center mb-8 mt-2 z-10">
@@ -159,68 +159,91 @@ export default function DynamicInvitationReplyPage() {
 
               
               {/* Main Guest Fields */}
-              <div className="flex justify-between mb-6 w-full">
+              <div className="flex flex-col md:flex-row gap-4 md:justify-between mb-6 w-full">
                 <input
                   type="text"
+                  id="main-guest-name"
                   name="name"
                   value={mainGuest.name}
                   onChange={handleMainGuestChange}
                   placeholder={t.invitation.name}
-                  className="bg-[#f6f6f6] rounded-md px-8 py-2 w-94 min-w-[330px] text-base border border-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#C18037] placeholder:text-[#bdbdbd]"
+                  className="bg-[#f6f6f6] rounded-md px-4 md:px-8 py-2 w-full md:w-auto flex-1 text-sm md:text-base border border-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#C18037] placeholder:text-[#bdbdbd]"
                   style={{ fontFamily: 'Montserrat' }}
+                  autoComplete="given-name"
                   required
                 />
                 <input
                   type="text"
+                  id="main-guest-surname"
                   name="surname"
                   value={mainGuest.surname}
                   onChange={handleMainGuestChange}
                   placeholder={t.invitation.surname}
-                  className="bg-[#f6f6f6] rounded-md px-8 py-2 w-64 min-w-[330px] text-base border border-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#C18037] placeholder:text-[#bdbdbd]"
+                  className="bg-[#f6f6f6] rounded-md px-4 md:px-8 py-2 w-full md:w-auto flex-1 text-sm md:text-base border border-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#C18037] placeholder:text-[#bdbdbd]"
                   style={{ fontFamily: 'Montserrat' }}
+                  autoComplete="family-name"
                   required
                 />
               </div>
            
 
             <div className="w-full mb-6">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-lg font-semibold" style={{ fontFamily: 'Montserrat', color: '#08080A' }}>{t.invitation.addPlusOnes}</div>
-                <div className="text-base font-normal text-[#08080A]" style={{ fontFamily: 'Montserrat' }}>{t.invitation.isItChild}</div>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
+                <div className="text-base md:text-lg font-semibold" style={{ fontFamily: 'Montserrat', color: '#08080A' }}>{t.invitation.addPlusOnes}</div>
+                <div className="text-sm md:text-base font-normal text-[#08080A]" style={{ fontFamily: 'Montserrat' }}>{t.invitation.isItChild}</div>
               </div>
               <div className="flex flex-col gap-3">
                 {guests.map((guest, idx) => (
-                  <div key={idx} className="flex items-center gap-3">
-                    <input
-                      type="text"
-                      placeholder={t.invitation.name}
-                      value={guest.name}
-                      onChange={e => handleGuestChange(idx, "name", e.target.value)}
-                      className="bg-[#f6f6f6] rounded-md px-8 py-2 w-40 min-w-[220px] text-base border border-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#C18037] placeholder:text-[#bdbdbd]"
-                      style={{ fontFamily: 'Montserrat' }}
-                    />
-                    <input
-                      type="text"
-                      placeholder={t.invitation.surname}
-                      value={guest.surname}
-                      onChange={e => handleGuestChange(idx, "surname", e.target.value)}
-                      className="bg-[#f6f6f6] rounded-md px-8 py-2 w-40 min-w-[220px] text-base border border-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#C18037] placeholder:text-[#bdbdbd]"
-                      style={{ fontFamily: 'Montserrat' }}
-                    />
+                  <div key={idx} className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div className="flex flex-col sm:flex-row gap-3 flex-1">
+                      <input
+                        type="text"
+                        id={`guest-${idx}-name`}
+                        name={`guest-${idx}-name`}
+                        placeholder={t.invitation.name}
+                        value={guest.name}
+                        onChange={e => handleGuestChange(idx, "name", e.target.value)}
+                        className="bg-[#f6f6f6] rounded-md px-4 md:px-8 py-2 w-full sm:w-auto flex-1 text-sm md:text-base border border-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#C18037] placeholder:text-[#bdbdbd]"
+                        style={{ fontFamily: 'Montserrat' }}
+                        autoComplete="given-name"
+                      />
+                      <input
+                        type="text"
+                        id={`guest-${idx}-surname`}
+                        name={`guest-${idx}-surname`}
+                        placeholder={t.invitation.surname}
+                        value={guest.surname}
+                        onChange={e => handleGuestChange(idx, "surname", e.target.value)}
+                        className="bg-[#f6f6f6] rounded-md px-4 md:px-8 py-2 w-full sm:w-auto flex-1 text-sm md:text-base border border-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#C18037] placeholder:text-[#bdbdbd]"
+                        style={{ fontFamily: 'Montserrat' }}
+                        autoComplete="family-name"
+                      />
+                    </div>
                     <div className="flex items-center gap-2">
                       <span
                         className={`flex w-5 h-5 rounded-full border-2 items-center justify-center cursor-pointer ${guest.isChild ? 'border-[#C18037] bg-[#C18037]' : 'border-[#bdbdbd] bg-white'}`}
                         onClick={() => handleGuestChange(idx, "isChild", !guest.isChild)}
                         style={{ transition: 'all 0.2s' }}
+                        role="checkbox"
+                        aria-checked={guest.isChild}
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleGuestChange(idx, "isChild", !guest.isChild);
+                          }
+                        }}
                       >
                         {guest.isChild && <span className="block w-3 h-3 rounded-full bg-white" />}
                       </span>
                     </div>
                     {guest.isChild ? (
                       <select
+                        id={`guest-${idx}-age`}
+                        name={`guest-${idx}-age`}
                         value={guest.age}
                         onChange={e => handleGuestChange(idx, "age", e.target.value)}
-                        className="bg-[#f6f6f6] rounded-md px-2 py-2 w-32 text-base border border-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#C18037] placeholder:text-[#bdbdbd]"
+                        className="bg-[#f6f6f6] rounded-md px-2 py-2 w-full sm:w-32 text-sm md:text-base border border-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#C18037] placeholder:text-[#bdbdbd]"
                         style={{ fontFamily: 'Montserrat' }}
                       >
                         <option value="">{t.invitation.age}</option>
@@ -232,7 +255,7 @@ export default function DynamicInvitationReplyPage() {
                     <button
                       type="button"
                       onClick={() => handleRemoveGuest(idx)}
-                      className="text-[#bdbdbd] hover:text-[#C18037] text-xl px-2 flex items-center"
+                      className="text-[#bdbdbd] hover:text-[#C18037] text-xl px-2 flex items-center justify-center self-start sm:self-center"
                       aria-label="Remove guest"
                       style={{ background: 'none', border: 'none', padding: 0 }}
                     >
@@ -243,21 +266,21 @@ export default function DynamicInvitationReplyPage() {
               </div>
             </div>
 
-            <div className="flex w-full gap-4 mt-4">
+            <div className="flex flex-col sm:flex-row w-full gap-4 mt-4">
               <button
                 type="button"
                 onClick={handleAddGuest}
-                className="min-w-[220px] border border-[#C18037] text-[#08080A] rounded-md px-6 py-3 font-semibold hover:bg-[#f6f6f6] transition-colors"
+                className="w-full sm:min-w-[220px] border border-[#C18037] text-[#08080A] rounded-md px-4 md:px-6 py-3 font-semibold hover:bg-[#f6f6f6] transition-colors text-sm md:text-base"
                 style={{ fontFamily: 'Montserrat' }}
               >
-{t.invitation.addGuests}
+                {t.invitation.addGuests}
               </button>
               <button
                 type="submit"
-                className="min-w-[220px] bg-[#08080A] text-white rounded-md px-6 py-3 font-semibold hover:bg-[#C18037] hover:text-white transition-colors"
+                className="w-full sm:min-w-[220px] bg-[#08080A] text-white rounded-md px-4 md:px-6 py-3 font-semibold hover:bg-[#C18037] hover:text-white transition-colors text-sm md:text-base"
                 style={{ fontFamily: 'Montserrat' }}
               >
-{t.invitation.continue}
+                {t.invitation.continue}
               </button>
             </div>
           </form>

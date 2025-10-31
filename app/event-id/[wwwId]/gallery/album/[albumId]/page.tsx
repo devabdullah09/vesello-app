@@ -1,5 +1,5 @@
 'use client';
-import Image from 'next/image';
+import CdnImage from '@/components/ui/CdnImage';
 import React, { useRef, useState, useEffect } from 'react';
 import UploadingOverlay from '@/components/gallery/UploadingOverlay';
 import UploadSuccessOverlay from '@/components/gallery/UploadSuccessOverlay';
@@ -7,6 +7,7 @@ import { useRouter, useParams } from 'next/navigation';
 import EventHeader from '@/components/layout/EventHeader';
 import EventFooter from '@/components/layout/EventFooter';
 import { useLanguage } from '@/components/language-context';
+import { uploadFiles, fetchGalleryFiles, getInitialImages, getInitialVideos, GalleryFile } from '@/lib/gallery';
 
 const downloadIcon = (
   <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="inline ml-1 text-[#C18037]">
@@ -27,6 +28,7 @@ export default function DynamicAlbumGallery() {
   const [images, setImages] = useState<string[]>([]);
   const [videos, setVideos] = useState<{ src: string; thumb: string }[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Overlay state
@@ -34,6 +36,18 @@ export default function DynamicAlbumGallery() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadTotal, setUploadTotal] = useState(0);
   const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
+
+  // Preview modal state
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewType, setPreviewType] = useState<'image' | 'video'>('image');
+  const [previewIndex, setPreviewIndex] = useState(0);
+  
+  // Enhanced upload progress tracking
+  const [currentUploadingFile, setCurrentUploadingFile] = useState<string>('');
+  const [currentPercent, setCurrentPercent] = useState<number | undefined>(undefined);
+  const [currentMediaType, setCurrentMediaType] = useState<'photos' | 'videos'>('photos');
+  const [totalImages, setTotalImages] = useState(0);
+  const [totalVideos, setTotalVideos] = useState(0);
 
   // Load event data and album data
   useEffect(() => {
@@ -128,22 +142,30 @@ export default function DynamicAlbumGallery() {
         // For default albums, use existing logic
         // Load photos
         const photosResponse = await fetch(`/api/event-id/${wwwId}/gallery/files?album=${albumId}&type=photos`);
+        console.log('Photos response status:', photosResponse.status);
         if (photosResponse.ok) {
           const photosResult = await photosResponse.json();
+          console.log('Photos result:', photosResult);
           if (photosResult.success) {
-            setImages(photosResult.files.map((file: any) => file.url || file.cdnUrl));
+            const photoUrls = photosResult.files.map((file: any) => file.url || file.cdnUrl);
+            console.log('Setting photos:', photoUrls);
+            setImages(photoUrls);
           }
         }
 
         // Load videos
         const videosResponse = await fetch(`/api/event-id/${wwwId}/gallery/files?album=${albumId}&type=videos`);
+        console.log('Videos response status:', videosResponse.status);
         if (videosResponse.ok) {
           const videosResult = await videosResponse.json();
+          console.log('Videos result:', videosResult);
           if (videosResult.success) {
-            setVideos(videosResult.files.map((file: any) => ({
+            const videoData = videosResult.files.map((file: any) => ({
               src: file.url || file.cdnUrl,
               thumb: file.thumbnailUrl || file.url || file.cdnUrl
-            })));
+            }));
+            console.log('Setting videos:', videoData);
+            setVideos(videoData);
           }
         }
       }
@@ -156,76 +178,124 @@ export default function DynamicAlbumGallery() {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    setUploading(true);
+    const filesArray = Array.from(files);
+    setSelectedFiles(filesArray);
+    setUploadTotal(filesArray.length);
     setUploadProgress(0);
-    setUploadTotal(files.length);
+    setUploading(true);
+
+    // Calculate file type breakdown
+    const imageFiles = filesArray.filter(file => file.type.startsWith('image/'));
+    const videoFiles = filesArray.filter(file => file.type.startsWith('video/'));
+    setTotalImages(imageFiles.length);
+    setTotalVideos(videoFiles.length);
 
     try {
-      const filesArray = Array.from(files);
-      
-      // Separate photos and videos
-      const photoFiles = filesArray.filter(file => file.type.startsWith('image/'));
-      const videoFiles = filesArray.filter(file => file.type.startsWith('video/'));
-      
-      let uploadedCount = 0;
-
       // Upload photos if any
-      if (photoFiles.length > 0) {
-        const photoFormData = new FormData();
-        photoFiles.forEach(file => {
-          photoFormData.append('files', file);
-        });
-        photoFormData.append('albumType', albumId);
-        photoFormData.append('mediaType', 'photos');
+      if (imageFiles.length > 0) {
+        setCurrentMediaType('photos');
+        const photoFileList = imageFiles as any as FileList;
+        const response = await uploadFiles(
+          photoFileList, 
+          albumId, 
+          'photos', 
+          ({ fileIndex, file, percent }) => {
+            setCurrentUploadingFile(file.name);
+            // Only show progress up to 90% - the remaining 10% is server processing
+            const displayPercent = Math.min(percent * 0.9, 90);
+            setCurrentPercent(displayPercent);
+            // Don't update overall progress until server confirms completion
+          },
+          wwwId
+        );
 
-        const photoResponse = await fetch(`/api/event-id/${wwwId}/gallery/upload`, {
-          method: 'POST',
-          body: photoFormData,
-        });
-
-        if (photoResponse.ok) {
-          uploadedCount += photoFiles.length;
-        } else {
-          const errorData = await photoResponse.json();
-          throw new Error(errorData.error || 'Photo upload failed');
+        if (response.success) {
+          setCurrentPercent(100);
+          setUploadProgress(prev => prev + imageFiles.length);
+          setCurrentUploadingFile('');
         }
       }
-      
+
       // Upload videos if any
       if (videoFiles.length > 0) {
-        const videoFormData = new FormData();
-        videoFiles.forEach(file => {
-          videoFormData.append('files', file);
-        });
-        videoFormData.append('albumType', albumId);
-        videoFormData.append('mediaType', 'videos');
+        setCurrentMediaType('videos');
+        const videoFileList = videoFiles as any as FileList;
+        const response = await uploadFiles(
+          videoFileList, 
+          albumId, 
+          'videos', 
+          ({ fileIndex, file, percent }) => {
+            setCurrentUploadingFile(file.name);
+            // Only show progress up to 90% - the remaining 10% is server processing
+            const displayPercent = Math.min(percent * 0.9, 90);
+            setCurrentPercent(displayPercent);
+            // Don't update overall progress until server confirms completion
+          },
+          wwwId
+        );
 
-        const videoResponse = await fetch(`/api/event-id/${wwwId}/gallery/upload`, {
-          method: 'POST',
-          body: videoFormData,
-        });
-
-        if (videoResponse.ok) {
-          uploadedCount += videoFiles.length;
-        } else {
-          const errorData = await videoResponse.json();
-          throw new Error(errorData.error || 'Video upload failed');
+        if (response.success) {
+          setCurrentPercent(100);
+          setUploadProgress(prev => prev + videoFiles.length);
+          setCurrentUploadingFile('');
         }
       }
-
-      // Reload gallery files
+      
+      // Reload gallery files after successful upload
       await loadGalleryFiles();
       
       setShowSuccessOverlay(true);
       setTimeout(() => setShowSuccessOverlay(false), 3000);
       
+      // Give a moment to show 100% completion before hiding overlay
+      setTimeout(() => {
+        setUploading(false);
+        setCurrentUploadingFile('');
+        setCurrentPercent(undefined);
+        setCurrentMediaType('photos');
+        setSelectedFiles([]);
+        setTotalImages(0);
+        setTotalVideos(0);
+      }, 1000);
+      
     } catch (error) {
       console.error('Upload error:', error);
       alert(`Upload failed: ${error instanceof Error ? error.message : 'Please try again.'}`);
-    } finally {
       setUploading(false);
-      setUploadProgress(0);
-      setUploadTotal(0);
+      setCurrentUploadingFile('');
+      setCurrentPercent(undefined);
+      setCurrentMediaType('photos');
+      setSelectedFiles([]);
+      setTotalImages(0);
+      setTotalVideos(0);
+    }
+  };
+
+  // Preview modal functions
+  const openPreview = (type: 'image' | 'video', index: number) => {
+    setPreviewType(type);
+    setPreviewIndex(index);
+    setPreviewOpen(true);
+  };
+
+  const closePreview = () => {
+    setPreviewOpen(false);
+  };
+
+  const navigatePreview = (direction: 'prev' | 'next') => {
+    const currentItems = previewType === 'image' ? images : videos;
+    if (direction === 'prev') {
+      setPreviewIndex((prev) => (prev > 0 ? prev - 1 : currentItems.length - 1));
+    } else {
+      setPreviewIndex((prev) => (prev < currentItems.length - 1 ? prev + 1 : 0));
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (previewOpen) {
+      if (e.key === 'Escape') closePreview();
+      if (e.key === 'ArrowLeft') navigatePreview('prev');
+      if (e.key === 'ArrowRight') navigatePreview('next');
     }
   };
 
@@ -332,29 +402,40 @@ export default function DynamicAlbumGallery() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {tab === 'photos' ? (
             images.map((imageUrl, index) => (
-              <div key={index} className="group relative">
+              <div key={index} className="group relative cursor-pointer" onClick={() => openPreview('image', index)}>
                 <div className="aspect-square relative overflow-hidden rounded-lg bg-gray-200">
-                  <Image
+                  <CdnImage
                     src={imageUrl}
                     alt={`${t.gallery.photos} ${index + 1}`}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
                   />
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <svg width="24" height="24" fill="white" viewBox="0 0 24 24" className="w-8 h-8">
+                        <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                      </svg>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))
           ) : (
             videos.map((video, index) => (
-              <div key={index} className="group relative">
+              <div key={index} className="group relative cursor-pointer" onClick={() => openPreview('video', index)}>
                 <div className="aspect-square relative overflow-hidden rounded-lg bg-gray-200">
-                  <Image
-                    src={video.thumb}
-                    alt={`${t.gallery.videos} ${index + 1}`}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-                    <div className="w-12 h-12 bg-white bg-opacity-90 rounded-full flex items-center justify-center">
+                  <video 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    poster={video.thumb}
+                    muted
+                    preload="metadata"
+                  >
+                    <source src={video.src} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                  <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center group-hover:bg-opacity-50 transition-all duration-300">
+                    <div className="w-12 h-12 bg-white bg-opacity-90 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                       <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24" className="text-gray-800 ml-1">
                         <path d="M8 5v14l11-7z"/>
                       </svg>
@@ -387,6 +468,12 @@ export default function DynamicAlbumGallery() {
         <UploadingOverlay 
           current={uploadProgress} 
           total={uploadTotal}
+          mediaType={currentMediaType}
+          uploadedCount={uploadProgress}
+          totalImages={totalImages}
+          totalVideos={totalVideos}
+          currentFileName={currentUploadingFile}
+          currentPercent={currentPercent}
         />
       )}
       
@@ -401,6 +488,77 @@ export default function DynamicAlbumGallery() {
       <div className="mt-auto">
         <EventFooter />
       </div>
+
+      {/* Preview Modal */}
+      {previewOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center"
+          onKeyDown={handleKeyDown}
+          tabIndex={0}
+        >
+          <div className="relative w-full h-full flex items-center justify-center p-4">
+            {/* Close button */}
+            <button
+              onClick={closePreview}
+              className="absolute top-4 right-4 text-white hover:text-gray-300 z-10"
+            >
+              <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Navigation buttons */}
+            {((previewType === 'image' && images.length > 1) || (previewType === 'video' && videos.length > 1)) && (
+              <>
+                <button
+                  onClick={() => navigatePreview('prev')}
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 z-10"
+                >
+                  <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => navigatePreview('next')}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 z-10"
+                >
+                  <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </>
+            )}
+
+            {/* Media content */}
+            <div className="max-w-full max-h-full flex items-center justify-center">
+              {previewType === 'image' ? (
+                <CdnImage
+                  src={images[previewIndex]}
+                  alt={`Preview ${previewIndex + 1}`}
+                  width={1200}
+                  height={800}
+                  className="max-w-full max-h-full object-contain"
+                  sizes="100vw"
+                />
+              ) : (
+                <video
+                  src={videos[previewIndex].src}
+                  controls
+                  className="max-w-full max-h-full"
+                  autoPlay
+                >
+                  Your browser does not support the video tag.
+                </video>
+              )}
+            </div>
+
+            {/* Counter */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm">
+              {previewIndex + 1} / {previewType === 'image' ? images.length : videos.length}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Trash2, Edit3, Plus, Eye, EyeOff, ArrowUp, ArrowDown } from 'lucide-react';
+import { useEventEdition } from "@/components/event-edition-context";
 
 interface FormQuestion {
   id: string;
@@ -90,8 +91,7 @@ const DEFAULT_QUESTIONS = [
 
 export default function ManageFormPage() {
   const router = useRouter();
-  const [events, setEvents] = useState<EventData[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<EventData | null>(null);
+  const { selectedEvent: contextEvent, setSelectedEvent, loading: contextLoading } = useEventEdition();
   const [questions, setQuestions] = useState<FormQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -114,48 +114,17 @@ export default function ManageFormPage() {
   });
 
   useEffect(() => {
-    fetchEvents();
-  }, []);
-
-  const fetchEvents = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        setError('Please log in to manage RSVP forms');
-        setLoading(false);
-        return;
-      }
-
-      const response = await fetch('/api/dashboard/events', {
-        headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        // The API returns a paginated response, so we need to access data.data.data
-        const events = data.data.data || [];
-        // Filter events that have RSVP enabled
-        const rsvpEnabledEvents = events.filter((event: EventData) => event.rsvpEnabled);
-        setEvents(rsvpEnabledEvents);
-        
-        if (rsvpEnabledEvents.length === 0) {
-          setError('No events with RSVP enabled found');
-        }
-      } else {
-        setError('Failed to load events');
-      }
-    } catch (error) {
-      setError('Failed to load events');
-    } finally {
+    if (contextEvent) {
+      fetchQuestions(contextEvent.wwwId);
+    } else if (!contextLoading) {
+      // show CTA if there's no selected event
       setLoading(false);
     }
-  };
+  }, [contextEvent, contextLoading]);
 
   const fetchQuestions = async (wwwId: string) => {
     try {
+      setLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session) {
@@ -177,20 +146,22 @@ export default function ManageFormPage() {
       }
     } catch (error) {
       setQuestions([]);
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const handleEventSelect = (event: EventData) => {
-    setSelectedEvent(event);
-    fetchQuestions(event.wwwId);
   };
 
   const handleBack = () => {
     router.push('/dashboard/events-edition/rsvp');
   };
 
+  const handleSwitchEvent = () => {
+    setSelectedEvent(null);
+    router.push("/dashboard/events-edition/select-event");
+  };
+
   const handleAddQuestion = async () => {
-    if (!selectedEvent || !newQuestion.title.trim()) return;
+    if (!contextEvent || !newQuestion.title.trim()) return;
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -207,7 +178,7 @@ export default function ManageFormPage() {
           'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
-          wwwId: selectedEvent.wwwId,
+          wwwId: contextEvent.wwwId,
           questionData: {
             questionType: newQuestion.questionType,
             title: newQuestion.title,
@@ -239,7 +210,7 @@ export default function ManageFormPage() {
   };
 
   const handleDeleteQuestion = async (questionId: string) => {
-    if (!selectedEvent) return;
+    if (!contextEvent) return;
 
     if (!confirm('Are you sure you want to delete this question?')) return;
 
@@ -251,7 +222,7 @@ export default function ManageFormPage() {
         return;
       }
 
-      const response = await fetch(`/api/dashboard/events/rsvp-form-questions?questionId=${questionId}&wwwId=${selectedEvent.wwwId}`, {
+      const response = await fetch(`/api/dashboard/events/rsvp-form-questions?questionId=${questionId}&wwwId=${contextEvent.wwwId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
@@ -270,7 +241,7 @@ export default function ManageFormPage() {
   };
 
   const handleToggleActive = async (question: FormQuestion) => {
-    if (!selectedEvent) return;
+    if (!contextEvent) return;
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -288,7 +259,7 @@ export default function ManageFormPage() {
         },
         body: JSON.stringify({
           questionId: question.id,
-          wwwId: selectedEvent.wwwId,
+          wwwId: contextEvent.wwwId,
         questionData: {
           ...question,
           isActive: !question.is_active
@@ -330,7 +301,7 @@ export default function ManageFormPage() {
     }));
   };
 
-  if (loading) {
+  if (loading || contextLoading) {
     return (
       <div className="flex-1 p-12 bg-gray-100 min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -341,7 +312,7 @@ export default function ManageFormPage() {
     );
   }
 
-  if (error && events.length === 0) {
+  if (error) {
     return (
       <div className="flex-1 p-12 bg-gray-100 min-h-screen">
         <div className="flex justify-between items-start mb-8">
@@ -356,65 +327,29 @@ export default function ManageFormPage() {
           <h1 className="text-2xl font-bold text-black mb-4">RSVP Form Management</h1>
           <p className="text-red-600 mb-4">{error}</p>
           <button
-            onClick={fetchEvents}
+            onClick={() => router.push('/dashboard/events-edition/select-event')}
             className="bg-[#E5B574] text-white px-6 py-2 rounded font-semibold hover:bg-[#D59C58] transition-colors"
           >
-            Retry
+            Select Event
           </button>
         </div>
       </div>
     );
   }
 
-  // Show event selection if no event is selected
-  if (!selectedEvent) {
+  // Show CTA when no event is selected
+  if (!contextEvent) {
     return (
-      <div className="flex-1 p-12 bg-gray-100 min-h-screen">
-        <div className="flex justify-between items-start mb-8">
+      <div className="flex-1 p-12 bg-gray-100 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-black mb-4">RSVP Form Management</h1>
+          <p className="text-gray-600 mb-6">Select an event to manage its RSVP form.</p>
           <button
-            onClick={handleBack}
-            className="bg-black text-white px-6 py-2 rounded font-semibold hover:bg-gray-800 transition-colors"
+            onClick={() => router.push('/dashboard/events-edition/select-event')}
+            className="bg-[#E5B574] text-white px-6 py-2 rounded font-semibold hover:bg-[#D59C58] transition-colors"
           >
-            Back
+            Select Event
           </button>
-        </div>
-
-        <h1 className="text-3xl font-bold text-black mb-8">RSVP FORM MANAGEMENT</h1>
-
-        <div className="bg-white rounded-lg shadow-sm p-8">
-          <h2 className="text-2xl font-semibold text-black mb-6">Select Event to Manage Form</h2>
-          <p className="text-gray-600 mb-8">
-            Choose an event to manage its RSVP form questions and settings.
-          </p>
-
-          {events.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-600 mb-4">No events with RSVP enabled found.</p>
-              <button
-                onClick={() => router.push('/dashboard/events-edition')}
-                className="bg-[#E5B574] text-white px-6 py-2 rounded font-semibold hover:bg-[#D59C58] transition-colors"
-              >
-                Create Event
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {events.map((event) => (
-                <div
-                  key={event.id}
-                  onClick={() => handleEventSelect(event)}
-                  className="border border-gray-200 rounded-lg p-6 cursor-pointer hover:border-[#E5B574] hover:shadow-md transition-all"
-                >
-                  <h3 className="font-semibold text-black mb-2">{event.title}</h3>
-                  <p className="text-gray-600 text-sm mb-2">{event.coupleNames}</p>
-                  <p className="text-gray-500 text-xs">
-                    {new Date(event.eventDate).toLocaleDateString()}
-                  </p>
-                  <p className="text-gray-500 text-xs">{event.venue || 'Venue TBA'}</p>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
     );
@@ -431,20 +366,20 @@ export default function ManageFormPage() {
           Back
         </button>
         <button
-          onClick={() => setSelectedEvent(null)}
-          className="bg-gray-500 text-white px-6 py-2 rounded font-semibold hover:bg-gray-600 transition-colors"
+          onClick={handleSwitchEvent}
+          className="bg-gray-200 text-black px-4 py-2 rounded font-semibold hover:bg-gray-300 transition-colors"
         >
-          Change Event
+          Switch Event
         </button>
       </div>
 
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-black mb-2">RSVP FORM MANAGEMENT</h1>
         <div className="bg-white rounded-lg shadow-sm p-4">
-          <h2 className="text-xl font-semibold text-black">{selectedEvent.title}</h2>
-          <p className="text-gray-600">{selectedEvent.coupleNames}</p>
+          <h2 className="text-xl font-semibold text-black">{contextEvent.title}</h2>
+          <p className="text-gray-600">{contextEvent.coupleNames}</p>
           <p className="text-gray-500 text-sm">
-            {new Date(selectedEvent.eventDate).toLocaleDateString()} • {selectedEvent.venue || 'Venue TBA'}
+            {new Date(contextEvent.eventDate).toLocaleDateString()} • {contextEvent.venue || 'Venue TBA'}
           </p>
         </div>
       </div>

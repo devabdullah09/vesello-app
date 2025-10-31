@@ -80,7 +80,7 @@ const Header = () => {
   )
 }
 
-export const DashboardHeader = () => {
+export const DashboardHeader = ({ onMenuClick }: { onMenuClick?: () => void }) => {
   const router = useRouter();
   const { language, setLanguage, t } = useLanguage();
   
@@ -95,14 +95,23 @@ export const DashboardHeader = () => {
   };
 
   return (
-    <header className="w-full bg-white shadow-sm flex items-center justify-between px-8 h-20 fixed top-0 left-0 z-50">
+    <header className="w-full bg-white shadow-sm flex items-center justify-between px-4 md:px-8 h-20 fixed top-0 left-0 z-50">
       <div className="flex items-center select-none">
+        {/* Mobile menu button */}
+        {onMenuClick && (
+          <button
+            onClick={onMenuClick}
+            className="md:hidden mr-4 text-gray-800 focus:outline-none"
+          >
+            <Menu size={24} />
+          </button>
+        )}
         <img src="/images/logo.png" alt="Vesello Logo" className="h-10 w-auto mr-2" style={{objectFit: 'contain'}} />
       </div>
       
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4">
         {/* Language Switcher */}
-        <div className="flex items-center gap-2">
+        <div className="hidden md:flex items-center gap-2">
           <button
             onClick={() => setLanguage('en')}
             className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
@@ -126,7 +135,7 @@ export const DashboardHeader = () => {
         </div>
         
         <button
-          className="bg-black text-white px-6 py-2 rounded-md font-semibold text-base hover:bg-[#E5B574] hover:text-black transition-colors"
+          className="bg-black text-white px-4 md:px-6 py-2 rounded-md font-semibold text-sm md:text-base hover:bg-[#E5B574] hover:text-black transition-colors"
           onClick={handleLogout}
         >
           {t.navigation.logout}

@@ -17,6 +17,7 @@ export interface Translations {
     loading: string;
     error: string;
     success: string;
+    onOff: string;
   };
   
   // Hero Section
@@ -176,6 +177,8 @@ export interface Translations {
     weather: string;
     contact: string;
     description: string;
+    dietaryRestrictions: string;
+    weatherPolicy: string;
   };
   
   
@@ -242,6 +245,7 @@ export interface Translations {
       rememberWhoLeft: string;
       selectAlbumToUpload: string;
       afterParty: string;
+      toggleDescription: string;
   };
   
   // Invitation Flow
@@ -355,6 +359,19 @@ export interface Translations {
       minLength: string;
       maxLength: string;
     };
+  };
+  
+  // Login
+  login: {
+    loginToAccount: string;
+    enterEmail: string;
+    password: string;
+    forgot: string;
+    enterPassword: string;
+    loginNow: string;
+    loggingIn: string;
+    pleaseEnterBoth: string;
+    loginFailed: string;
   };
   
   // Navigation
@@ -487,6 +504,7 @@ export const translations: Record<Language, Translations> = {
       loading: 'Loading...',
       error: 'Error',
       success: 'Success',
+      onOff: 'On and Off',
     },
     hero: {
       saveTheDate: 'Save The Date',
@@ -560,6 +578,8 @@ export const translations: Record<Language, Translations> = {
       weather: 'Weather',
       contact: 'Contact',
       description: 'Here you can find any additional details about our wedding day.',
+      dietaryRestrictions: 'Please Let Us Know Of Any Dietary Restrictions By August 15th.',
+      weatherPolicy: 'The Wedding Will Be Held Rain Or Shine, But The Ceremony Will Be Moved Indoors In Case Of Bad Weather.',
     },
     gallery: {
       title: 'Gallery',
@@ -623,6 +643,7 @@ export const translations: Record<Language, Translations> = {
       afterParty: 'After Party',
       uploadPhotosVideos: 'UPLOAD PHOTOS/VIDEOS',
       uploadedBy: 'Uploaded By',
+      toggleDescription: 'You can on and off this section on website.',
     },
     invitation: {
       welcome: 'Welcome',
@@ -730,6 +751,17 @@ export const translations: Record<Language, Translations> = {
         minLength: 'Minimum {min} characters',
         maxLength: 'Maximum {max} characters',
       },
+    },
+    login: {
+      loginToAccount: 'Login to your account',
+      enterEmail: 'Enter your email',
+      password: 'Password',
+      forgot: 'Forgot ?',
+      enterPassword: 'Enter your password',
+      loginNow: 'Login now',
+      loggingIn: 'Logging in...',
+      pleaseEnterBoth: 'Please enter both email and password.',
+      loginFailed: 'Login failed. Please check your credentials.',
     },
     navigation: {
       home: 'Home',
@@ -918,6 +950,7 @@ export const translations: Record<Language, Translations> = {
       loading: 'Ładowanie...',
       error: 'Błąd',
       success: 'Sukces',
+      onOff: 'Włącz i Wyłącz',
     },
     hero: {
       saveTheDate: 'Zapisz Datę',
@@ -1043,6 +1076,8 @@ export const translations: Record<Language, Translations> = {
       weather: 'Pogoda',
       contact: 'Kontakt',
       description: 'Tutaj znajdziesz wszystkie dodatkowe szczegóły dotyczące naszego dnia ślubu.',
+      dietaryRestrictions: 'Prosimy o informację o wszelkich ograniczeniach żywieniowych do 15 sierpnia.',
+      weatherPolicy: 'Ślub odbędzie się niezależnie od pogody, ale w przypadku złej pogody ceremonia zostanie przeniesiona do środka.',
     },
     gallery: {
       title: 'Galeria',
@@ -1106,6 +1141,7 @@ export const translations: Record<Language, Translations> = {
       afterParty: 'After Party',
       uploadPhotosVideos: 'PRZEŚLIJ ZDJĘCIA/FILMY',
       uploadedBy: 'Przesłane Przez',
+      toggleDescription: 'Możesz włączyć i wyłączyć tę sekcję na stronie.',
     },
     invitation: {
       welcome: 'Witamy',
@@ -1158,7 +1194,7 @@ export const translations: Record<Language, Translations> = {
       yourRsvpResponse: 'Twoja Odpowiedź RSVP',
       weddingAfterDayParty: 'After Party Ślubny',
       noGuestsAttending: 'Brak gości uczestniczących',
-      addPlusOnes: 'Dodaj Plus One lub Rodzinę',
+      addPlusOnes: 'Dodaj Osobę towarzyszącą lub Rodzinę',
       household: 'Rodzina',
       isItChild: 'Czy to dziecko?',
       addGuests: 'Dodaj Gości',
@@ -1213,6 +1249,17 @@ export const translations: Record<Language, Translations> = {
         minLength: 'Minimum {min} znaków',
         maxLength: 'Maksimum {max} znaków',
       },
+    },
+    login: {
+      loginToAccount: 'Zaloguj się do swojego konta',
+      enterEmail: 'Wprowadź swój email',
+      password: 'Hasło',
+      forgot: 'Zapomniałeś ?',
+      enterPassword: 'Wprowadź swoje hasło',
+      loginNow: 'Zaloguj się teraz',
+      loggingIn: 'Logowanie...',
+      pleaseEnterBoth: 'Proszę wprowadzić zarówno email jak i hasło.',
+      loginFailed: 'Logowanie nie powiodło się. Sprawdź swoje dane.',
     },
     navigation: {
       home: 'Strona Główna',
@@ -1329,3 +1376,4 @@ export const translations: Record<Language, Translations> = {
     },
   },
 };
+``

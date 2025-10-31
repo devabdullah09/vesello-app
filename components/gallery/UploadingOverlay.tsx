@@ -13,6 +13,8 @@ interface UploadingOverlayProps {
   totalImages?: number;
   totalVideos?: number;
   currentFileName?: string;
+  // Fine-grained progress for the current file (0-100)
+  currentPercent?: number;
 }
 
 const UploadingOverlay: React.FC<UploadingOverlayProps> = ({ 
@@ -23,7 +25,8 @@ const UploadingOverlay: React.FC<UploadingOverlayProps> = ({
   uploadedCount = 0, 
   totalImages = 0, 
   totalVideos = 0, 
-  currentFileName 
+  currentFileName,
+  currentPercent
 }) => {
   return (
     <div className="fixed inset-0 z-[1000] bg-white flex flex-col min-h-screen">
@@ -65,8 +68,20 @@ const UploadingOverlay: React.FC<UploadingOverlayProps> = ({
               
               {/* Progress Text */}
               <div className="text-center text-[#888]" style={{ fontFamily: 'Montserrat', fontWeight: 400 }}>
-                Uploading {current} of {total}
+                Uploading {current} of {total} ({(current / total * 100).toFixed(0)}%)
               </div>
+
+              {/* Per-file fine progress (especially useful for large videos) */}
+              {typeof currentPercent === 'number' && currentFileName && (
+                <div className="mt-3 space-y-1">
+                  <div className="text-center text-xs text-[#C18037]" style={{ fontFamily: 'Montserrat', fontWeight: 500 }}>
+                    {mediaType === 'videos' ? 'Video' : 'File'} progress: {Math.floor(currentPercent)}%
+                  </div>
+                  <div className="h-2 rounded-full bg-[#F4E6CC] relative overflow-hidden">
+                    <div className="h-full bg-[#C18037] transition-all" style={{ width: `${Math.max(0, Math.min(100, currentPercent))}%` }} />
+                  </div>
+                </div>
+              )}
               
               {/* Detailed Breakdown */}
               {(totalImages > 0 || totalVideos > 0) && (

@@ -3,12 +3,14 @@ import { useEffect, useState } from "react";
 import { useEvents, useAuth } from '@/hooks/use-dashboard'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/components/language-context'
+import { useEventEdition } from '@/components/event-edition-context'
 
 export default function EventsListPage() {
   const { events, loading, error, fetchEvents, createEvent, updateEvent, deleteEvent } = useEvents()
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const { t } = useLanguage()
+  const { setSelectedEvent } = useEventEdition()
   const [showModal, setShowModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
@@ -205,7 +207,21 @@ export default function EventsListPage() {
     });
   };
 
-  const handleManageClick = (eventId: string) => {
+  const handleManageClick = async (event: any) => {
+    // Set the selected event in context
+    const eventData = {
+      id: event.id,
+      wwwId: event.wwwId,
+      title: event.title,
+      coupleNames: event.coupleNames,
+      eventDate: event.eventDate,
+      venue: event.venue,
+      status: event.status,
+      galleryEnabled: event.galleryEnabled,
+      rsvpEnabled: event.rsvpEnabled,
+      eventUrl: `/event-id/${event.wwwId}`
+    };
+    setSelectedEvent(eventData);
     router.push('/dashboard/events-edition');
   };
 
@@ -346,7 +362,7 @@ export default function EventsListPage() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button 
                       className="text-green-600 font-semibold mr-2 hover:text-green-800"
-                      onClick={() => handleManageClick(event.id)}
+                      onClick={() => handleManageClick(event)}
                     >
                       {t.dashboard.manage}
                     </button>

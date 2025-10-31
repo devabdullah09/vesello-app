@@ -4,10 +4,10 @@ import React, { useRef, useState, useEffect } from 'react';
 import UploadingOverlay from '@/components/gallery/UploadingOverlay';
 import UploadSuccessOverlay from '@/components/gallery/UploadSuccessOverlay';
 import { useRouter, useParams } from 'next/navigation';
-// Removed direct bunny-net imports - now using API endpoints
 import EventHeader from '@/components/layout/EventHeader';
 import EventFooter from '@/components/layout/EventFooter';
 import { useLanguage } from '@/components/language-context';
+import { uploadFiles, fetchGalleryFiles, getInitialImages, getInitialVideos, GalleryFile } from '@/lib/gallery';
 
 const downloadIcon = (
   <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="inline ml-1 text-[#C18037]">
@@ -38,6 +38,12 @@ export default function EventWeddingDayGallery() {
   const [totalImages, setTotalImages] = useState(0);
   const [totalVideos, setTotalVideos] = useState(0);
   const [currentUploadingFile, setCurrentUploadingFile] = useState<string>('');
+  const [currentPercent, setCurrentPercent] = useState<number | undefined>(undefined);
+
+  // Preview modal state
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewType, setPreviewType] = useState<'image' | 'video'>('image');
+  const [previewIndex, setPreviewIndex] = useState(0);
 
 
   // Load existing images and event data on component mount
@@ -109,36 +115,17 @@ export default function EventWeddingDayGallery() {
     setTotalVideos(videoFiles.length);
 
     try {
-      // Create FormData for upload
-      const formData = new FormData();
-      formData.append('albumType', 'wedding-day');
-      formData.append('mediaType', tab);
-      
-      // Add all files to FormData
-      filesArray.forEach((file, index) => {
-        formData.append('files', file);
-        
-        // Update current uploading file
-        if (index === 0) {
-          setCurrentUploadingFile(file.name);
-        }
+      // Upload files to server (which now uploads to Bunny.net) with per-file progress
+      const response = await uploadFiles(files, 'wedding-day', tab, ({ fileIndex, file, percent }) => {
+        setCurrentUploadingFile(file.name);
+        // Only show progress up to 90% - the remaining 10% is server processing
+        const displayPercent = Math.min(percent * 0.9, 90);
+        setCurrentPercent(displayPercent);
+        // Don't update overall progress until server confirms completion
       });
-
-      // Upload files via API endpoint
-      const response = await fetch(`/api/event-id/${wwwId}/gallery/upload`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.details || 'Upload failed');
-      }
-
-      const result = await response.json();
-      console.log('Upload successful:', result);
       
-      // Update progress to show completion
+      // Server processing complete - show 100% and update overall progress
+      setCurrentPercent(100);
       setUploadProgress(filesArray.length);
       setCurrentUploadingFile('');
       
@@ -152,12 +139,42 @@ export default function EventWeddingDayGallery() {
         setSelectedFiles([]);
         setTotalImages(0);
         setTotalVideos(0);
-      }, 500);
+        setCurrentPercent(undefined);
+      }, 1000); // Give a moment to show 100% completion
     } catch (error) {
       console.error('Upload error:', error);
       setUploading(false);
       setCurrentUploadingFile('');
+      setCurrentPercent(undefined);
       alert('Upload failed. Please try again.');
+    }
+  };
+
+  // Preview modal functions
+  const openPreview = (type: 'image' | 'video', index: number) => {
+    setPreviewType(type);
+    setPreviewIndex(index);
+    setPreviewOpen(true);
+  };
+
+  const closePreview = () => {
+    setPreviewOpen(false);
+  };
+
+  const navigatePreview = (direction: 'prev' | 'next') => {
+    const currentItems = previewType === 'image' ? images : videos;
+    if (direction === 'prev') {
+      setPreviewIndex((prev) => (prev > 0 ? prev - 1 : currentItems.length - 1));
+    } else {
+      setPreviewIndex((prev) => (prev < currentItems.length - 1 ? prev + 1 : 0));
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (previewOpen) {
+      if (e.key === 'Escape') closePreview();
+      if (e.key === 'ArrowLeft') navigatePreview('prev');
+      if (e.key === 'ArrowRight') navigatePreview('next');
     }
   };
 
@@ -178,6 +195,7 @@ export default function EventWeddingDayGallery() {
           totalImages={totalImages}
           totalVideos={totalVideos}
           currentFileName={currentUploadingFile}
+          currentPercent={currentPercent}
         />
       )}
       {showSuccess && (
@@ -232,13 +250,38 @@ export default function EventWeddingDayGallery() {
               </div>
               {/* Gallery Images or Videos */}
               {tab === 'photos' && images.map((img, i) => (
-                <Image key={i} src={img} alt={`Gallery ${i}`} width={180} height={180} className="rounded-lg object-cover" />
+                <div key={i} className="relative w-[180px] h-[180px] rounded-lg overflow-hidden cursor-pointer group" onClick={() => openPreview('image', i)}>
+                  <Image 
+                    src={img} 
+                    alt={`Gallery ${i}`} 
+                    width={180} 
+                    height={180} 
+                    className="object-cover group-hover:scale-105 transition-transform duration-300" 
+                    sizes="180px"
+                  />
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <svg width="24" height="24" fill="white" viewBox="0 0 24 24" className="w-6 h-6">
+                        <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
               ))}
               {tab === 'videos' && videos.map((vid, i) => (
-                <video key={i} width={180} height={180} controls poster={vid.thumb} className="rounded-lg object-cover">
-                  <source src={vid.src} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
+                <div key={i} className="relative w-[180px] h-[180px] rounded-lg overflow-hidden cursor-pointer group" onClick={() => openPreview('video', i)}>
+                  <video width={180} height={180} poster={vid.thumb} className="object-cover">
+                    <source src={vid.src} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                  <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center group-hover:bg-opacity-50 transition-all duration-300">
+                    <div className="w-10 h-10 bg-white bg-opacity-90 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" className="text-gray-800 ml-1">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
@@ -249,6 +292,77 @@ export default function EventWeddingDayGallery() {
       <div className="mt-auto">
         <EventFooter />
       </div>
+
+      {/* Preview Modal */}
+      {previewOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center"
+          onKeyDown={handleKeyDown}
+          tabIndex={0}
+        >
+          <div className="relative w-full h-full flex items-center justify-center p-4">
+            {/* Close button */}
+            <button
+              onClick={closePreview}
+              className="absolute top-4 right-4 text-white hover:text-gray-300 z-10"
+            >
+              <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Navigation buttons */}
+            {((previewType === 'image' && images.length > 1) || (previewType === 'video' && videos.length > 1)) && (
+              <>
+                <button
+                  onClick={() => navigatePreview('prev')}
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 z-10"
+                >
+                  <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => navigatePreview('next')}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 z-10"
+                >
+                  <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </>
+            )}
+
+            {/* Media content */}
+            <div className="max-w-full max-h-full flex items-center justify-center">
+              {previewType === 'image' ? (
+                <Image
+                  src={images[previewIndex]}
+                  alt={`Preview ${previewIndex + 1}`}
+                  width={1200}
+                  height={800}
+                  className="max-w-full max-h-full object-contain"
+                  sizes="100vw"
+                />
+              ) : (
+                <video
+                  src={videos[previewIndex].src}
+                  controls
+                  className="max-w-full max-h-full"
+                  autoPlay
+                >
+                  Your browser does not support the video tag.
+                </video>
+              )}
+            </div>
+
+            {/* Counter */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm">
+              {previewIndex + 1} / {previewType === 'image' ? images.length : videos.length}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

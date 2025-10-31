@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Search, Filter, Download, Plus, Edit, Trash2, Eye } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { useEventEdition } from "@/components/event-edition-context";
 
 interface Event {
   id: string;
@@ -58,7 +59,8 @@ interface IndividualGuest {
 export default function EventGuestListPage() {
   const params = useParams();
   const router = useRouter();
-  const wwwId = params?.wwwId as string;
+  const { selectedEvent: contextEvent, setSelectedEvent } = useEventEdition();
+  const wwwId = contextEvent?.wwwId || params?.wwwId as string;
 
   const [event, setEvent] = useState<Event | null>(null);
   const [guests, setGuests] = useState<Guest[]>([]);
@@ -400,6 +402,15 @@ export default function EventGuestListPage() {
           className="bg-black text-white px-6 py-2 rounded font-semibold hover:bg-gray-800 transition-colors"
         >
           Back
+        </button>
+        <button
+          onClick={() => {
+            setSelectedEvent(null);
+            router.push("/dashboard/events-edition/select-event");
+          }}
+          className="bg-gray-200 text-black px-4 py-2 rounded font-semibold hover:bg-gray-300 transition-colors"
+        >
+          Switch Event
         </button>
       </div>
       

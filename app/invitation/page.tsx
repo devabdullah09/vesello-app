@@ -79,13 +79,13 @@ export default function InvitationReplyPage() {
 
   return (
     <div className="min-h-screen flex flex-col justify-between bg-[#fff]" style={{ fontFamily: 'Montserrat, Arial, Helvetica, sans-serif' }}>
-      <div className="flex-1 flex flex-col items-center justify-center py-16 relative">
-        <div className="relative w-full max-w-3xl bg-white rounded-2xl border border-[#C7B299] p-8 md:p-12 shadow-md mx-auto z-10" style={{ minHeight: 700 }}>
+      <div className="flex-1 flex flex-col items-center justify-center py-8 md:py-16 px-4 relative">
+        <div className="relative w-full max-w-3xl bg-white rounded-2xl border border-[#C7B299] p-4 md:p-8 lg:p-12 shadow-md mx-auto z-10" style={{ minHeight: 700 }}>
           {/* Decorative Corners and Sparkles (inside card) */}
-          <Image src="/images/invitation/leaf_left.png" alt="leaf left" width={180} height={180} className="absolute left-0 top-10 z-0" style={{ pointerEvents: 'none' }} />
-          <Image src="/images/invitation/leaf_right.png" alt="leaf right" width={180} height={180} className="absolute right-0 bottom-10 z-0" style={{ pointerEvents: 'none' }} />
-          <Image src="/images/invitation/sparkle_left.png" alt="sparkle left" width={120} height={40} className="absolute left-8 top-40 z-0" style={{ pointerEvents: 'none' }} />
-          <Image src="/images/invitation/sparkle_right.png" alt="sparkle right" width={120} height={40} className="absolute right-8 bottom-40 z-0" style={{ pointerEvents: 'none' }} />
+          <Image src="/images/invitation/leaf_left.png" alt="leaf left" width={180} height={180} className="absolute left-0 top-10 z-0 hidden md:block" style={{ pointerEvents: 'none' }} />
+          <Image src="/images/invitation/leaf_right.png" alt="leaf right" width={180} height={180} className="absolute right-0 bottom-10 z-0 hidden md:block" style={{ pointerEvents: 'none' }} />
+          <Image src="/images/invitation/sparkle_left.png" alt="sparkle left" width={120} height={40} className="absolute left-8 top-40 z-0 hidden md:block" style={{ pointerEvents: 'none' }} />
+          <Image src="/images/invitation/sparkle_right.png" alt="sparkle right" width={120} height={40} className="absolute right-8 bottom-40 z-0 hidden md:block" style={{ pointerEvents: 'none' }} />
 
           {/* Main Content */}
           <div className="w-full flex flex-col items-center mb-8 mt-2 z-10">
@@ -116,14 +116,14 @@ export default function InvitationReplyPage() {
 
               
               {/* Main Guest Fields */}
-              <div className="flex justify-between mb-6 w-full">
+              <div className="flex flex-col md:flex-row gap-4 md:justify-between mb-6 w-full">
                 <input
                   type="text"
                   name="name"
                   value={mainGuest.name}
                   onChange={handleMainGuestChange}
                   placeholder={t.forms.name}
-                  className="bg-[#f6f6f6] rounded-md px-8 py-2 w-94 min-w-[330px] text-base border border-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#C18037] placeholder:text-[#bdbdbd]"
+                  className="bg-[#f6f6f6] rounded-md px-4 md:px-8 py-2 w-full md:w-auto flex-1 text-sm md:text-base border border-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#C18037] placeholder:text-[#bdbdbd]"
                   style={{ fontFamily: 'Montserrat' }}
                   required
                 />
@@ -133,7 +133,7 @@ export default function InvitationReplyPage() {
                   value={mainGuest.surname}
                   onChange={handleMainGuestChange}
                   placeholder="Surname"
-                  className="bg-[#f6f6f6] rounded-md px-8 py-2 w-64 min-w-[330px] text-base border border-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#C18037] placeholder:text-[#bdbdbd]"
+                  className="bg-[#f6f6f6] rounded-md px-4 md:px-8 py-2 w-full md:w-auto flex-1 text-sm md:text-base border border-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#C18037] placeholder:text-[#bdbdbd]"
                   style={{ fontFamily: 'Montserrat' }}
                   required
                 />
@@ -142,15 +142,15 @@ export default function InvitationReplyPage() {
 
             <div className="w-full mb-6">
               <div className="flex items-center justify-between mb-2">
-                <div className="text-lg font-semibold" style={{ fontFamily: 'Montserrat', color: '#08080A' }}>Add Plus Ones or Household</div>
-                <div className="text-base font-normal text-[#08080A]" style={{ fontFamily: 'Montserrat' }}>Is it a child?</div>
+                <div className="text-lg font-semibold" style={{ fontFamily: 'Montserrat', color: '#08080A' }}>{t.invitation.addPlusOnes}</div>
+                <div className="text-base font-normal text-[#08080A]" style={{ fontFamily: 'Montserrat' }}>{t.invitation.isItChild}</div>
               </div>
               <div className="flex flex-col gap-3">
                 {guests.map((guest, idx) => (
                   <div key={idx} className="flex items-center gap-3">
                     <input
                       type="text"
-                      placeholder="Name"
+                      placeholder={t.invitation.name}
                       value={guest.name}
                       onChange={e => handleGuestChange(idx, "name", e.target.value)}
                       className="bg-[#f6f6f6] rounded-md px-8 py-2 w-40 min-w-[220px] text-base border border-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#C18037] placeholder:text-[#bdbdbd]"
@@ -158,7 +158,7 @@ export default function InvitationReplyPage() {
                     />
                     <input
                       type="text"
-                      placeholder="Surname"
+                      placeholder={t.invitation.surname}
                       value={guest.surname}
                       onChange={e => handleGuestChange(idx, "surname", e.target.value)}
                       className="bg-[#f6f6f6] rounded-md px-8 py-2 w-40 min-w-[220px] text-base border border-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#C18037] placeholder:text-[#bdbdbd]"
@@ -166,7 +166,7 @@ export default function InvitationReplyPage() {
                     />
                     <div className="flex items-center gap-2">
                       <span
-                        className={`inline-block w-5 h-5 rounded-full border-2 flex items-center justify-center cursor-pointer ${guest.isChild ? 'border-[#C18037] bg-[#C18037]' : 'border-[#bdbdbd] bg-white'}`}
+                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center cursor-pointer ${guest.isChild ? 'border-[#C18037] bg-[#C18037]' : 'border-[#bdbdbd] bg-white'}`}
                         onClick={() => handleGuestChange(idx, "isChild", !guest.isChild)}
                         style={{ transition: 'all 0.2s' }}
                       >
@@ -180,7 +180,7 @@ export default function InvitationReplyPage() {
                         className="bg-[#f6f6f6] rounded-md px-2 py-2 w-32 text-base border border-[#e0e0e0] focus:outline-none focus:ring-2 focus:ring-[#C18037] placeholder:text-[#bdbdbd]"
                         style={{ fontFamily: 'Montserrat' }}
                       >
-                        <option value="">Age</option>
+                        <option value="">{t.invitation.age}</option>
                         {childAges.map((age) => (
                           <option key={age} value={age}>{age}</option>
                         ))}
@@ -207,14 +207,14 @@ export default function InvitationReplyPage() {
                 className="min-w-[220px] border border-[#C18037] text-[#08080A] rounded-md px-6 py-3 font-semibold hover:bg-[#f6f6f6] transition-colors"
                 style={{ fontFamily: 'Montserrat' }}
               >
-                Add Guests
+                {t.invitation.addGuests}
               </button>
               <button
                 type="submit"
                 className="min-w-[220px] bg-[#08080A] text-white rounded-md px-6 py-3 font-semibold hover:bg-[#C18037] hover:text-white transition-colors"
                 style={{ fontFamily: 'Montserrat' }}
               >
-                Continue
+                {t.invitation.continue}
               </button>
             </div>
           </form>
