@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { signInUser } from "@/lib/supabase-auth";
+import { useLanguage } from '@/components/language-context';
+import { signInUser } from '@/lib/supabase-auth';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 export default function LoginPage() {
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -18,7 +20,7 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      setError("Please enter both email and password.");
+      setError(t.login.pleaseEnterBoth);
       return;
     }
     
@@ -30,7 +32,7 @@ export default function LoginPage() {
       router.replace("/dashboard");
     } catch (error: any) {
       console.error('Login error:', error);
-      setError(error.message || "Login failed. Please check your credentials.");
+      setError(error.message || t.login.loginFailed);
     } finally {
       setLoading(false);
     }
@@ -54,16 +56,16 @@ export default function LoginPage() {
       <div className="z-10 w-full max-w-md">
         <Card className="shadow-xl border-none bg-white/95">
           <CardHeader>
-            <CardTitle className="text-center text-[1.6rem] font-bold text-gray-900" style={{fontFamily: 'Montserrat, Arial, Helvetica, sans-serif'}}>Login to your account</CardTitle>
+            <CardTitle className="text-center text-[1.6rem] font-bold text-gray-900" style={{fontFamily: 'Montserrat, Arial, Helvetica, sans-serif'}}>{t.login.loginToAccount}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-5">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">{t.forms.email}</label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder={t.login.enterEmail}
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="bg-white border-gray-300 focus:border-amber-500 focus:ring-amber-500"
@@ -72,14 +74,14 @@ export default function LoginPage() {
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-                  <a href="#" className="text-xs text-gray-500 hover:text-amber-500 transition-colors">Forgot ?</a>
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">{t.login.password}</label>
+                  <a href="#" className="text-xs text-gray-500 hover:text-amber-500 transition-colors">{t.login.forgot}</a>
                 </div>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
+                    placeholder={t.login.enterPassword}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     className="bg-white border-gray-300 focus:border-amber-500 focus:ring-amber-500 pr-10"
@@ -109,7 +111,7 @@ export default function LoginPage() {
                 disabled={loading}
                 className="w-full bg-gradient-to-r from-[#E5B574] via-[#D59C58] to-[#C18037] text-white font-semibold text-base py-2 rounded-md shadow-md hover:from-[#D59C58] hover:to-[#E5B574] transition-colors disabled:opacity-50"
               >
-                {loading ? "Logging in..." : "Login now"}
+                {loading ? t.login.loggingIn : t.login.loginNow}
               </Button>
             </form>
           </CardContent>

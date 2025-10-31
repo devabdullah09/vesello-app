@@ -32,17 +32,17 @@ export default function GalleryPage() {
         {/* Admin Toggle */}
         {admin && (
           <div className="flex items-center mb-6 justify-end">
-            <span className="mr-3 font-semibold text-black">On and Off</span>
+            <span className="mr-3 font-semibold text-black">{t.common.onOff}</span>
             <button
               className={`w-14 h-8 flex items-center bg-gray-200 rounded-full p-1 transition-colors duration-300 focus:outline-none ${visible ? 'bg-green-400' : 'bg-gray-400'}`}
               onClick={() => setVisible(v => !v)}
-              title="You can on and off this section on website."
+              title={t.gallery.toggleDescription}
             >
               <span
                 className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${visible ? 'translate-x-6' : ''}`}
               />
             </button>
-            <span className="ml-3 text-sm text-gray-600">You can on and off this section on website.</span>
+            <span className="ml-3 text-sm text-gray-600">{t.gallery.toggleDescription}</span>
           </div>
         )}
         {/* Content or Unavailable */}

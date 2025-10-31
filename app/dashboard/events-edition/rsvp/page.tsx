@@ -1,16 +1,36 @@
 "use client";
 import { useRouter } from "next/navigation";
+import { useEventEdition } from "@/components/event-edition-context";
+import { useEffect } from "react";
 
 export default function RSVPManagementPage() {
   const router = useRouter();
+  const { selectedEvent, setSelectedEvent } = useEventEdition();
+
+  useEffect(() => {
+    if (!selectedEvent) {
+      router.push("/dashboard/events-edition/select-event");
+    } else if (!selectedEvent.rsvpEnabled) {
+      router.push("/dashboard/events-edition");
+    }
+  }, [selectedEvent, router]);
 
   const handleBack = () => {
     router.push("/dashboard/events-edition");
   };
 
+  const handleSwitchEvent = () => {
+    setSelectedEvent(null);
+    router.push("/dashboard/events-edition/select-event");
+  };
+
   const handleModuleClick = (module: string) => {
     router.push(`/dashboard/events-edition/rsvp/${module}`);
   };
+
+  if (!selectedEvent || !selectedEvent.rsvpEnabled) {
+    return null;
+  }
 
   return (
     <div className="flex-1 p-12 bg-gray-100 min-h-screen">
@@ -20,6 +40,12 @@ export default function RSVPManagementPage() {
           className="bg-black text-white px-6 py-2 rounded font-semibold hover:bg-gray-800 transition-colors"
         >
           Back
+        </button>
+        <button
+          onClick={handleSwitchEvent}
+          className="bg-gray-200 text-black px-4 py-2 rounded font-semibold hover:bg-gray-300 transition-colors"
+        >
+          Switch Event
         </button>
       </div>
       

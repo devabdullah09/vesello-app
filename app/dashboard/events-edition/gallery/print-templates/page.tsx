@@ -3,8 +3,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useEventEdition } from "@/components/event-edition-context";
 
-interface Event {
+interface EventData {
   id: string;
   wwwId: string;
   title: string;
@@ -13,6 +14,8 @@ interface Event {
   venue?: string;
   status: string;
   galleryEnabled: boolean;
+  rsvpEnabled: boolean;
+  eventUrl: string;
 }
 
 interface Template {
@@ -102,69 +105,37 @@ const businessCardTemplates: Template[] = [
 export default function PrintTemplatesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [events, setEvents] = useState<Event[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const { selectedEvent: contextEvent, setSelectedEvent, loading: contextLoading } = useEventEdition();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
 
-  const wwwId = searchParams.get('wwwId');
   const templateId = searchParams.get('template');
 
   useEffect(() => {
-    if (!wwwId) {
-      fetchEvents();
-    } else {
+    if (contextEvent) {
       fetchEventDetails();
+    } else if (!contextLoading) {
+      setLoading(false);
     }
-  }, [wwwId]);
+  }, [contextEvent, contextLoading]);
 
-  const fetchEvents = async () => {
+  const fetchEventDetails = async () => {
+    if (!contextEvent?.wwwId) return;
+    
     try {
       setLoading(true);
       setError(null);
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setError('Not authenticated');
-        return;
-      }
-
-      const response = await fetch('/api/dashboard/events', {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch events');
-      }
-
-      const result = await response.json();
-      // Filter events to only show those with gallery enabled
-      const allEvents = result.data.data || [];
-      const galleryEnabledEvents = allEvents.filter((event: Event) => event.galleryEnabled);
-      setEvents(galleryEnabledEvents);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch events');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchEventDetails = async () => {
-    try {
-      const eventResponse = await fetch(`/api/event-id/${wwwId}`);
+      const eventResponse = await fetch(`/api/event-id/${contextEvent.wwwId}`);
       if (!eventResponse.ok) {
         throw new Error('Event not found');
       }
       
       const eventResult = await eventResponse.json();
-      setSelectedEvent(eventResult.data);
+      // Event data already available from context
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch event details');
     } finally {
@@ -173,20 +144,17 @@ export default function PrintTemplatesPage() {
   };
 
   const handleBack = () => {
-    if (wwwId) {
-      router.push("/dashboard/events-edition/gallery/print-templates");
-    } else {
-      router.push("/dashboard/events-edition/gallery");
-    }
+    router.push("/dashboard/events-edition/gallery");
   };
 
-  const handleEventSelect = (selectedWwwId: string) => {
-    router.push(`/dashboard/events-edition/gallery/print-templates?wwwId=${selectedWwwId}`);
+  const handleSwitchEvent = () => {
+    setSelectedEvent(null);
+    router.push("/dashboard/events-edition/select-event");
   };
 
   const handleTemplateSelect = (template: Template) => {
     setSelectedTemplate(template);
-    router.push(`/dashboard/events-edition/gallery/print-templates?wwwId=${wwwId}&template=${template.id}`);
+    router.push(`/dashboard/events-edition/gallery/print-templates?wwwId=${contextEvent?.wwwId}&template=${template.id}`);
   };
 
   const handlePreviewTemplate = (template: Template) => {
@@ -200,7 +168,7 @@ export default function PrintTemplatesPage() {
   };
 
   const handleDownloadTemplate = async (template: Template) => {
-    if (!selectedEvent) return;
+    if (!contextEvent) return;
 
     try {
       const response = await fetch('/api/dashboard/events/print-template', {
@@ -211,11 +179,11 @@ export default function PrintTemplatesPage() {
         body: JSON.stringify({
           templateId: template.id,
           eventData: {
-            wwwId: selectedEvent.wwwId,
-            coupleNames: selectedEvent.coupleNames,
-            eventDate: selectedEvent.eventDate,
-            venue: selectedEvent.venue,
-            galleryUrl: `${window.location.origin}/event-id/${selectedEvent.wwwId}/gallery`
+            wwwId: contextEvent.wwwId,
+            coupleNames: contextEvent.coupleNames,
+            eventDate: contextEvent.eventDate,
+            venue: contextEvent.venue,
+            galleryUrl: `${window.location.origin}/event-id/${contextEvent.wwwId}/gallery`
           }
         }),
       });
@@ -225,7 +193,7 @@ export default function PrintTemplatesPage() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${template.name}-${selectedEvent.coupleNames.replace(/\s+/g, '-')}.pdf`;
+        a.download = `${template.name}-${contextEvent.coupleNames.replace(/\s+/g, '-')}.pdf`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -254,90 +222,26 @@ export default function PrintTemplatesPage() {
     );
   }
 
-  // Show event selection interface when no wwwId is provided
-  if (!wwwId) {
+  if (contextLoading) {
     return (
-      <div className="flex-1 p-12 bg-gray-100 min-h-screen">
-        <div className="flex justify-between items-start mb-8">
-          <button
-            onClick={handleBack}
-            className="bg-black text-white px-6 py-2 rounded font-semibold hover:bg-gray-800 transition-colors"
-          >
-            Back
-          </button>
-        </div>
-        
-        <h1 className="text-3xl font-bold text-black mb-8">PRINT TEMPLATES</h1>
-        
-        <div className="bg-white rounded-lg shadow-sm p-8">
-          <h2 className="text-2xl font-semibold text-black mb-6">Select an Event</h2>
-          <p className="text-gray-600 mb-6">
-            Choose an event to generate print templates with its information.
-          </p>
-          
-          {events.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-600 mb-4">No events with gallery enabled found.</p>
-              <p className="text-gray-500 text-sm mb-6">
-                To generate print templates, you need to enable the gallery feature for your events first.
-              </p>
-              <button
-                onClick={() => router.push('/dashboard/events-list')}
-                className="bg-[#E5B574] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#D59C58] transition-colors"
-              >
-                Manage Events
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {events.map((event) => (
-                <div
-                  key={event.id}
-                  onClick={() => handleEventSelect(event.wwwId)}
-                  className="border border-gray-200 rounded-lg p-6 hover:border-[#E5B574] hover:shadow-md transition-all cursor-pointer"
-                >
-                  <h3 className="text-lg font-semibold text-black mb-2">{event.title}</h3>
-                  <p className="text-[#E5B574] font-medium mb-3">{event.coupleNames}</p>
-                  <p className="text-gray-600 text-sm mb-2">
-                    {new Date(event.eventDate).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </p>
-                  {event.venue && (
-                    <p className="text-gray-500 text-sm mb-3">{event.venue}</p>
-                  )}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        event.status === 'active' ? 'bg-green-100 text-green-800' :
-                        event.status === 'planned' ? 'bg-blue-100 text-blue-800' :
-                        event.status === 'completed' ? 'bg-gray-100 text-gray-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
-                      </span>
-                      <span className="px-2 py-1 rounded text-xs font-medium bg-[#E5B574] text-white">
-                        Gallery Enabled
-                      </span>
-                    </div>
-                    <span className="text-[#E5B574] text-sm font-medium">Select →</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      <div className="flex-1 p-12 bg-gray-100 min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
       </div>
     );
   }
 
-  // Show templates when event is selected
-  if (!selectedEvent) {
+  if (!contextEvent) {
     return (
       <div className="flex-1 p-12 bg-gray-100 min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading event details...</div>
+        <div className="text-center">
+          <div className="text-lg mb-4">No event selected</div>
+          <button
+            onClick={() => router.push("/dashboard/events-edition/select-event")}
+            className="bg-gradient-to-r from-[#E5B574] via-[#D59C58] to-[#C18037] text-white font-semibold px-6 py-3 rounded-md shadow-md hover:from-[#D59C58] hover:to-[#E5B574] transition-colors"
+          >
+            Select Event
+          </button>
+        </div>
       </div>
     );
   }
@@ -351,11 +255,17 @@ export default function PrintTemplatesPage() {
         >
           Back
         </button>
+        <button
+          onClick={handleSwitchEvent}
+          className="bg-gray-200 text-black px-4 py-2 rounded font-semibold hover:bg-gray-300 transition-colors"
+        >
+          Switch Event
+        </button>
       </div>
       
       <h1 className="text-3xl font-bold text-black mb-4">PRINT TEMPLATES</h1>
       <p className="text-gray-600 mb-8">
-        Creating templates for: <span className="font-semibold">{selectedEvent.title}</span> - {selectedEvent.coupleNames}
+        Creating templates for: <span className="font-semibold">{contextEvent.title}</span> - {contextEvent.coupleNames}
       </p>
       
       {/* A5 FORMAT Section */}
@@ -374,7 +284,7 @@ export default function PrintTemplatesPage() {
                     <>
                       <div className="text-center">
                         <div className="text-[8px] text-gray-600">Welcome To</div>
-                        <div className="text-[10px] font-bold text-[#E5B574] mb-1">{selectedEvent.coupleNames}</div>
+                        <div className="text-[10px] font-bold text-[#E5B574] mb-1">{contextEvent.coupleNames}</div>
                         <div className="text-[8px] text-gray-800">Wedding</div>
                       </div>
                       <div className="bg-gray-200 w-8 h-8 mx-auto rounded"></div>
@@ -395,7 +305,7 @@ export default function PrintTemplatesPage() {
                     <>
                       <div className="text-center">
                         <div className="text-[8px] text-gray-600">Thank You</div>
-                        <div className="text-[7px] font-bold text-[#E5B574]">{selectedEvent.coupleNames}</div>
+                        <div className="text-[7px] font-bold text-[#E5B574]">{contextEvent.coupleNames}</div>
                       </div>
                       <div className="bg-gray-200 w-6 h-6 mx-auto rounded"></div>
                       <div className="text-[5px] text-center text-gray-600">View Photos</div>
@@ -448,7 +358,7 @@ export default function PrintTemplatesPage() {
                     <>
                       <div className="text-center">
                         <div className="text-[6px] text-gray-600">Gallery</div>
-                        <div className="text-[7px] font-bold text-[#E5B574]">{selectedEvent.coupleNames}</div>
+                        <div className="text-[7px] font-bold text-[#E5B574]">{contextEvent.coupleNames}</div>
                       </div>
                       <div className="bg-gray-200 w-4 h-4 mx-auto rounded"></div>
                     </>
@@ -466,7 +376,7 @@ export default function PrintTemplatesPage() {
                     <>
                       <div className="text-center">
                         <div className="text-[6px] text-gray-600">Thanks!</div>
-                        <div className="text-[5px] font-bold text-[#E5B574]">{selectedEvent.coupleNames}</div>
+                        <div className="text-[5px] font-bold text-[#E5B574]">{contextEvent.coupleNames}</div>
                       </div>
                       <div className="bg-gray-200 w-3 h-3 mx-auto rounded"></div>
                     </>
@@ -546,7 +456,7 @@ export default function PrintTemplatesPage() {
                           transformOrigin: 'top center'
                         }}
                       >
-                        {renderTemplatePreview(previewTemplate, selectedEvent)}
+                        {renderTemplatePreview(previewTemplate, contextEvent)}
                       </div>
                     ) : (
                       <div 
@@ -558,7 +468,7 @@ export default function PrintTemplatesPage() {
                           transformOrigin: 'center'
                         }}
                       >
-                        {renderTemplatePreview(previewTemplate, selectedEvent)}
+                        {renderTemplatePreview(previewTemplate, contextEvent)}
                       </div>
                     )}
                   </div>
@@ -578,22 +488,22 @@ export default function PrintTemplatesPage() {
                     </div>
                     <div>
                       <span className="font-medium text-gray-700">Event:</span>
-                      <span className="ml-2 text-gray-600">{selectedEvent.coupleNames}</span>
+                      <span className="ml-2 text-gray-600">{contextEvent.coupleNames}</span>
                     </div>
                     <div>
                       <span className="font-medium text-gray-700">Date:</span>
                       <span className="ml-2 text-gray-600">
-                        {new Date(selectedEvent.eventDate).toLocaleDateString('en-US', {
+                        {new Date(contextEvent.eventDate).toLocaleDateString('en-US', {
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric'
                         })}
                       </span>
                     </div>
-                    {selectedEvent.venue && (
+                    {contextEvent.venue && (
                       <div>
                         <span className="font-medium text-gray-700">Venue:</span>
-                        <span className="ml-2 text-gray-600">{selectedEvent.venue}</span>
+                        <span className="ml-2 text-gray-600">{contextEvent.venue}</span>
                       </div>
                     )}
                   </div>
@@ -624,7 +534,7 @@ export default function PrintTemplatesPage() {
 }
 
 // Template Preview Renderer
-function renderTemplatePreview(template: Template, event: Event | null) {
+function renderTemplatePreview(template: Template, event: EventData | null) {
   if (!event) return <div>Loading...</div>;
 
   const formattedDate = new Date(event.eventDate).toLocaleDateString('en-US', {

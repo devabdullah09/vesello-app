@@ -1,8 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import Link from "next/link";
-import { useEvent } from "@/components/event-context";
+import { useParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useLanguage } from '@/components/language-context';
+import { useEvent } from '@/components/event-context';
 import TimelineSection from "@/components/sections/TimelineSection";
 import DynamicTimelineSection from "@/components/sections/DynamicTimelineSection";
 import CeremonySection from "@/components/sections/CeremonySection";
@@ -174,6 +175,7 @@ interface EventData {
 }
 
 export default function PublicEventPage() {
+  const { t } = useLanguage();
   const params = useParams();
   const wwwId = params.wwwId as string;
   const { setCoupleNames } = useEvent();
@@ -552,7 +554,7 @@ export default function PublicEventPage() {
                   fontSize: 'clamp(1.8rem, 6vw, 2.7rem)',
                 }}
               >
-                Save The Date
+                {t.hero.saveTheDate}
               </h2>
             </div>
 
@@ -564,7 +566,7 @@ export default function PublicEventPage() {
                    letterSpacing: '0.12em',
                    fontSize: 'clamp(0.875rem, 2.5vw, 1.125rem)'
                  }}>
-                {eventData.sectionContent?.heroSection?.customMessage || "WE'RE GETTING MARRIED!"}
+                {eventData.sectionContent?.heroSection?.customMessage || t.hero.gettingMarried}
               </p>
             </div>
 

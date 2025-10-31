@@ -3,6 +3,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useEventEdition } from "@/components/event-edition-context";
 
 interface RSVPQRData {
   eventId: string;
@@ -31,57 +32,23 @@ interface Event {
 export default function RSVPQRCodePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { selectedEvent: contextEvent, setSelectedEvent } = useEventEdition();
   const [rsvpData, setRsvpData] = useState<RSVPQRData | null>(null);
-  const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const wwwId = searchParams.get('wwwId');
+  const wwwId = contextEvent?.wwwId || searchParams.get('wwwId');
 
   useEffect(() => {
-    if (!wwwId) {
-      fetchEvents();
-    } else {
-      fetchRSVPQR();
+    if (!contextEvent || !wwwId) {
+      router.push('/dashboard/events-edition/select-event');
+      return;
     }
-  }, [wwwId]);
-
-  const fetchEvents = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setError('Not authenticated');
-        return;
-      }
-
-      const response = await fetch('/api/dashboard/events', {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch events');
-      }
-
-      const result = await response.json();
-      // Filter events to only show those with RSVP enabled
-      const allEvents = result.data.data || [];
-      const rsvpEnabledEvents = allEvents.filter((event: Event) => event.rsvpEnabled);
-      setEvents(rsvpEnabledEvents);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch events');
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchRSVPQR();
+  }, [contextEvent, wwwId]);
 
   const fetchRSVPQR = async () => {
+    if (!wwwId) return;
     try {
       setLoading(true);
       setError(null);
@@ -92,7 +59,7 @@ export default function RSVPQRCodePage() {
         return;
       }
 
-      const response = await fetch(`/api/dashboard/events/rsvp-qr?wwwId=${encodeURIComponent(wwwId || '')}`, {
+      const response = await fetch(`/api/dashboard/events/rsvp-qr?wwwId=${encodeURIComponent(wwwId)}`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
@@ -117,9 +84,6 @@ export default function RSVPQRCodePage() {
     router.push("/dashboard/events-edition/rsvp");
   };
 
-  const handleEventSelect = (selectedWwwId: string) => {
-    router.push(`/dashboard/events-edition/rsvp/qr-code?wwwId=${selectedWwwId}`);
-  };
 
   const downloadQRCode = () => {
     if (!rsvpData?.qrCodeDataUrl) return;
@@ -233,7 +197,7 @@ export default function RSVPQRCodePage() {
 
   if (loading) {
     return (
-      <div className="flex-1 p-12 bg-gray-100 min-h-screen flex items-center justify-center">
+      <div className="flex-1 p-4 md:p-8 lg:p-12 bg-gray-100 min-h-screen flex items-center justify-center">
         <div className="text-lg">Loading RSVP details...</div>
       </div>
     );
@@ -241,103 +205,14 @@ export default function RSVPQRCodePage() {
 
   if (error) {
     return (
-      <div className="flex-1 p-12 bg-gray-100 min-h-screen flex items-center justify-center">
+      <div className="flex-1 p-4 md:p-8 lg:p-12 bg-gray-100 min-h-screen flex items-center justify-center">
         <div className="text-red-600 text-lg">Error: {error}</div>
         <button
           onClick={handleBack}
-          className="mt-4 bg-black text-white px-6 py-2 rounded font-semibold hover:bg-gray-800 transition-colors"
+          className="mt-4 bg-black text-white px-4 md:px-6 py-2 rounded font-semibold hover:bg-gray-800 transition-colors text-sm md:text-base"
         >
           Back
         </button>
-      </div>
-    );
-  }
-
-  // Show event selection interface when no wwwId is provided
-  if (!wwwId) {
-    return (
-      <div className="flex-1 p-12 bg-gray-100 min-h-screen">
-        <div className="flex justify-between items-start mb-8">
-          <button
-            onClick={handleBack}
-            className="bg-black text-white px-6 py-2 rounded font-semibold hover:bg-gray-800 transition-colors"
-          >
-            Back
-          </button>
-        </div>
-        
-        <h1 className="text-3xl font-bold text-black mb-8">RSVP QR CODE/LINK MANAGEMENT</h1>
-        
-        {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="text-lg">Loading events...</div>
-          </div>
-        ) : error ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="text-red-600 text-lg">Error: {error}</div>
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow-sm p-8">
-          <h2 className="text-2xl font-semibold text-black mb-6">Select an Event</h2>
-          <p className="text-gray-600 mb-6">
-            Choose an event to generate its RSVP QR code and link for sharing with guests.
-          </p>
-          
-          {events.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-600 mb-4">No events with RSVP enabled found.</p>
-              <p className="text-gray-500 text-sm mb-6">
-                To generate RSVP QR codes, you need to enable the RSVP feature for your events first.
-              </p>
-              <button
-                onClick={() => router.push('/dashboard/events-list')}
-                className="bg-[#E5B574] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#D59C58] transition-colors"
-              >
-                Manage Events
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {events.map((event) => (
-                <div
-                  key={event.id}
-                  onClick={() => handleEventSelect(event.wwwId)}
-                  className="border border-gray-200 rounded-lg p-6 hover:border-[#E5B574] hover:shadow-md transition-all cursor-pointer"
-                >
-                  <h3 className="text-lg font-semibold text-black mb-2">{event.title}</h3>
-                  <p className="text-[#E5B574] font-medium mb-3">{event.coupleNames}</p>
-                  <p className="text-gray-600 text-sm mb-2">
-                    {new Date(event.eventDate).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </p>
-                  {event.venue && (
-                    <p className="text-gray-500 text-sm mb-3">{event.venue}</p>
-                  )}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        event.status === 'active' ? 'bg-green-100 text-green-800' :
-                        event.status === 'planned' ? 'bg-blue-100 text-blue-800' :
-                        event.status === 'completed' ? 'bg-gray-100 text-gray-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
-                      </span>
-                      <span className="px-2 py-1 rounded text-xs font-medium bg-[#E5B574] text-white">
-                        RSVP Enabled
-                      </span>
-                    </div>
-                    <span className="text-[#E5B574] text-sm font-medium">Select →</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-          </div>
-        )}
       </div>
     );
   }
@@ -345,40 +220,49 @@ export default function RSVPQRCodePage() {
   // Show RSVP QR code when event is selected
   if (!rsvpData) {
     return (
-      <div className="flex-1 p-12 bg-gray-100 min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading RSVP QR code...</div>
+      <div className="flex-1 p-4 md:p-8 lg:p-12 bg-gray-100 min-h-screen flex items-center justify-center">
+        <div className="text-base md:text-lg">Loading RSVP QR code...</div>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 p-12 bg-gray-100 min-h-screen">
-      <div className="flex justify-between items-start mb-8">
+    <div className="flex-1 p-4 md:p-8 lg:p-12 bg-gray-100 min-h-screen">
+      <div className="flex justify-between items-start mb-6 md:mb-8">
         <button
           onClick={handleBack}
-          className="bg-black text-white px-6 py-2 rounded font-semibold hover:bg-gray-800 transition-colors"
+          className="bg-black text-white px-4 md:px-6 py-2 rounded font-semibold hover:bg-gray-800 transition-colors text-sm md:text-base"
         >
           Back
         </button>
+        <button
+          onClick={() => {
+            setSelectedEvent(null);
+            router.push("/dashboard/events-edition/select-event");
+          }}
+          className="bg-gray-200 text-black px-4 py-2 rounded font-semibold hover:bg-gray-300 transition-colors text-sm"
+        >
+          Switch Event
+        </button>
       </div>
       
-      <h1 className="text-3xl font-bold text-black mb-8">RSVP QR CODE/LINK</h1>
+      <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-black mb-6 md:mb-8">RSVP QR CODE/LINK</h1>
       
       {/* Event Info */}
-      <div className="bg-white p-6 rounded-lg shadow-sm mb-8">
-        <h2 className="text-xl font-semibold text-black mb-4">Event Information</h2>
+      <div className="bg-white p-4 md:p-6 rounded-lg shadow-sm mb-6 md:mb-8">
+        <h2 className="text-lg md:text-xl font-semibold text-black mb-4">Event Information</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-sm text-gray-600">Event Title</label>
-            <p className="text-lg font-medium text-black">{rsvpData.title}</p>
+            <label className="text-xs md:text-sm text-gray-600">Event Title</label>
+            <p className="text-base md:text-lg font-medium text-black">{rsvpData.title}</p>
           </div>
           <div>
-            <label className="text-sm text-gray-600">Couple Names</label>
-            <p className="text-lg font-medium text-black">{rsvpData.coupleNames}</p>
+            <label className="text-xs md:text-sm text-gray-600">Couple Names</label>
+            <p className="text-base md:text-lg font-medium text-black">{rsvpData.coupleNames}</p>
           </div>
           <div>
-            <label className="text-sm text-gray-600">Event Date</label>
-            <p className="text-lg font-medium text-black">
+            <label className="text-xs md:text-sm text-gray-600">Event Date</label>
+            <p className="text-base md:text-lg font-medium text-black">
               {new Date(rsvpData.eventDate).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'long',
@@ -387,32 +271,32 @@ export default function RSVPQRCodePage() {
             </p>
           </div>
           <div>
-            <label className="text-sm text-gray-600">Venue</label>
-            <p className="text-lg font-medium text-black">{rsvpData.venue || 'Not specified'}</p>
+            <label className="text-xs md:text-sm text-gray-600">Venue</label>
+            <p className="text-base md:text-lg font-medium text-black">{rsvpData.venue || 'Not specified'}</p>
         </div>
         </div>
       </div>
 
-      <div className="flex justify-between items-start">
+      <div className="flex flex-col lg:flex-row justify-between items-start gap-6">
         {/* Left content - RSVP Link Section */}
-        <div className="flex-1">
+        <div className="flex-1 w-full lg:w-auto">
           <div className="mb-6">
-            <p className="text-lg text-gray-700 mb-4">
+            <p className="text-sm md:text-lg text-gray-700 mb-4">
               Copy the link and invite guests to your event RSVP
             </p>
-            <div className="flex items-center gap-4 mb-4">
-              <div className="text-2xl font-bold text-black bg-white p-4 rounded border flex-1">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4">
+              <div className="text-sm md:text-lg font-bold text-black bg-white p-3 md:p-4 rounded border flex-1 w-full sm:w-auto break-all">
                 {rsvpData.rsvpUrl}
               </div>
               <button
                 onClick={copyLink}
-                className="bg-[#E5B574] text-white px-4 py-2 rounded font-semibold hover:bg-[#D59C58] transition-colors"
+                className="bg-[#E5B574] text-white px-4 py-2 rounded font-semibold hover:bg-[#D59C58] transition-colors text-sm md:text-base whitespace-nowrap"
               >
                 Copy Link
               </button>
             </div>
 
-            <p className="text-sm text-gray-700 mb-4">
+            <p className="text-xs md:text-sm text-gray-700 mb-4">
               Download the QR code and share the event's RSVP page with your guests:
             </p>
 
@@ -618,26 +502,26 @@ export default function RSVPQRCodePage() {
         </div>
         
         {/* Right content - QR Code Section */}
-        <div className="flex flex-col items-center ml-12">
+        <div className="flex flex-col items-center w-full lg:w-auto lg:ml-12">
           <div className="bg-white p-4 rounded shadow-sm">
             {rsvpData.qrCodeDataUrl ? (
               <img 
                 src={rsvpData.qrCodeDataUrl} 
                 alt="QR Code" 
-                className="w-32 h-32"
+                className="w-24 h-24 md:w-32 md:h-32"
               />
             ) : (
-              <div className="bg-gray-200 w-32 h-32 flex items-center justify-center">
+              <div className="bg-gray-200 w-24 h-24 md:w-32 md:h-32 flex items-center justify-center">
                 <div className="text-gray-500 text-xs text-center">
                   QR Code<br />Error
                 </div>
               </div>
             )}
           </div>
-          <div className="text-left mt-4">
+          <div className="text-center mt-4">
             <button 
               onClick={downloadQRCode}
-              className="text-[#E5B574] font-semibold hover:underline"
+              className="text-[#E5B574] font-semibold hover:underline text-sm md:text-base"
             >
               Download QR Code
             </button>

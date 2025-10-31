@@ -389,32 +389,32 @@ export default function OrganizersPage() {
   if (!user || userProfile?.role !== 'superadmin') return null
 
   return (
-    <div className="min-h-screen bg-white flex">
-      <Sidebar role="superadmin" />
-      <div className="flex-1 p-12">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-black">ORGANIZERS MANAGEMENT</h1>
-          <div className="flex gap-2">
+    <div className="min-h-screen bg-white">
+      <div className="flex-1 p-4 md:p-8 lg:p-12">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4">
+          <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-black">ORGANIZERS MANAGEMENT</h1>
+          <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
             <Button 
               variant="outline" 
               disabled={refreshing}
               onClick={() => {
                 fetchAvailableEvents(true)
               }}
+              className="text-xs md:text-sm"
             >
               {refreshing ? 'Refreshing...' : `Refresh Events (${availableEvents.length})`}
             </Button>
             <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
               <DialogTrigger asChild>
-                <Button className="bg-gradient-to-r from-[#E5B574] via-[#D59C58] to-[#C18037] text-white font-semibold px-6 py-2 rounded-md shadow-md hover:from-[#D59C58] hover:to-[#E5B574] transition-colors">
+                <Button className="bg-gradient-to-r from-[#E5B574] via-[#D59C58] to-[#C18037] text-white font-semibold px-4 md:px-6 py-2 rounded-md shadow-md hover:from-[#D59C58] hover:to-[#E5B574] transition-colors text-xs md:text-sm">
                   <Plus className="w-4 h-4 mr-2" />
                   Create Organizer
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
+              <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>Create New Organizer Account</DialogTitle>
-                  <DialogDescription>
+                  <DialogTitle className="text-lg md:text-xl">Create New Organizer Account</DialogTitle>
+                  <DialogDescription className="text-sm">
                     Create a new organizer account for an event. The organizer will only be able to manage their assigned event.
                   </DialogDescription>
                 </DialogHeader>
@@ -424,8 +424,8 @@ export default function OrganizersPage() {
                 </div>
               )}
               <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="email" className="text-right">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-medium">
                     Email *
                   </Label>
                   <Input
@@ -433,12 +433,12 @@ export default function OrganizersPage() {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="col-span-3"
                     placeholder="organizer@example.com"
+                    className="w-full"
                   />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="password" className="text-right">
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-sm font-medium">
                     Password *
                   </Label>
                   <Input
@@ -446,28 +446,28 @@ export default function OrganizersPage() {
                     type="password"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="col-span-3"
                     placeholder="Enter password"
+                    className="w-full"
                   />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="displayName" className="text-right">
+                <div className="space-y-2">
+                  <Label htmlFor="displayName" className="text-sm font-medium">
                     Name *
                   </Label>
                   <Input
                     id="displayName"
                     value={formData.displayName}
                     onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                    className="col-span-3"
                     placeholder="Organizer Name"
+                    className="w-full"
                   />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="eventId" className="text-right">
+                <div className="space-y-2">
+                  <Label htmlFor="eventId" className="text-sm font-medium">
                     Event *
                   </Label>
                   <Select value={formData.eventId} onValueChange={(value) => setFormData({ ...formData, eventId: value })}>
-                    <SelectTrigger className="col-span-3">
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder={availableEvents.length === 0 ? "No events available" : "Select an event"} />
                     </SelectTrigger>
                     <SelectContent>
@@ -549,28 +549,28 @@ export default function OrganizersPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div>
-                      <h4 className="font-semibold mb-2">Event Assignment</h4>
+                      <h4 className="font-semibold mb-2 text-sm md:text-base">Event Assignment</h4>
                       {organizer.events ? (
                         <div className="space-y-2">
-                          <p><strong>Event:</strong> {organizer.events.title}</p>
-                          <p><strong>Couple:</strong> {organizer.events.couple_names}</p>
-                          <p><strong>Event ID:</strong> {organizer.events.www_id}</p>
-                          <Badge variant={getStatusBadgeVariant(organizer.events.status)}>
+                          <p className="text-sm"><strong>Event:</strong> {organizer.events.title}</p>
+                          <p className="text-sm"><strong>Couple:</strong> {organizer.events.couple_names}</p>
+                          <p className="text-sm"><strong>Event ID:</strong> {organizer.events.www_id}</p>
+                          <Badge variant={getStatusBadgeVariant(organizer.events.status)} className="text-xs">
                             {organizer.events.status}
                           </Badge>
                         </div>
                       ) : (
-                        <p className="text-gray-500">No event assigned</p>
+                        <p className="text-gray-500 text-sm">No event assigned</p>
                       )}
                     </div>
                     <div>
-                      <h4 className="font-semibold mb-2">Account Details</h4>
-                      <div className="space-y-1 text-sm text-gray-600">
+                      <h4 className="font-semibold mb-2 text-sm md:text-base">Account Details</h4>
+                      <div className="space-y-1 text-xs md:text-sm text-gray-600">
                         <p><strong>Created:</strong> {formatDate(organizer.created_at)}</p>
                         <p><strong>Last Login:</strong> {formatDate(organizer.last_login)}</p>
-                        <div><strong>Status:</strong> <Badge variant="default">Active</Badge></div>
+                        <div><strong>Status:</strong> <Badge variant="default" className="text-xs">Active</Badge></div>
                       </div>
                     </div>
                   </div>
@@ -582,10 +582,10 @@ export default function OrganizersPage() {
 
         {/* Password Generation Modal */}
         <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Password Management</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-lg md:text-xl">Password Management</DialogTitle>
+              <DialogDescription className="text-sm">
                 Generate a new password for {passwordData.displayName} ({passwordData.email})
               </DialogDescription>
             </DialogHeader>

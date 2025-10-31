@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Allow if user is admin or owns the event
-    const isAdmin = userRole === 'admin';
+    const isAdmin = userRole === 'admin' || userRole === 'superadmin';
     const isOrganizer = event.organizer_id === user.id;
     
     console.log('Authorization check:', {

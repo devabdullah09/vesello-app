@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 
 interface ImageUploadProps {
@@ -20,7 +20,56 @@ export default function ImageUpload({
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [imageDimensions, setImageDimensions] = useState<{ width: number; height: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const getImageDimensions = (file: File): Promise<{ width: number; height: number }> => {
+    return new Promise((resolve, reject) => {
+      const img = new window.Image();
+      const url = URL.createObjectURL(file);
+      
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        resolve({ width: img.width, height: img.height });
+      };
+      
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Failed to load image'));
+      };
+      
+      img.src = url;
+    });
+  };
+
+  const getImageDimensionsFromUrl = (url: string): Promise<{ width: number; height: number }> => {
+    return new Promise((resolve, reject) => {
+      const img = new window.Image();
+      
+      img.onload = () => {
+        resolve({ width: img.width, height: img.height });
+      };
+      
+      img.onerror = () => {
+        reject(new Error('Failed to load image'));
+      };
+      
+      img.src = url;
+    });
+  };
+
+  // Load dimensions for existing image
+  useEffect(() => {
+    if (currentImage) {
+      getImageDimensionsFromUrl(currentImage)
+        .then(dimensions => setImageDimensions(dimensions))
+        .catch(() => {
+          // Silently fail - dimensions are optional
+        });
+    } else {
+      setImageDimensions(null);
+    }
+  }, [currentImage]);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -41,6 +90,15 @@ export default function ImageUpload({
     try {
       setUploading(true);
       setError(null);
+
+      // Get image dimensions before uploading
+      try {
+        const dimensions = await getImageDimensions(file);
+        setImageDimensions(dimensions);
+      } catch (dimError) {
+        console.warn('Could not read image dimensions:', dimError);
+        setImageDimensions(null);
+      }
 
       // Create FormData for upload
       const formData = new FormData();
@@ -68,6 +126,7 @@ export default function ImageUpload({
     } catch (err) {
       console.error('Upload error:', err);
       setError(err instanceof Error ? err.message : 'Failed to upload image');
+      setImageDimensions(null);
     } finally {
       setUploading(false);
     }
@@ -79,6 +138,7 @@ export default function ImageUpload({
 
   const handleRemove = () => {
     onImageChange('');
+    setImageDimensions(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -132,6 +192,12 @@ export default function ImageUpload({
 
       {error && (
         <div className="text-xs text-red-600">{error}</div>
+      )}
+
+      {imageDimensions && (
+        <div className="text-xs text-gray-600">
+          Dimensions: {imageDimensions.width} × {imageDimensions.height} px
+        </div>
       )}
 
       <input

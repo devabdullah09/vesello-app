@@ -3,6 +3,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
+import { useEventEdition } from "@/components/event-edition-context";
 
 interface Event {
   id: string;
@@ -42,9 +43,9 @@ export default function AlbumsManagementPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { selectedEvent: contextEvent, setSelectedEvent } = useEventEdition();
   
   const [events, setEvents] = useState<Event[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [selectedAlbum, setSelectedAlbum] = useState<string | null>(null);
   const [albumFiles, setAlbumFiles] = useState<AlbumFile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,16 +92,18 @@ export default function AlbumsManagementPage() {
   const [activeSection, setActiveSection] = useState<'published' | 'hidden' | 'favorites'>('published');
   
 
-  const wwwId = searchParams.get('wwwId');
+  const wwwId = contextEvent?.wwwId || searchParams.get('wwwId');
   const albumId = searchParams.get('album');
   const mode = searchParams.get('mode'); // For set-cover mode
 
   useEffect(() => {
     console.log('useEffect triggered with wwwId:', wwwId, 'albumId:', albumId);
-    if (!wwwId) {
-      console.log('No wwwId, fetching events');
-      fetchEvents();
-    } else if (!albumId) {
+    if (!contextEvent || !wwwId) {
+      console.log('No context event, redirecting to select event');
+      router.push('/dashboard/events-edition/select-event');
+      return;
+    }
+    if (!albumId) {
       console.log('No albumId, fetching event details');
       fetchEventDetails();
     } else {
@@ -109,7 +112,7 @@ export default function AlbumsManagementPage() {
       setSelectedAlbum(albumId);
       fetchAlbumFiles();
     }
-  }, [wwwId, albumId]);
+  }, [contextEvent, wwwId, albumId]);
 
   // Handle set cover photo mode
   useEffect(() => {
@@ -120,52 +123,23 @@ export default function AlbumsManagementPage() {
     }
   }, [mode, albumId, albumFiles]);
 
-  const fetchEvents = async () => {
+  const fetchEventDetails = async () => {
+    if (!contextEvent?.wwwId) return;
+    
     try {
       setLoading(true);
-      setError(null);
-
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setError('Not authenticated');
-        return;
-      }
-
-      const response = await fetch('/api/dashboard/events', {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch events');
-      }
-
-      const result = await response.json();
-      const allEvents = result.data.data || [];
-      const galleryEnabledEvents = allEvents.filter((event: Event) => event.galleryEnabled);
-      setEvents(galleryEnabledEvents);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch events');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchEventDetails = async () => {
-    try {
-      const eventResponse = await fetch(`/api/event-id/${wwwId}`);
+      const eventResponse = await fetch(`/api/event-id/${contextEvent.wwwId}`);
       if (!eventResponse.ok) {
         throw new Error('Event not found');
       }
       
       const eventResult = await eventResponse.json();
-      setSelectedEvent(eventResult.data);
+      // Use contextEvent directly; avoid resetting context to prevent loops
       await fetchCustomAlbums(eventResult.data.id);
+      setLoading(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch event details');
+      setLoading(false);
     }
   };
 
@@ -197,6 +171,8 @@ export default function AlbumsManagementPage() {
       }
     } catch (err) {
       console.error('Error fetching custom albums:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -296,16 +272,12 @@ export default function AlbumsManagementPage() {
     }
   };
 
-  const handleEventSelect = (selectedWwwId: string) => {
-    router.push(`/dashboard/events-edition/gallery/albums?wwwId=${selectedWwwId}`);
-  };
-
   const handleAlbumSelect = (albumId: string) => {
-    router.push(`/dashboard/events-edition/gallery/albums?wwwId=${wwwId}&album=${albumId}`);
+    router.push(`/dashboard/events-edition/gallery/albums?wwwId=${contextEvent?.wwwId}&album=${albumId}`);
   };
 
   const handleCreateAlbum = async (albumData: { name: string; description?: string }) => {
-    if (!selectedEvent) return;
+    if (!contextEvent) return;
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -315,11 +287,11 @@ export default function AlbumsManagementPage() {
       }
 
       console.log('Creating album with data:', {
-        eventId: selectedEvent.id,
+        eventId: contextEvent.id,
         name: albumData.name,
         description: albumData.description,
         isPublic: true,
-        selectedEvent: selectedEvent
+        selectedEvent: contextEvent
       });
 
       const response = await fetch('/api/dashboard/gallery/albums', {
@@ -329,7 +301,7 @@ export default function AlbumsManagementPage() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          eventId: selectedEvent.id,
+          eventId: contextEvent.id,
           name: albumData.name,
           description: albumData.description,
           isPublic: true
@@ -408,8 +380,8 @@ export default function AlbumsManagementPage() {
 
       if (response.ok) {
         // Refresh custom albums
-        if (selectedEvent) {
-          await fetchCustomAlbums(selectedEvent.id);
+        if (contextEvent) {
+          await fetchCustomAlbums(contextEvent.id);
         }
         setShowRenameModal(false);
         setEditingAlbum(null);
@@ -444,8 +416,8 @@ export default function AlbumsManagementPage() {
 
       if (response.ok) {
         // Refresh custom albums
-        if (selectedEvent) {
-          await fetchCustomAlbums(selectedEvent.id);
+        if (contextEvent) {
+          await fetchCustomAlbums(contextEvent.id);
         }
         setShowDeleteConfirm(false);
         setAlbumToDelete(null);
@@ -461,7 +433,7 @@ export default function AlbumsManagementPage() {
 
   // Handle set cover photo
   const handleSetCoverPhoto = async (photoUrl: string) => {
-    if (!selectedAlbum || !selectedEvent) return;
+    if (!selectedAlbum || !contextEvent) return;
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -490,7 +462,7 @@ export default function AlbumsManagementPage() {
 
       if (response.ok) {
         // Refresh custom albums
-        await fetchCustomAlbums(selectedEvent.id);
+        await fetchCustomAlbums(contextEvent.id);
         setShowSetCoverModal(false);
         alert('Cover photo set successfully!');
       } else {
@@ -569,10 +541,10 @@ export default function AlbumsManagementPage() {
   };
 
   const loadExistingTags = async () => {
-    if (!selectedEvent || selectedFilesForAction.length === 0) return;
+    if (!contextEvent || selectedFilesForAction.length === 0) return;
     
     try {
-      const response = await fetch(`/api/event-id/${selectedEvent.wwwId}/gallery/tags`, {
+      const response = await fetch(`/api/event-id/${contextEvent.wwwId}/gallery/tags`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -600,10 +572,10 @@ export default function AlbumsManagementPage() {
   };
 
   const saveTags = async () => {
-    if (!selectedEvent || appliedTags.length === 0) return;
+    if (!contextEvent || appliedTags.length === 0) return;
 
     try {
-      const response = await fetch(`/api/event-id/${selectedEvent.wwwId}/gallery/tags`, {
+      const response = await fetch(`/api/event-id/${contextEvent.wwwId}/gallery/tags`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -917,7 +889,7 @@ export default function AlbumsManagementPage() {
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || !selectedEvent || !selectedAlbum) return;
+    if (!files || !contextEvent || !selectedAlbum) return;
 
     setUploading(true);
     try {
@@ -939,7 +911,7 @@ export default function AlbumsManagementPage() {
         photoFormData.append('albumType', actualAlbumId);
         photoFormData.append('mediaType', 'photos');
 
-        const photoResponse = await fetch(`/api/event-id/${selectedEvent.wwwId}/gallery/upload`, {
+        const photoResponse = await fetch(`/api/event-id/${contextEvent.wwwId}/gallery/upload`, {
           method: 'POST',
           body: photoFormData,
         });
@@ -958,7 +930,7 @@ export default function AlbumsManagementPage() {
         videoFormData.append('albumType', actualAlbumId);
         videoFormData.append('mediaType', 'videos');
 
-        const videoResponse = await fetch(`/api/event-id/${selectedEvent.wwwId}/gallery/upload`, {
+        const videoResponse = await fetch(`/api/event-id/${contextEvent.wwwId}/gallery/upload`, {
           method: 'POST',
           body: videoFormData,
         });
@@ -982,7 +954,7 @@ export default function AlbumsManagementPage() {
   };
 
   const handleDeleteFile = async (fileName: string) => {
-    if (!selectedEvent || !selectedAlbum) return;
+    if (!contextEvent || !selectedAlbum) return;
     
     if (!confirm('Are you sure you want to delete this file?')) return;
 
@@ -993,7 +965,7 @@ export default function AlbumsManagementPage() {
 
       if (selectedAlbum.startsWith('custom-')) {
         // For custom albums, delete from database
-        const response = await fetch(`/api/event-id/${selectedEvent.wwwId}/gallery/delete-custom-file`, {
+        const response = await fetch(`/api/event-id/${contextEvent.wwwId}/gallery/delete-custom-file`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -1013,7 +985,7 @@ export default function AlbumsManagementPage() {
         }
       } else {
         // For default albums, use existing logic
-        const response = await fetch(`/api/event-id/${selectedEvent.wwwId}/gallery/delete`, {
+        const response = await fetch(`/api/event-id/${contextEvent.wwwId}/gallery/delete`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -1120,85 +1092,6 @@ export default function AlbumsManagementPage() {
     );
   }
 
-  // Show event selection interface when no wwwId is provided
-  if (!wwwId) {
-    return (
-      <div className="flex-1 p-12 bg-gray-100 min-h-screen">
-        <div className="flex justify-between items-start mb-8">
-          <button
-            onClick={handleBack}
-            className="bg-black text-white px-6 py-2 rounded font-semibold hover:bg-gray-800 transition-colors"
-          >
-            Back
-          </button>
-        </div>
-        
-        <h1 className="text-3xl font-bold text-black mb-8">ALBUMS MANAGEMENT</h1>
-        
-        <div className="bg-white rounded-lg shadow-sm p-8">
-          <h2 className="text-2xl font-semibold text-black mb-6">Select an Event</h2>
-          <p className="text-gray-600 mb-6">
-            Choose an event to manage its gallery albums and photos.
-          </p>
-          
-          {events.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-600 mb-4">No events with gallery enabled found.</p>
-              <p className="text-gray-500 text-sm mb-6">
-                To manage albums, you need to enable the gallery feature for your events first.
-              </p>
-              <button
-                onClick={() => router.push('/dashboard/events-list')}
-                className="bg-[#E5B574] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#D59C58] transition-colors"
-              >
-                Manage Events
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {events.map((event) => (
-                <div
-                  key={event.id}
-                  onClick={() => handleEventSelect(event.wwwId)}
-                  className="border border-gray-200 rounded-lg p-6 hover:border-[#E5B574] hover:shadow-md transition-all cursor-pointer"
-                >
-                  <h3 className="text-lg font-semibold text-black mb-2">{event.title}</h3>
-                  <p className="text-[#E5B574] font-medium mb-3">{event.coupleNames}</p>
-                  <p className="text-gray-600 text-sm mb-2">
-                    {new Date(event.eventDate).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </p>
-                  {event.venue && (
-                    <p className="text-gray-500 text-sm mb-3">{event.venue}</p>
-                  )}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        event.status === 'active' ? 'bg-green-100 text-green-800' :
-                        event.status === 'planned' ? 'bg-blue-100 text-blue-800' :
-                        event.status === 'completed' ? 'bg-gray-100 text-gray-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
-                      </span>
-                      <span className="px-2 py-1 rounded text-xs font-medium bg-[#E5B574] text-white">
-                        Gallery Enabled
-                      </span>
-                    </div>
-                    <span className="text-[#E5B574] text-sm font-medium">Manage →</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
   // Show album selection when event is selected but no album
   if (!albumId) {
     return (
@@ -1209,6 +1102,15 @@ export default function AlbumsManagementPage() {
             className="bg-black text-white px-6 py-2 rounded font-semibold hover:bg-gray-800 transition-colors"
           >
             Back
+          </button>
+          <button
+            onClick={() => {
+              setSelectedEvent(null);
+              router.push("/dashboard/events-edition/select-event");
+            }}
+            className="bg-gray-200 text-black px-4 py-2 rounded font-semibold hover:bg-gray-300 transition-colors"
+          >
+            Switch Event
           </button>
         </div>
         
@@ -1221,7 +1123,7 @@ export default function AlbumsManagementPage() {
                 Select Album to Manage
               </h2>
               <p className="text-gray-600">
-                Managing: <span className="font-semibold">{selectedEvent?.title}</span> - {selectedEvent?.coupleNames}
+                Managing: <span className="font-semibold">{contextEvent?.title}</span> - {contextEvent?.coupleNames}
               </p>
             </div>
             <button
@@ -1553,7 +1455,7 @@ export default function AlbumsManagementPage() {
       
       <h1 className="text-3xl font-bold text-black mb-4">ALBUM MANAGEMENT</h1>
       <p className="text-gray-600 mb-8">
-        Managing: <span className="font-semibold">{selectedEvent?.title}</span> - {selectedEvent?.coupleNames} - {
+        Managing: <span className="font-semibold">{contextEvent?.title}</span> - {contextEvent?.coupleNames} - {
           albumId?.startsWith('custom-') 
             ? customAlbums.find(a => a.id === albumId.replace('custom-', ''))?.name || 'Custom Album'
             : albums.find(a => a.id === albumId)?.title || 'Album'

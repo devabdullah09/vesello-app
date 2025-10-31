@@ -16,7 +16,7 @@ const Footer: React.FC = () => {
     <footer style={{
       background: '#0a0a0b',
       color: 'white',
-      padding: '1rem 0',
+      padding: '1.5rem 0',
       boxShadow: '0 2px 8px 0 rgba(0,0,0,0.10)',
       width: '100%',
       position: 'relative',
@@ -25,20 +25,28 @@ const Footer: React.FC = () => {
         maxWidth: '1400px',
         margin: '0 auto',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 2rem',
-      }}>
-        <div>
-          <div style={{ fontSize: '1.6rem', fontWeight: 400, marginBottom: '0.5rem' }}>
+        flexDirection: 'column',
+        gap: '1rem',
+        padding: '0 1rem',
+      }}
+      className="md:flex-row md:items-center md:justify-between md:px-8"
+      >
+        <div className="text-center md:text-left">
+          <div style={{ fontSize: '1.2rem', fontWeight: 400, marginBottom: '0.5rem' }}
+            className="md:text-2xl"
+          >
             © 2025 {displayNames}
           </div>
-          <div style={{ fontSize: '1.2rem', color: '#e0e0e0', marginBottom: '0.5rem'  }}>
+          <div style={{ fontSize: '1rem', color: '#e0e0e0' }}
+            className="md:text-lg"
+          >
             {t.common.poweredBy}
           </div>
         </div>
         
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', justifyContent: 'center' }}
+          className="flex-col sm:flex-row"
+        >
           {/* Language Switcher */}
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button
@@ -92,14 +100,14 @@ const Footer: React.FC = () => {
         </div>
       </div>
 
-      <div className="border-t border-gray-800 pt-2 text-right">
+      <div className="border-t border-gray-800 pt-4 px-4 text-center">
           <p className="text-gray-500 text-xs">
             {t.common.designedBy}{' '}
             <a 
               href="https://www.abdullahshafiq.com" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="underline"
+              className="underline hover:text-white transition-colors"
             >
               Abdullah
             </a>

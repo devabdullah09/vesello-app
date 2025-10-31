@@ -1,8 +1,10 @@
 "use client";
-import { useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { useLanguage } from '@/components/language-context';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import { supabase } from '@/lib/supabase';
+import { useEventEdition } from "@/components/event-edition-context";
 
 interface Event {
   id: string;
@@ -28,10 +30,10 @@ interface GalleryContent {
 }
 
 export default function EditAlbumPage() {
+  const { t } = useLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [events, setEvents] = useState<Event[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const { selectedEvent: contextEvent, setSelectedEvent: setContextSelectedEvent, loading: contextLoading } = useEventEdition();
   const [galleryContent, setGalleryContent] = useState<GalleryContent>({
     welcomeText: "Welcome To",
     coupleNames: "",
@@ -47,52 +49,17 @@ export default function EditAlbumPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const wwwId = searchParams.get('wwwId');
-
   useEffect(() => {
-    if (!wwwId) {
-      fetchEvents();
-    } else {
+    if (contextEvent) {
       fetchEventGalleryContent();
-    }
-  }, [wwwId]);
-
-  const fetchEvents = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setError('Not authenticated');
-        return;
-      }
-
-      const response = await fetch('/api/dashboard/events', {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch events');
-      }
-
-      const result = await response.json();
-      // Filter events to only show those with gallery enabled
-      const allEvents = result.data.data || [];
-      const galleryEnabledEvents = allEvents.filter((event: Event) => event.galleryEnabled);
-      setEvents(galleryEnabledEvents);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch events');
-    } finally {
+    } else if (!contextLoading) {
       setLoading(false);
     }
-  };
+  }, [contextEvent, contextLoading]);
 
   const fetchEventGalleryContent = async () => {
+    if (!contextEvent?.wwwId) return;
+
     try {
       setLoading(true);
       setError(null);
@@ -103,18 +70,8 @@ export default function EditAlbumPage() {
         return;
       }
 
-      // Get event data
-      const eventResponse = await fetch(`/api/event-id/${wwwId}`);
-      if (!eventResponse.ok) {
-        throw new Error('Event not found');
-      }
-      
-      const eventResult = await eventResponse.json();
-      const event = eventResult.data;
-      setSelectedEvent(event);
-
       // Get or create gallery content
-      const contentResponse = await fetch(`/api/dashboard/events/gallery-content?wwwId=${encodeURIComponent(wwwId || '')}`, {
+      const contentResponse = await fetch(`/api/dashboard/events/gallery-content?wwwId=${encodeURIComponent(contextEvent.wwwId)}`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
@@ -127,17 +84,21 @@ export default function EditAlbumPage() {
           setGalleryContent(contentResult.data);
         } else {
           // Use event data as defaults
-          setGalleryContent(prev => ({
-            ...prev,
-            coupleNames: event.coupleNames
-          }));
+          if (contextEvent) {
+            setGalleryContent(prev => ({
+              ...prev,
+              coupleNames: contextEvent.coupleNames
+            }));
+          }
         }
       } else {
         // Use event data as defaults
-        setGalleryContent(prev => ({
-          ...prev,
-          coupleNames: event.coupleNames
-        }));
+        if (contextEvent) {
+          setGalleryContent(prev => ({
+            ...prev,
+            coupleNames: contextEvent.coupleNames
+          }));
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch gallery content');
@@ -147,19 +108,16 @@ export default function EditAlbumPage() {
   };
 
   const handleBack = () => {
-    if (wwwId) {
-      router.push("/dashboard/events-edition/gallery/edit-album-page");
-    } else {
-      router.push("/dashboard/events-edition/gallery");
-    }
+    router.push("/dashboard/events-edition/gallery");
   };
 
-  const handleEventSelect = (selectedWwwId: string) => {
-    router.push(`/dashboard/events-edition/gallery/edit-album-page?wwwId=${selectedWwwId}`);
+  const handleSwitchEvent = () => {
+    setContextSelectedEvent(null);
+    router.push("/dashboard/events-edition/select-event");
   };
 
   const handleSave = async () => {
-    if (!selectedEvent) return;
+    if (!contextEvent) return;
 
     setSaving(true);
     try {
@@ -175,7 +133,7 @@ export default function EditAlbumPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          wwwId: selectedEvent.wwwId,
+          wwwId: contextEvent.wwwId,
           content: galleryContent
         }),
       });
@@ -222,126 +180,60 @@ export default function EditAlbumPage() {
     );
   }
 
-  // Show event selection interface when no wwwId is provided
-  if (!wwwId) {
+  if (contextLoading) {
     return (
-      <div className="flex-1 p-12 bg-gray-100 min-h-screen">
-        <div className="flex justify-between items-start mb-8">
-          <button
-            onClick={handleBack}
-            className="bg-black text-white px-6 py-2 rounded font-semibold hover:bg-gray-800 transition-colors"
-          >
-            Back
-          </button>
-        </div>
-        
-        <h1 className="text-3xl font-bold text-black mb-8">EDIT ALBUM PAGE</h1>
-        
-        {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="text-lg">Loading events...</div>
-          </div>
-        ) : error ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="text-red-600 text-lg">Error: {error}</div>
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow-sm p-8">
-            <h2 className="text-2xl font-semibold text-black mb-6">Select an Event to Edit</h2>
-            <p className="text-gray-600 mb-6">
-              Choose an event to customize its gallery page content and appearance.
-            </p>
-            
-            {events.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-600 mb-4">No events with gallery enabled found.</p>
-                <p className="text-gray-500 text-sm mb-6">
-                  To edit gallery content, you need to enable the gallery feature for your events first.
-                </p>
-                <button
-                  onClick={() => router.push('/dashboard/events-list')}
-                  className="bg-[#E5B574] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#D59C58] transition-colors"
-                >
-                  Manage Events
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {events.map((event) => (
-                  <div
-                    key={event.id}
-                    onClick={() => handleEventSelect(event.wwwId)}
-                    className="border border-gray-200 rounded-lg p-6 hover:border-[#E5B574] hover:shadow-md transition-all cursor-pointer"
-                  >
-                    <h3 className="text-lg font-semibold text-black mb-2">{event.title}</h3>
-                    <p className="text-[#E5B574] font-medium mb-3">{event.coupleNames}</p>
-                    <p className="text-gray-600 text-sm mb-2">
-                      {new Date(event.eventDate).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </p>
-                    {event.venue && (
-                      <p className="text-gray-500 text-sm mb-3">{event.venue}</p>
-                    )}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          event.status === 'active' ? 'bg-green-100 text-green-800' :
-                          event.status === 'planned' ? 'bg-blue-100 text-blue-800' :
-                          event.status === 'completed' ? 'bg-gray-100 text-gray-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
-                        </span>
-                        <span className="px-2 py-1 rounded text-xs font-medium bg-[#E5B574] text-white">
-                          Gallery Enabled
-                        </span>
-                      </div>
-                      <span className="text-[#E5B574] text-sm font-medium">Edit →</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+      <div className="flex-1 p-12 bg-gray-100 min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
       </div>
     );
   }
 
-  // Show gallery content editor when event is selected
-  if (!selectedEvent) {
+  if (!contextEvent) {
     return (
       <div className="flex-1 p-12 bg-gray-100 min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading event details...</div>
+        <div className="text-center">
+          <div className="text-lg mb-4">No event selected</div>
+          <button
+            onClick={() => router.push("/dashboard/events-edition/select-event")}
+            className="bg-gradient-to-r from-[#E5B574] via-[#D59C58] to-[#C18037] text-white font-semibold px-6 py-3 rounded-md shadow-md hover:from-[#D59C58] hover:to-[#E5B574] transition-colors"
+          >
+            Select Event
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex flex-col lg:flex-row min-h-screen bg-gray-100">
       {/* Editor Panel */}
-      <div className="w-1/2 p-8 bg-white">
-        <div className="flex justify-between items-start mb-8">
+      <div className="w-full lg:w-1/2 p-4 md:p-8 bg-white">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4">
           <button
             onClick={handleBack}
-            className="bg-black text-white px-6 py-2 rounded font-semibold hover:bg-gray-800 transition-colors"
+            className="bg-black text-white px-4 md:px-6 py-2 rounded font-semibold hover:bg-gray-800 transition-colors text-sm md:text-base"
           >
             Back
           </button>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="bg-[#E5B574] text-white px-6 py-2 rounded font-semibold hover:bg-[#D59C58] transition-colors disabled:opacity-50"
-          >
-            {saving ? 'Saving...' : 'Save Changes'}
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={handleSwitchEvent}
+              className="bg-gray-200 text-black px-4 py-2 rounded font-semibold hover:bg-gray-300 transition-colors text-sm"
+            >
+              Switch Event
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="bg-[#E5B574] text-white px-4 md:px-6 py-2 rounded font-semibold hover:bg-[#D59C58] transition-colors disabled:opacity-50 text-sm md:text-base"
+            >
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
         </div>
 
-        <h1 className="text-2xl font-bold text-black mb-6">Edit Gallery Content</h1>
-        <p className="text-gray-600 mb-6">Editing: <span className="font-semibold">{selectedEvent.title}</span></p>
+        <h1 className="text-xl md:text-2xl font-bold text-black mb-4 md:mb-6">Edit Gallery Content</h1>
+        <p className="text-gray-600 mb-4 md:mb-6 text-sm md:text-base">Editing: <span className="font-semibold">{contextEvent.title}</span></p>
 
         <div className="space-y-6">
           {/* Visibility Toggle */}
@@ -379,7 +271,7 @@ export default function EditAlbumPage() {
               value={galleryContent.coupleNames}
               onChange={(e) => handleContentChange('coupleNames', e.target.value)}
               className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E5B574]"
-              placeholder={selectedEvent.coupleNames}
+              placeholder={contextEvent.coupleNames}
             />
           </div>
 
@@ -452,19 +344,19 @@ export default function EditAlbumPage() {
       </div>
 
       {/* Preview Panel */}
-      <div className="w-1/2 p-8 bg-gray-50">
-        <h2 className="text-xl font-semibold text-black mb-6">Live Preview</h2>
+      <div className="w-full lg:w-1/2 p-4 md:p-8 bg-gray-50 border-t lg:border-t-0 lg:border-l">
+        <h2 className="text-lg md:text-xl font-semibold text-black mb-4 md:mb-6">Live Preview</h2>
         
         {/* Preview of gallery page */}
-        <div className="bg-white rounded-lg shadow-lg p-6 max-w-md mx-auto" style={{ transform: 'scale(0.8)', transformOrigin: 'top' }}>
+        <div className="bg-white rounded-lg shadow-lg p-4 md:p-6 max-w-md mx-auto" style={{ transformOrigin: 'top' }}>
           {galleryContent.visible ? (
             <div className="flex flex-col items-center justify-center relative z-10">
               <div className="text-center mt-2 mb-6">
-                <div className="text-sm" style={{ fontFamily: 'Montserrat', fontWeight: 400 }}>{galleryContent.welcomeText}</div>
-                <div className="text-2xl font-sail" style={{ fontWeight: 400, marginTop: 4, marginBottom: 0, letterSpacing: '0.5px', lineHeight: 1.1 }}>
-                  {galleryContent.coupleNames || selectedEvent.coupleNames}
+                <div className="text-xs md:text-sm" style={{ fontFamily: 'Montserrat', fontWeight: 400 }}>{galleryContent.welcomeText}</div>
+                <div className="text-xl md:text-2xl font-sail" style={{ fontWeight: 400, marginTop: 4, marginBottom: 0, letterSpacing: '0.5px', lineHeight: 1.1 }}>
+                  {galleryContent.coupleNames || contextEvent.coupleNames}
                 </div>
-                <div className="text-lg font-sail" style={{ background: 'linear-gradient(90deg, #E5B574 0%, #C18037 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginTop: -4, fontWeight: 400, letterSpacing: '0.5px', lineHeight: 1.1 }}>
+                <div className="text-base md:text-lg font-sail" style={{ background: 'linear-gradient(90deg, #E5B574 0%, #C18037 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginTop: -4, fontWeight: 400, letterSpacing: '0.5px', lineHeight: 1.1 }}>
                   Wedding
                 </div>
               </div>
@@ -478,7 +370,7 @@ export default function EditAlbumPage() {
               </div>
 
               {/* View Gallery Button */}
-              <button className="bg-gradient-to-r from-[#E5B574] to-[#C18037] text-white font-semibold rounded-md px-6 py-1 mb-6 shadow text-sm" 
+              <button className="bg-gradient-to-r from-[#E5B574] to-[#C18037] text-white font-semibold rounded-md px-6 py-1 mb-6 shadow text-xs md:text-sm" 
                style={{ fontFamily: 'Montserrat', fontWeight: 600 }}>
                 {galleryContent.viewGalleryButtonText}
               </button>
@@ -497,8 +389,8 @@ export default function EditAlbumPage() {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-48">
-              <div className="text-lg font-bold text-gray-700 mb-2">Gallery Hidden</div>
-              <div className="text-gray-500 text-sm">This section is currently unavailable</div>
+              <div className="text-lg font-bold text-gray-700 mb-2">{t.gallery.notAvailable}</div>
+              <div className="text-gray-500 text-sm">{t.gallery.notAvailable}</div>
             </div>
           )}
         </div>
