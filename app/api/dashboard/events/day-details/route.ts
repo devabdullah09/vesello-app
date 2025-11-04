@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
 
     // Generate the public event URL
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const eventUrl = `${baseUrl}/event-id/${event.wwwId}`
+    const eventUrl = `${baseUrl}/${event.wwwId}`
 
     // Generate QR code as data URL
     let qrCodeDataUrl: string

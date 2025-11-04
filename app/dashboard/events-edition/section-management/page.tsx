@@ -311,7 +311,7 @@ export default function SectionManagementPage() {
           View how your event page looks to guests with the current section settings.
         </p>
         <a
-          href={`/event-id/${wwwId}`}
+          href={`/${wwwId}`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center space-x-2 bg-[#E5B574] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#D59C58] transition-colors"

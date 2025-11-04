@@ -82,7 +82,7 @@ export default function EventDetailsPage() {
       const { data: { session } } = await supabase.auth.getSession()
       const token = session?.access_token || ''
       
-      const response = await fetch(`/api/event-id/${wwwId}`, {
+      const response = await fetch(`/api/${wwwId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -126,7 +126,7 @@ export default function EventDetailsPage() {
       const { data: { session } } = await supabase.auth.getSession()
       const token = session?.access_token || ''
       
-      const response = await fetch(`/api/event-id/${wwwId}/update-content`, {
+      const response = await fetch(`/api/${wwwId}/update-content`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

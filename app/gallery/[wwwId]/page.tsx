@@ -43,7 +43,7 @@ export default function EventGalleryPage() {
 
   const fetchEventData = async () => {
     try {
-      const response = await fetch(`/api/event-id/${wwwId}`);
+      const response = await fetch(`/api/${wwwId}`);
       
       if (!response.ok) {
         throw new Error('Event not found');
@@ -61,7 +61,7 @@ export default function EventGalleryPage() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/event-id/${wwwId}/gallery`);
+      const response = await fetch(`/api/${wwwId}/gallery`);
       
       if (!response.ok) {
         if (response.status === 404) {

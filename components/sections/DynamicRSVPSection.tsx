@@ -44,7 +44,7 @@ export default function DynamicRSVPSection({
     setIsSubmitting(true);
     
     try {
-      const response = await fetch(`/api/event-id/${wwwId}/rsvp`, {
+      const response = await fetch(`/api/${wwwId}/rsvp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -94,7 +94,7 @@ export default function DynamicRSVPSection({
               Thank you for your response, {formData.name}! We look forward to celebrating with you.
             </p>
             <Link 
-              href={`/event-id/${wwwId}`}
+              href={`/${wwwId}`}
               className="bg-[#E5B574] text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#D59C58] transition-colors"
             >
               Back to Event

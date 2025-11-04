@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
 
     // Generate the public gallery URL
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const galleryUrl = `${baseUrl}/event-id/${event.wwwId}/gallery`
+    const galleryUrl = `${baseUrl}/${event.wwwId}/gallery`
 
     // Generate QR code as data URL
     let qrCodeDataUrl: string

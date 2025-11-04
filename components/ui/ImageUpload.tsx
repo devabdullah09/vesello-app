@@ -9,6 +9,8 @@ interface ImageUploadProps {
   placeholder?: string;
   className?: string;
   uploadPath?: string; // e.g., 'team-photos', 'venue-images'
+  wwwId?: string; // Optional: Event ID for direct uploads
+  maxSize?: number; // Optional: Max file size in bytes (default: 50MB)
 }
 
 export default function ImageUpload({
@@ -16,7 +18,9 @@ export default function ImageUpload({
   onImageChange,
   placeholder = "Click to upload image",
   className = "w-32 h-32",
-  uploadPath = 'event-images'
+  uploadPath = 'event-images',
+  wwwId,
+  maxSize = 50 * 1024 * 1024 // Default: 50MB
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -81,9 +85,9 @@ export default function ImageUpload({
       return;
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Image must be less than 5MB');
+    // Validate file size
+    if (file.size > maxSize) {
+      setError(`Image must be less than ${(maxSize / 1024 / 1024).toFixed(0)}MB`);
       return;
     }
 
@@ -100,27 +104,65 @@ export default function ImageUpload({
         setImageDimensions(null);
       }
 
-      // Create FormData for upload
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('uploadPath', uploadPath);
+      // Use direct upload to Bunny.net if wwwId is available (bypasses Vercel's 4.5MB limit)
+      if (wwwId) {
+        // Get upload URL
+        const uploadUrlResponse = await fetch('/api/content/upload-url', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            fileName: file.name,
+            fileType: file.type,
+            fileSize: file.size,
+            uploadPath,
+            wwwId,
+          }),
+        });
 
-      // Upload to content upload endpoint
-      const response = await fetch('/api/content/upload', {
-        method: 'POST',
-        body: formData,
-      });
+        if (!uploadUrlResponse.ok) {
+          const errorData = await uploadUrlResponse.json();
+          throw new Error(errorData.error || 'Failed to get upload URL');
+        }
 
-      if (!response.ok) {
-        throw new Error('Failed to upload image');
-      }
+        const { uploadUrl, cdnUrl, headers: uploadHeaders } = await uploadUrlResponse.json();
 
-      const result = await response.json();
-      
-      if (result.success && result.data?.url) {
-        onImageChange(result.data.url);
+        // Upload directly to Bunny.net
+        const uploadResponse = await fetch(uploadUrl, {
+          method: 'PUT',
+          headers: uploadHeaders,
+          body: file,
+        });
+
+        if (!uploadResponse.ok) {
+          const errorText = await uploadResponse.text();
+          throw new Error(`Upload failed: ${uploadResponse.status} ${errorText}`);
+        }
+
+        onImageChange(cdnUrl);
       } else {
-        throw new Error('Upload failed - no URL returned');
+        // Fallback to API route for cases without wwwId (smaller files)
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('uploadPath', uploadPath);
+
+        const response = await fetch('/api/content/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to upload image');
+        }
+
+        const result = await response.json();
+        
+        if (result.success && result.data?.url) {
+          onImageChange(result.data.url);
+        } else {
+          throw new Error('Upload failed - no URL returned');
+        }
       }
 
     } catch (err) {

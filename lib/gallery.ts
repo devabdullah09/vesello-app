@@ -1,4 +1,5 @@
 import { env } from './env-loader';
+import { uploadDirectToBunny, registerUploadedFiles } from './bunny-net-client';
 
 export interface GalleryFile {
   url: string;
@@ -20,6 +21,11 @@ export interface GalleryResponse {
   count: number;
 }
 
+/**
+ * Upload files directly to Bunny.net (bypasses Vercel's 4.5MB limit)
+ * This function uploads directly from client to Bunny.net storage
+ * Falls back to server-side upload if wwwId is not provided
+ */
 export async function uploadFiles(
   files: FileList | File[],
   albumType: 'wedding-day' | 'party-day' | string,
@@ -27,13 +33,48 @@ export async function uploadFiles(
   onFileProgress?: (args: { fileIndex: number; file: File; loaded: number; total: number; percent: number }) => void,
   wwwId?: string
 ): Promise<UploadResponse> {
-  // We upload in one request when possible, but to support per-file progress (especially for large videos),
-  // we stream each file via XHR and track progress, then fall back to a batched fetch for small images.
-
   const fileArray = Array.from(files);
 
-  // Determine the API endpoint based on whether wwwId is provided
-  const apiEndpoint = wwwId ? `/api/event-id/${wwwId}/gallery/upload` : '/api/gallery/upload';
+  // If wwwId is provided, use direct upload to Bunny.net (bypasses Vercel's 4.5MB limit)
+  if (wwwId) {
+    try {
+      // Use direct upload to Bunny.net
+      const result = await uploadDirectToBunny(
+        fileArray,
+        wwwId,
+        albumType,
+        mediaType,
+        onFileProgress ? (progress) => {
+          // Find the file by index to match the original interface
+          const file = fileArray[progress.fileIndex];
+          if (file) {
+            onFileProgress({
+              fileIndex: progress.fileIndex,
+              file,
+              loaded: progress.loaded,
+              total: progress.total,
+              percent: progress.percent,
+            });
+          }
+        } : undefined
+      );
+
+      // Register uploads in the database (for custom albums)
+      const isValidCustomAlbum = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(albumType);
+      if (isValidCustomAlbum) {
+        await registerUploadedFiles(wwwId, result.files, result.cdnUrls, albumType, mediaType);
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Direct upload failed:', error);
+      throw error;
+    }
+  }
+
+  // Fallback: Use server-side upload (has 4.5MB limit on Vercel)
+  // This is for pages without wwwId (like generic gallery pages)
+  const apiEndpoint = '/api/gallery/upload';
 
   // If a progress callback is provided, upload files one by one with XHR to report progress.
   if (onFileProgress) {
