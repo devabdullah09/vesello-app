@@ -52,7 +52,7 @@ export default function EventEditionLayout({
       const token = session?.access_token || ''
       
       // Get event data
-      const response = await fetch(`/api/event-id/${wwwId}`, {
+      const response = await fetch(`/api/${wwwId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -144,7 +144,7 @@ export default function EventEditionLayout({
               </Badge>
               <Button
                 variant="outline"
-                onClick={() => window.open(`/event-id/${event.www_id}`, '_blank')}
+                onClick={() => window.open(`/${event.www_id}`, '_blank')}
                 className="flex items-center gap-2"
               >
                 <ExternalLink className="w-4 h-4" />

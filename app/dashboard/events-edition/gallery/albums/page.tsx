@@ -128,7 +128,7 @@ export default function AlbumsManagementPage() {
     
     try {
       setLoading(true);
-      const eventResponse = await fetch(`/api/event-id/${contextEvent.wwwId}`);
+      const eventResponse = await fetch(`/api/${contextEvent.wwwId}`);
       if (!eventResponse.ok) {
         throw new Error('Event not found');
       }
@@ -186,7 +186,7 @@ export default function AlbumsManagementPage() {
       
       if (albumId.startsWith('custom-')) {
         // For custom albums, fetch from database
-        const response = await fetch(`/api/event-id/${wwwId}/gallery/custom-album-files?albumId=${actualAlbumId}`);
+        const response = await fetch(`/api/${wwwId}/gallery/custom-album-files?albumId=${actualAlbumId}`);
         if (response.ok) {
           const result = await response.json();
           console.log('Custom album files response:', result);
@@ -222,8 +222,8 @@ export default function AlbumsManagementPage() {
       
       // For default albums, use existing logic
       const [photosResponse, videosResponse] = await Promise.all([
-        fetch(`/api/event-id/${wwwId}/gallery/files?album=${actualAlbumId}&type=photos`),
-        fetch(`/api/event-id/${wwwId}/gallery/files?album=${actualAlbumId}&type=videos`)
+        fetch(`/api/${wwwId}/gallery/files?album=${actualAlbumId}&type=photos`),
+        fetch(`/api/${wwwId}/gallery/files?album=${actualAlbumId}&type=videos`)
       ]);
       
       const allFiles: AlbumFile[] = [];
@@ -544,7 +544,7 @@ export default function AlbumsManagementPage() {
     if (!contextEvent || selectedFilesForAction.length === 0) return;
     
     try {
-      const response = await fetch(`/api/event-id/${contextEvent.wwwId}/gallery/tags`, {
+      const response = await fetch(`/api/${contextEvent.wwwId}/gallery/tags`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -575,7 +575,7 @@ export default function AlbumsManagementPage() {
     if (!contextEvent || appliedTags.length === 0) return;
 
     try {
-      const response = await fetch(`/api/event-id/${contextEvent.wwwId}/gallery/tags`, {
+      const response = await fetch(`/api/${contextEvent.wwwId}/gallery/tags`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -661,7 +661,7 @@ export default function AlbumsManagementPage() {
       }));
       
       // Save to backend
-      const response = await fetch(`/api/event-id/${wwwId}/gallery/status`, {
+      const response = await fetch(`/api/${wwwId}/gallery/status`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -700,7 +700,7 @@ export default function AlbumsManagementPage() {
       }));
       
       // Save to backend
-      const response = await fetch(`/api/event-id/${wwwId}/gallery/status`, {
+      const response = await fetch(`/api/${wwwId}/gallery/status`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -779,7 +779,7 @@ export default function AlbumsManagementPage() {
     if (!wwwId || !albumId || albumFiles.length === 0) return;
 
     try {
-      const response = await fetch(`/api/event-id/${wwwId}/gallery/status?albumId=${albumId}`);
+      const response = await fetch(`/api/${wwwId}/gallery/status?albumId=${albumId}`);
       if (response.ok) {
         const data = await response.json();
         if (data.statuses) {
@@ -903,42 +903,27 @@ export default function AlbumsManagementPage() {
         ? selectedAlbum.replace('custom-', '') 
         : selectedAlbum;
       
+      // Import uploadFiles function (now uses direct uploads to Bunny.net)
+      const { uploadFiles } = await import('@/lib/gallery');
+      
       if (photoFiles.length > 0) {
-        const photoFormData = new FormData();
-        photoFiles.forEach(file => {
-          photoFormData.append('files', file);
-        });
-        photoFormData.append('albumType', actualAlbumId);
-        photoFormData.append('mediaType', 'photos');
-
-        const photoResponse = await fetch(`/api/event-id/${contextEvent.wwwId}/gallery/upload`, {
-          method: 'POST',
-          body: photoFormData,
-        });
-
-        if (!photoResponse.ok) {
-          const errorData = await photoResponse.json();
-          throw new Error(errorData.error || 'Photo upload failed');
-        }
+        await uploadFiles(
+          photoFiles,
+          actualAlbumId,
+          'photos',
+          undefined, // No progress callback for now
+          contextEvent.wwwId
+        );
       }
       
       if (videoFiles.length > 0) {
-        const videoFormData = new FormData();
-        videoFiles.forEach(file => {
-          videoFormData.append('files', file);
-        });
-        videoFormData.append('albumType', actualAlbumId);
-        videoFormData.append('mediaType', 'videos');
-
-        const videoResponse = await fetch(`/api/event-id/${contextEvent.wwwId}/gallery/upload`, {
-          method: 'POST',
-          body: videoFormData,
-        });
-
-        if (!videoResponse.ok) {
-          const errorData = await videoResponse.json();
-          throw new Error(errorData.error || 'Video upload failed');
-        }
+        await uploadFiles(
+          videoFiles,
+          actualAlbumId,
+          'videos',
+          undefined, // No progress callback for now
+          contextEvent.wwwId
+        );
       }
 
       await fetchAlbumFiles();
@@ -965,7 +950,7 @@ export default function AlbumsManagementPage() {
 
       if (selectedAlbum.startsWith('custom-')) {
         // For custom albums, delete from database
-        const response = await fetch(`/api/event-id/${contextEvent.wwwId}/gallery/delete-custom-file`, {
+        const response = await fetch(`/api/${contextEvent.wwwId}/gallery/delete-custom-file`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -985,7 +970,7 @@ export default function AlbumsManagementPage() {
         }
       } else {
         // For default albums, use existing logic
-        const response = await fetch(`/api/event-id/${contextEvent.wwwId}/gallery/delete`, {
+        const response = await fetch(`/api/${contextEvent.wwwId}/gallery/delete`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',

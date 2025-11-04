@@ -174,7 +174,7 @@ export default function RSVPPrintTemplatesPage() {
             eventDate: contextEvent.eventDate,
             venue: contextEvent.venue,
             title: contextEvent.title,
-            rsvpUrl: `${window.location.origin}/event-id/${contextEvent.wwwId}/invitation`
+            rsvpUrl: `${window.location.origin}/${contextEvent.wwwId}/invitation`
           }
         }),
       });

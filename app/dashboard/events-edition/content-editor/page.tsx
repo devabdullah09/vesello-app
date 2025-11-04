@@ -294,7 +294,7 @@ export default function ContentEditorPage() {
           View your event page and use the inline editor to customize all content.
         </p>
         <a
-          href={`/event-id/${selectedEvent.wwwId}`}
+          href={`/${selectedEvent.wwwId}`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center space-x-2 bg-[#E5B574] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#D59C58] transition-colors"

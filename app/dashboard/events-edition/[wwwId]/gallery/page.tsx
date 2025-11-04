@@ -49,7 +49,7 @@ export default function EventGalleryPage() {
       const { data: { session } } = await supabase.auth.getSession()
       const token = session?.access_token || ''
       
-      const response = await fetch(`/api/event-id/${wwwId}/gallery?albumType=${activeTab}&mediaType=photos`, {
+      const response = await fetch(`/api/${wwwId}/gallery?albumType=${activeTab}&mediaType=photos`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -91,30 +91,22 @@ export default function EventGalleryPage() {
     setUploadProgress(0)
 
     try {
-      const formData = new FormData()
-      Array.from(files).forEach(file => {
-        formData.append('files', file)
-      })
-      formData.append('albumType', activeTab)
-      formData.append('mediaType', 'photos')
-
-      const { data: { session } } = await supabase.auth.getSession()
-      const token = session?.access_token || ''
-
-      const response = await fetch(`/api/event-id/${wwwId}/gallery/upload`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
+      // Use direct upload to Bunny.net (bypasses Vercel's 4.5MB limit)
+      const { uploadFiles } = await import('@/lib/gallery')
+      
+      const filesArray = Array.from(files)
+      
+      await uploadFiles(
+        filesArray,
+        activeTab,
+        'photos',
+        ({ fileIndex, percent }) => {
+          // Update progress
+          const totalProgress = ((fileIndex + 1) / filesArray.length) * 100
+          setUploadProgress(totalProgress)
         },
-        body: formData
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.details || 'Upload failed')
-      }
-
-      const result = await response.json()
+        wwwId
+      )
       
       // Refresh gallery images
       await fetchGalleryImages()

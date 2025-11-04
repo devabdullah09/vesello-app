@@ -26,7 +26,7 @@ export const defaultGalleryContent: GalleryContent = {
 
 export async function fetchGalleryContent(wwwId: string): Promise<GalleryContent> {
   try {
-    const response = await fetch(`/api/event-id/${wwwId}/gallery-content`);
+    const response = await fetch(`/api/${wwwId}/gallery-content`);
     if (response.ok) {
       const result = await response.json();
       if (result.success && result.data) {

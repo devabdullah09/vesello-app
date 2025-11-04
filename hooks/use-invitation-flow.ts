@@ -48,7 +48,7 @@ export function useInvitationFlow(wwwId: string) {
     
     if (nextStepPath) {
       console.log('DEBUG: Navigating to:', nextStepPath);
-      router.push(nextStepPath); // Path already includes /event-id/${wwwId}
+      router.push(nextStepPath); // Path already includes /${wwwId}
     } else {
       console.error('DEBUG: No next step found!');
     }
@@ -57,7 +57,7 @@ export function useInvitationFlow(wwwId: string) {
   const navigateToPreviousStep = (currentStepId: string) => {
     const previousStepPath = getPreviousStep(currentStepId, customQuestions, wwwId);
     if (previousStepPath) {
-      router.push(previousStepPath); // Path already includes /event-id/${wwwId}
+      router.push(previousStepPath); // Path already includes /${wwwId}
     }
   };
 

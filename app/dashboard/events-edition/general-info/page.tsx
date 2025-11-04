@@ -177,7 +177,7 @@ export default function EventsGeneralInfoPage() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Event URL</label>
             <div className="text-sm text-gray-900 bg-gray-50 p-2 rounded">
-              {generalInfo?.eventUrl || `http://localhost:3000/event-id/${generalInfo?.wwwId}`}
+              {generalInfo?.eventUrl || `http://localhost:3000/${generalInfo?.wwwId}`}
             </div>
           </div>
           

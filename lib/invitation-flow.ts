@@ -41,7 +41,7 @@ export function getInvitationFlow(customQuestions: CustomQuestion[], wwwId: stri
     id: question.id,
     type: 'custom',
     orderIndex: 5.5 + (question.order_index * 0.1), // Place between transportation (5) and note (6)
-    path: `/event-id/${wwwId}/invitation/custom-question/${question.id}`,
+    path: `/${wwwId}/invitation/custom-question/${question.id}`,
     title: question.title
   }));
 
@@ -49,8 +49,8 @@ export function getInvitationFlow(customQuestions: CustomQuestion[], wwwId: stri
   const updatedDefaultSteps: InvitationStep[] = DEFAULT_STEPS.map(step => ({
     ...step,
     path: step.path === '/invitation' 
-      ? `/event-id/${wwwId}/invitation` 
-      : `/event-id/${wwwId}${step.path}`
+      ? `/${wwwId}/invitation` 
+      : `/${wwwId}${step.path}`
   }));
 
   // Combine and sort all steps

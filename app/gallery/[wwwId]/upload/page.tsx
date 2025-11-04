@@ -37,7 +37,7 @@ export default function EventGalleryUploadPage() {
 
   const fetchEventData = async () => {
     try {
-      const response = await fetch(`/api/event-id/${wwwId}`);
+      const response = await fetch(`/api/${wwwId}`);
       
       if (!response.ok) {
         throw new Error('Event not found');
@@ -74,27 +74,48 @@ export default function EventGalleryUploadPage() {
     setUploadProgress(0);
 
     try {
-      // For now, we'll simulate upload progress
-      // In a real implementation, you'd upload to your storage service
-      const totalFiles = selectedFiles.length;
+      // Use direct upload to Bunny.net (bypasses Vercel's 4.5MB limit)
+      const { uploadFiles } = await import('@/lib/gallery');
       
-      for (let i = 0; i < totalFiles; i++) {
-        const file = selectedFiles[i];
-        
-        // Simulate upload progress
-        const progress = ((i + 1) / totalFiles) * 100;
-        setUploadProgress(progress);
-        
-        // Here you would implement actual file upload logic
-        // For example, upload to Bunny.net, AWS S3, or your preferred storage
-        
-        // Simulate upload delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      const filesArray = Array.from(selectedFiles);
+      const photoFiles = filesArray.filter(file => file.type.startsWith('image/'));
+      const videoFiles = filesArray.filter(file => file.type.startsWith('video/'));
+      
+      let uploadedCount = 0;
+      
+      if (photoFiles.length > 0) {
+        await uploadFiles(
+          photoFiles,
+          'wedding-day', // Default album type
+          'photos',
+          ({ fileIndex, percent }) => {
+            // Update progress for photos
+            const totalProgress = ((uploadedCount + (fileIndex + 1)) / filesArray.length) * 100;
+            setUploadProgress(totalProgress);
+          },
+          eventData.wwwId
+        );
+        uploadedCount += photoFiles.length;
+      }
+      
+      if (videoFiles.length > 0) {
+        await uploadFiles(
+          videoFiles,
+          'wedding-day', // Default album type
+          'videos',
+          ({ fileIndex, percent }) => {
+            // Update progress for videos
+            const totalProgress = ((uploadedCount + (fileIndex + 1)) / filesArray.length) * 100;
+            setUploadProgress(totalProgress);
+          },
+          eventData.wwwId
+        );
+        uploadedCount += videoFiles.length;
       }
 
-      alert('Files uploaded successfully!');
+      setUploadProgress(100);
+      alert(`${uploadedCount} file(s) uploaded successfully!`);
       setSelectedFiles(null);
-      setUploadProgress(0);
       
       // Reset file input
       const fileInput = document.getElementById('fileInput') as HTMLInputElement;
@@ -102,9 +123,10 @@ export default function EventGalleryUploadPage() {
       
     } catch (err) {
       console.error('Upload error:', err);
-      alert('Upload failed. Please try again.');
+      alert(`Upload failed: ${err instanceof Error ? err.message : 'Please try again.'}`);
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   };
 

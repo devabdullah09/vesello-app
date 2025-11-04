@@ -219,7 +219,7 @@ export default function EventsListPage() {
       status: event.status,
       galleryEnabled: event.galleryEnabled,
       rsvpEnabled: event.rsvpEnabled,
-      eventUrl: `/event-id/${event.wwwId}`
+      eventUrl: `/${event.wwwId}`
     };
     setSelectedEvent(eventData);
     router.push('/dashboard/events-edition');

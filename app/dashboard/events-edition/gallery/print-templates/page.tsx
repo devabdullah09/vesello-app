@@ -129,7 +129,7 @@ export default function PrintTemplatesPage() {
       setLoading(true);
       setError(null);
 
-      const eventResponse = await fetch(`/api/event-id/${contextEvent.wwwId}`);
+      const eventResponse = await fetch(`/api/${contextEvent.wwwId}`);
       if (!eventResponse.ok) {
         throw new Error('Event not found');
       }
@@ -183,7 +183,7 @@ export default function PrintTemplatesPage() {
             coupleNames: contextEvent.coupleNames,
             eventDate: contextEvent.eventDate,
             venue: contextEvent.venue,
-            galleryUrl: `${window.location.origin}/event-id/${contextEvent.wwwId}/gallery`
+            galleryUrl: `${window.location.origin}/${contextEvent.wwwId}/gallery`
           }
         }),
       });
