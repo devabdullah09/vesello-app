@@ -1,3 +1,4 @@
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { supabase } from './supabase'
 import { createServerClient } from './supabase'
 import { 
@@ -9,6 +10,54 @@ import {
   PaginatedResponse 
 } from './dashboard-types'
 import { uploadFiles, getCdnUrl } from './bunny-net'
+
+const DEFAULT_ALBUM_TABLE = 'gallery_default_album_settings'
+
+export const DEFAULT_ALBUM_DEFINITIONS = [
+  {
+    key: 'wedding-day',
+    defaultName: 'Wedding Day',
+    defaultDescription: 'Wedding ceremony photos'
+  },
+  {
+    key: 'party-day',
+    defaultName: 'Party Day',
+    defaultDescription: 'Party and celebration photos'
+  }
+] as const
+
+export type DefaultAlbumKey = typeof DEFAULT_ALBUM_DEFINITIONS[number]['key']
+
+interface DefaultAlbumSettingRow {
+  id?: string
+  event_id: string
+  album_type: string
+  custom_name?: string | null
+  description?: string | null
+  cover_image_url?: string | null
+  is_hidden?: boolean | null
+  is_deleted?: boolean | null
+  created_at?: string | null
+  updated_at?: string | null
+}
+
+const isMissingDefaultAlbumTable = (error: any) => {
+  const message = error?.message || error?.toString?.();
+  if (typeof message !== 'string') {
+    return false;
+  }
+  return (
+    message.includes(`relation "${DEFAULT_ALBUM_TABLE}" does not exist`) ||
+    message.includes(`Could not find the table 'public.${DEFAULT_ALBUM_TABLE}'`) ||
+    message.includes(DEFAULT_ALBUM_TABLE)
+  );
+}
+
+const throwMissingDefaultAlbumTableError = () => {
+  const customError = new Error('MISSING_DEFAULT_ALBUM_TABLE')
+  customError.name = 'MissingDefaultAlbumTableError'
+  throw customError
+}
 
 // Gallery Albums
 
@@ -43,24 +92,154 @@ export const createGalleryAlbum = async (albumData: CreateGalleryAlbumData): Pro
 export const getEventAlbums = async (eventId: string): Promise<GalleryAlbum[]> => {
   try {
     console.log('getEventAlbums called with eventId:', eventId);
-    const { data, error } = await supabase
+    const serverSupabase = createServerClient();
+
+    const { data, error } = await serverSupabase
       .from('gallery_albums')
       .select('*')
       .eq('event_id', eventId)
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false });
 
     console.log('Database query result:', { data, error });
 
     if (error) throw error
 
-    const mappedData = data.map(mapAlbumFromDB);
-    console.log('Mapped albums:', mappedData);
-    return mappedData;
+    const mappedCustomAlbums = (data || []).map(mapAlbumFromDB);
+
+    const { defaultAlbums } = await loadDefaultAlbumsForEvent(serverSupabase, eventId);
+
+    const combinedAlbums = [...defaultAlbums, ...mappedCustomAlbums];
+    console.log('Mapped albums (with defaults):', combinedAlbums);
+
+    return combinedAlbums;
   } catch (error) {
     console.error('Error getting event albums:', error)
     throw error
   }
 }
+
+const loadDefaultAlbumsForEvent = async (client: SupabaseClient, eventId: string): Promise<{ defaultAlbums: GalleryAlbum[]; tableMissing: boolean }> => {
+  try {
+    const { data, error } = await client
+      .from(DEFAULT_ALBUM_TABLE)
+      .select('*')
+      .eq('event_id', eventId);
+
+    if (error) {
+      if (isMissingDefaultAlbumTable(error)) {
+        console.warn(`Table ${DEFAULT_ALBUM_TABLE} not found. Returning default album definitions.`);
+        const fallbackAlbums = DEFAULT_ALBUM_DEFINITIONS.map(def => mapDefaultAlbum(def, undefined, eventId, true));
+        return { defaultAlbums: fallbackAlbums, tableMissing: true };
+      }
+      throw error;
+    }
+
+    const settingsByAlbum = new Map<string, DefaultAlbumSettingRow>();
+    (data || []).forEach(setting => {
+      if (setting && setting.album_type) {
+        settingsByAlbum.set(setting.album_type, setting);
+      }
+    });
+
+    const defaultAlbums = DEFAULT_ALBUM_DEFINITIONS
+      .map(def => mapDefaultAlbum(def, settingsByAlbum.get(def.key), eventId));
+
+    return { defaultAlbums, tableMissing: false };
+  } catch (error) {
+    if (isMissingDefaultAlbumTable(error)) {
+      console.warn(`Table ${DEFAULT_ALBUM_TABLE} not found. Returning default album definitions.`);
+      const fallbackAlbums = DEFAULT_ALBUM_DEFINITIONS.map(def => mapDefaultAlbum(def, undefined, eventId, true));
+      return { defaultAlbums: fallbackAlbums, tableMissing: true };
+    }
+    console.error('Error loading default albums:', error);
+    throw error;
+  }
+};
+
+interface DefaultAlbumUpdateInput {
+  name?: string | null
+  description?: string | null
+  coverImageUrl?: string | null
+  isHidden?: boolean
+  isDeleted?: boolean
+}
+
+export const updateDefaultAlbumSettings = async (
+  eventId: string,
+  albumType: DefaultAlbumKey,
+  updates: DefaultAlbumUpdateInput
+): Promise<GalleryAlbum> => {
+  try {
+    const client = createServerClient();
+
+    const payload: Partial<DefaultAlbumSettingRow> & { event_id: string; album_type: string } = {
+      event_id: eventId,
+      album_type: albumType,
+      updated_at: new Date().toISOString()
+    };
+
+    if (updates.name !== undefined) {
+      payload.custom_name = updates.name && updates.name.trim().length > 0 ? updates.name.trim() : null;
+    }
+
+    if (updates.description !== undefined) {
+      payload.description = updates.description?.trim() || null;
+    }
+
+    if (updates.coverImageUrl !== undefined) {
+      payload.cover_image_url = updates.coverImageUrl || null;
+    }
+
+    if (updates.isHidden !== undefined) {
+      payload.is_hidden = updates.isHidden;
+    }
+
+    if (updates.isDeleted !== undefined) {
+      payload.is_deleted = updates.isDeleted;
+    }
+
+    const { data, error } = await client
+      .from(DEFAULT_ALBUM_TABLE)
+      .upsert(payload, { onConflict: 'event_id,album_type', ignoreDuplicates: false })
+      .select('*')
+      .single();
+
+    if (error) {
+      if (isMissingDefaultAlbumTable(error)) {
+        throwMissingDefaultAlbumTableError();
+      }
+      throw error;
+    }
+
+    const settingRow: DefaultAlbumSettingRow | undefined = data ?? {
+      event_id: eventId,
+      album_type: albumType,
+      custom_name: payload.custom_name ?? null,
+      description: payload.description ?? null,
+      cover_image_url: payload.cover_image_url ?? null,
+      is_hidden: payload.is_hidden ?? false,
+      is_deleted: payload.is_deleted ?? false,
+      created_at: payload.updated_at,
+      updated_at: payload.updated_at
+    };
+
+    const definition = DEFAULT_ALBUM_DEFINITIONS.find(def => def.key === albumType) ?? DEFAULT_ALBUM_DEFINITIONS[0];
+    return mapDefaultAlbum(definition, settingRow, eventId);
+  } catch (error) {
+    if (error instanceof Error && error.name === 'MissingDefaultAlbumTableError') {
+      throw error;
+    }
+    if (isMissingDefaultAlbumTable(error)) {
+      throwMissingDefaultAlbumTableError();
+    }
+    console.error('Error updating default album settings:', error);
+    throw error;
+  }
+};
+
+export const softDeleteDefaultAlbum = async (eventId: string, albumType: DefaultAlbumKey): Promise<GalleryAlbum> => {
+  return updateDefaultAlbumSettings(eventId, albumType, { isDeleted: true, isHidden: true });
+};
 
 // Get album by ID
 export const getAlbumById = async (albumId: string): Promise<GalleryAlbum | null> => {
@@ -415,8 +594,42 @@ const mapAlbumFromDB = (dbAlbum: any): GalleryAlbum => ({
   coverImageUrl: dbAlbum.cover_image_url,
   isPublic: dbAlbum.is_public,
   createdAt: dbAlbum.created_at,
-  updatedAt: dbAlbum.updated_at
+  updatedAt: dbAlbum.updated_at,
+  albumType: 'custom',
+  isDefault: false,
+  defaultKey: undefined,
+  isHidden: dbAlbum.is_public === false,
+  isDeleted: false
 })
+
+const mapDefaultAlbum = (
+  definition: (typeof DEFAULT_ALBUM_DEFINITIONS)[number],
+  setting: DefaultAlbumSettingRow | undefined,
+  eventId: string,
+  tableMissing: boolean = false
+): GalleryAlbum => {
+  const createdAt = setting?.created_at || new Date(0).toISOString()
+  const updatedAt = setting?.updated_at || createdAt
+  const isHidden = Boolean(setting?.is_hidden)
+  const isDeleted = Boolean(setting?.is_deleted)
+
+  return {
+    id: definition.key,
+    eventId,
+    name: setting?.custom_name?.trim() || definition.defaultName,
+    description: setting?.description ?? definition.defaultDescription,
+    coverImageUrl: setting?.cover_image_url ?? undefined,
+    isPublic: !(isHidden || isDeleted),
+    createdAt,
+    updatedAt,
+    albumType: 'default',
+    defaultKey: definition.key,
+    isHidden,
+    isDeleted,
+    isDefault: true,
+    tableMissing
+  }
+}
 
 const mapImageFromDB = (dbImage: any): GalleryImage => ({
   id: dbImage.id,
@@ -439,7 +652,8 @@ export const storeCustomAlbumFiles = async (
   files: File[],
   albumId: string,
   wwwId: string,
-  mediaType: 'photos' | 'videos'
+  mediaType: 'photos' | 'videos',
+  signature?: string
 ): Promise<{ files: any[], cdnUrls: string[], message: string }> => {
   try {
     // First, upload files to Bunny.net using the album ID as the folder name
@@ -477,7 +691,8 @@ export const storeCustomAlbumFiles = async (
         is_approved: true, // Auto-approve custom album uploads
         metadata: {
           uploadedAt: new Date().toISOString(),
-          mediaType: mediaType
+          mediaType: mediaType,
+          signature: signature || null
         }
       };
       console.log('Creating image record:', record);

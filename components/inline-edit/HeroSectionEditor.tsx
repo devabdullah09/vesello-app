@@ -3,11 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import EditModal from './EditModal';
 import ImageUpload from '@/components/ui/ImageUpload';
+import { useLanguage } from '@/components/language-context';
 
 interface HeroSectionData {
   coupleNames: string;
   eventDate: string;
-  venue?: string;
   customMessage?: string;
   backgroundImage?: string;
 }
@@ -25,10 +25,10 @@ export default function HeroSectionEditor({
   data,
   onSave,
 }: HeroSectionEditorProps) {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState<HeroSectionData>(data || {
     coupleNames: '',
     eventDate: '',
-    venue: '',
     customMessage: 'WE\'RE GETTING MARRIED!',
     backgroundImage: ''
   });
@@ -62,14 +62,14 @@ export default function HeroSectionEditor({
     <EditModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Edit Hero Section"
+      title={t.editModals.heroSection}
       onSave={handleSave}
       saving={saving}
     >
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Couple Names
+            {t.editModals.heroSectionLabels.coupleNames}
           </label>
           <input
             type="text"
@@ -82,7 +82,7 @@ export default function HeroSectionEditor({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Event Date & Time
+            {t.editModals.heroSectionLabels.eventDateAndTime}
           </label>
           <input
             type="datetime-local"
@@ -94,20 +94,7 @@ export default function HeroSectionEditor({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Venue
-          </label>
-          <input
-            type="text"
-            value={formData.venue || ''}
-            onChange={(e) => handleInputChange('venue', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E5B574] focus:border-transparent"
-            placeholder="Wedding Venue Name"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Custom Message
+            {t.editModals.heroSectionLabels.customMessage}
           </label>
           <input
             type="text"
@@ -120,7 +107,7 @@ export default function HeroSectionEditor({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Background Image (Optional)
+            {t.editModals.heroSectionLabels.backgroundImage}
           </label>
           <ImageUpload
             currentImage={formData.backgroundImage}

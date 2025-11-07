@@ -182,9 +182,12 @@ export async function registerUploadedFiles(
   files: string[],
   cdnUrls: string[],
   albumType: string,
-  mediaType: 'photos' | 'videos'
+  mediaType: 'photos' | 'videos',
+  signature?: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const trimmedSignature = signature ? String(signature).trim() : undefined;
+    console.log('registerUploadedFiles - sending signature:', trimmedSignature || 'none', 'type:', typeof trimmedSignature);
     const response = await fetch(`/api/${wwwId}/gallery/register-uploads`, {
       method: 'POST',
       headers: {
@@ -195,12 +198,15 @@ export async function registerUploadedFiles(
         cdnUrls,
         albumType,
         mediaType,
+        signature: trimmedSignature, // Send trimmed signature
       }),
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to register uploads');
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      console.error('Register uploads error response:', errorData);
+      const errorMessage = errorData.details || errorData.error || 'Failed to register uploads';
+      throw new Error(`${errorMessage}${errorData.code ? ` (Code: ${errorData.code})` : ''}${errorData.hint ? ` - ${errorData.hint}` : ''}`);
     }
 
     return { success: true };

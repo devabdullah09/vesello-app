@@ -21,85 +21,60 @@ const EventFooter: React.FC = () => {
       width: '100%',
       position: 'relative',
     }}>
-      <div style={{
-        maxWidth: '1400px',
-        margin: '0 auto',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 2rem',
-      }}>
-        <div>
-          <div style={{ fontSize: '1.6rem', fontWeight: 400, marginBottom: '0.5rem' }}>
-            © 2025 {displayNames}
-          </div>
-          <div style={{ fontSize: '1.2rem', color: '#e0e0e0', marginBottom: '0.5rem'  }}>
-            {t.common.poweredBy}
-          </div>
-        </div>
-        
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          {/* Language Switcher */}
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button
-              style={{
-                background: language === 'en' ? 'white' : 'transparent',
-                color: language === 'en' ? 'black' : 'white',
-                border: '1px solid white',
-                borderRadius: '8px',
-                padding: '0.3rem 0.8rem',
-                fontSize: '0.9rem',
-                cursor: 'pointer',
-                transition: 'background 0.2s, color 0.2s',
-              }}
-              onClick={() => setLanguage('en')}
-            >
-              EN
-            </button>
-            <button
-              style={{
-                background: language === 'pl' ? 'white' : 'transparent',
-                color: language === 'pl' ? 'black' : 'white',
-                border: '1px solid white',
-                borderRadius: '8px',
-                padding: '0.3rem 0.8rem',
-                fontSize: '0.9rem',
-                cursor: 'pointer',
-                transition: 'background 0.2s, color 0.2s',
-              }}
-              onClick={() => setLanguage('pl')}
-            >
-              PL
-            </button>
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 py-4 sm:py-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
+          <div className="flex-1">
+            <div className="text-lg sm:text-xl md:text-2xl font-normal mb-2 sm:mb-3">
+              © 2025 {displayNames}
+            </div>
+            <div className="text-sm sm:text-base md:text-lg text-gray-300 mb-2">
+              {t.common.poweredBy}
+            </div>
           </div>
           
-          <button
-            style={{
-              background: 'transparent',
-              color: 'white',
-              border: '1px solid white',
-              borderRadius: '12px',
-              padding: '0.4rem 2.2rem',
-              fontSize: '1.1rem',
-              cursor: 'pointer',
-              letterSpacing: '1px',
-              transition: 'background 0.2s, color 0.2s',
-            }}
-            onClick={() => router.push('/login')}
-          >
-            {t.common.login}
-          </button>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+            {/* Language Switcher */}
+            <div className="flex gap-2">
+              <button
+                className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+                  language === 'en' 
+                    ? 'bg-white text-black' 
+                    : 'bg-transparent text-white border border-white'
+                }`}
+                onClick={() => setLanguage('en')}
+              >
+                EN
+              </button>
+              <button
+                className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+                  language === 'pl' 
+                    ? 'bg-white text-black' 
+                    : 'bg-transparent text-white border border-white'
+                }`}
+                onClick={() => setLanguage('pl')}
+              >
+                PL
+              </button>
+            </div>
+            
+            <button
+              className="bg-transparent text-white border border-white rounded-lg px-4 py-2 sm:px-6 sm:py-2.5 text-xs sm:text-sm md:text-base font-medium tracking-wide hover:bg-white hover:text-black transition-all whitespace-nowrap"
+              onClick={() => router.push('/login')}
+            >
+              {t.common.login}
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="border-t border-gray-800 pt-2 text-right">
-        <p className="text-gray-500 text-xs">
+      <div className="border-t border-gray-800 pt-2 sm:pt-3 px-4 sm:px-6 md:px-8 text-center sm:text-right">
+        <p className="text-gray-500 text-xs sm:text-sm">
           {t.common.designedBy}{' '}
           <a 
             href="https://www.abdullahshafiq.com" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="underline"
+            className="underline hover:text-gray-300 transition-colors"
           >
             Abdullah
           </a>

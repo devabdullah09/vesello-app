@@ -3,9 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import EditModal from './EditModal';
 import ImageUpload from '@/components/ui/ImageUpload';
+import { useLanguage } from '@/components/language-context';
 
 interface CeremonySectionData {
-  title: string;
+  venueNameEn?: string;
+  venueNamePl?: string;
   description: string;
   date: string;
   time: string;
@@ -28,22 +30,40 @@ export default function CeremonySectionEditor({
   data,
   onSave,
 }: CeremonySectionEditorProps) {
-  const [formData, setFormData] = useState<CeremonySectionData>(data || {
-    title: 'Ceremony Details',
+  const { t, language } = useLanguage();
+  const [formData, setFormData] = useState<CeremonySectionData>({
+    venueNameEn: '',
+    venueNamePl: '',
     description: 'Join us as we exchange vows in a beautiful ceremony.',
     date: '',
-    time: '12:00 PM',
+    time: '12:00',
     location: '',
     details: ''
   });
   const [saving, setSaving] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Update formData when data prop changes
+  // Update formData only when modal opens (not on every data change)
   useEffect(() => {
-    if (data && typeof data === 'object') {
-      setFormData(prev => ({ ...prev, ...data }));
+    if (isOpen && !isInitialized) {
+      if (data) {
+        setFormData({
+          venueNameEn: data.venueNameEn || '',
+          venueNamePl: data.venueNamePl || '',
+          description: data.description || 'Join us as we exchange vows in a beautiful ceremony.',
+          date: data.date || '',
+          time: data.time || '12:00',
+          location: data.location || '',
+          details: data.details || '',
+          mapUrl: data.mapUrl || '',
+          imageUrl: data.imageUrl || ''
+        });
+      }
+      setIsInitialized(true);
+    } else if (!isOpen) {
+      setIsInitialized(false);
     }
-  }, [data]);
+  }, [isOpen, data, isInitialized]);
 
   const handleSave = async () => {
     try {
@@ -66,27 +86,42 @@ export default function CeremonySectionEditor({
     <EditModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Edit Ceremony Details"
+      title={t.editModals.ceremonySection}
       onSave={handleSave}
       saving={saving}
     >
       <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Section Title
-          </label>
-          <input
-            type="text"
-            value={formData.title}
-            onChange={(e) => handleInputChange('title', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E5B574] focus:border-transparent"
-            placeholder="Ceremony Details"
-          />
-        </div>
+        {language === 'pl' ? (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {t.editModals.ceremonyVenueNamePl || 'Nazwa miejsca ceremonii.'}
+            </label>
+            <input
+              type="text"
+              value={formData.venueNamePl || ''}
+              onChange={(e) => handleInputChange('venueNamePl', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E5B574] focus:border-transparent"
+              placeholder="Nazwa kościoła / miejsca"
+            />
+          </div>
+        ) : (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {t.editModals.ceremonyVenueNameEn || 'Wedding Ceremony Venue Name'}
+            </label>
+            <input
+              type="text"
+              value={formData.venueNameEn || ''}
+              onChange={(e) => handleInputChange('venueNameEn', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E5B574] focus:border-transparent"
+              placeholder="Church Name / Venue Name"
+            />
+          </div>
+        )}
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Description
+            {t.editModals.ceremonyDescription || 'Description'}
           </label>
           <textarea
             value={formData.description}
@@ -100,7 +135,7 @@ export default function CeremonySectionEditor({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Date
+              {t.editModals.ceremonyDate || 'Date'}
             </label>
             <input
               type="date"
@@ -112,7 +147,7 @@ export default function CeremonySectionEditor({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Time
+              {t.editModals.ceremonyTime || 'Time (24-hour format)'}
             </label>
             <input
               type="time"
@@ -120,12 +155,15 @@ export default function CeremonySectionEditor({
               onChange={(e) => handleInputChange('time', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#E5B574] focus:border-transparent"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Use 24-hour format (e.g., 15:00 for 3:00 PM)
+            </p>
           </div>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Location
+            {t.editModals.ceremonyLocation || 'Location'}
           </label>
           <input
             type="text"
@@ -138,7 +176,7 @@ export default function CeremonySectionEditor({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Google Maps Link (Optional)
+            {t.editModals.ceremonyMapUrl || 'Google Maps Link (Optional)'}
           </label>
           <input
             type="url"
@@ -151,7 +189,7 @@ export default function CeremonySectionEditor({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Additional Details
+            {t.editModals.ceremonyAdditionalDetails || 'Additional Details'}
           </label>
           <textarea
             value={formData.details || ''}
@@ -164,7 +202,7 @@ export default function CeremonySectionEditor({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Ceremony Image
+            {t.editModals.ceremonyImage || 'Ceremony Image'}
           </label>
           <ImageUpload
             currentImage={formData.imageUrl}

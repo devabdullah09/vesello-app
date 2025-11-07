@@ -31,7 +31,8 @@ export async function uploadFiles(
   albumType: 'wedding-day' | 'party-day' | string,
   mediaType: 'photos' | 'videos',
   onFileProgress?: (args: { fileIndex: number; file: File; loaded: number; total: number; percent: number }) => void,
-  wwwId?: string
+  wwwId?: string,
+  signature?: string
 ): Promise<UploadResponse> {
   const fileArray = Array.from(files);
 
@@ -59,10 +60,18 @@ export async function uploadFiles(
         } : undefined
       );
 
-      // Register uploads in the database (for custom albums)
+      // ALWAYS register uploads in the database (even without signature)
+      // This ensures we can track all uploads and display signatures when available
       const isValidCustomAlbum = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(albumType);
-      if (isValidCustomAlbum) {
-        await registerUploadedFiles(wwwId, result.files, result.cdnUrls, albumType, mediaType);
+      const trimmedSignature = signature ? String(signature).trim() : undefined;
+      console.log('Registering uploads in database - signature:', trimmedSignature || 'none', 'albumType:', albumType);
+      console.log('Signature type:', typeof trimmedSignature, 'length:', trimmedSignature?.length);
+      const registerResult = await registerUploadedFiles(wwwId, result.files, result.cdnUrls, albumType, mediaType, trimmedSignature);
+      if (!registerResult.success) {
+        console.error('Failed to register uploads in database:', registerResult.error);
+        // Don't throw - upload to Bunny.net succeeded, just database registration failed
+      } else {
+        console.log('Successfully registered uploads in database');
       }
 
       return result;
@@ -133,6 +142,9 @@ export async function uploadFiles(
   fileArray.forEach((file) => formData.append('files', file));
   formData.append('albumType', albumType);
   formData.append('mediaType', mediaType);
+  if (signature) {
+    formData.append('signature', signature);
+  }
 
   const response = await fetch(apiEndpoint, { method: 'POST', body: formData });
   if (!response.ok) {

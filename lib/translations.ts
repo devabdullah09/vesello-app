@@ -246,6 +246,8 @@ export interface Translations {
       selectAlbumToUpload: string;
       afterParty: string;
       toggleDescription: string;
+      signaturePlaceholder: string;
+      signatureHint: string;
   };
   
   // Invitation Flow
@@ -380,6 +382,7 @@ export interface Translations {
     events: string;
     gallery: string;
     rsvp: string;
+    invitation: string;
     dashboard: string;
     login: string;
     logout: string;
@@ -469,23 +472,126 @@ export interface Translations {
   };
   
   // Status Messages
-  status: {
-    loading: string;
-    error: string;
-    success: string;
-    warning: string;
-    info: string;
-    noData: string;
-    notFound: string;
-    unauthorized: string;
-    forbidden: string;
-    serverError: string;
-    networkError: string;
-    tryAgain: string;
-    refresh: string;
-    notAvailable: string;
+    status: {
+      loading: string;
+      error: string;
+      success: string;
+      warning: string;
+      info: string;
+      noData: string;
+      notFound: string;
+      unauthorized: string;
+      forbidden: string;
+      serverError: string;
+      networkError: string;
+      tryAgain: string;
+      refresh: string;
+      notAvailable: string;
+    };
+
+  // Gallery Content Edit
+  galleryContentEdit: {
+    title: string;
+    subtitle: string;
+    editing: string;
+    galleryVisibility: string;
+    galleryVisibilityDescription: string;
+    welcomeText: string;
+    coupleNames: string;
+    uploadButtonText: string;
+    viewGalleryButtonText: string;
+    missionTitle: string;
+    missionText: string;
+    goalText: string;
+    countMeInButtonText: string;
+    back: string;
+    switchEvent: string;
+    saveChanges: string;
+    saving: string;
+    livePreview: string;
   };
-}
+
+  // Edit Modals
+  editModals: {
+    heroSection: string;
+    timelineSection: string;
+    ceremonySection: string;
+    venueSection: string;
+    seatingChartSection: string;
+    menuSection: string;
+    wishesAndGiftsSection: string;
+    teamSection: string;
+    accommodationSection: string;
+    transportationSection: string;
+    additionalInfoSection: string;
+    coupleNames: string;
+    eventDateAndTime: string;
+    customMessage: string;
+    backgroundImage: string;
+    backgroundImageOptional: string;
+    cancel: string;
+    saveChanges: string;
+    saving: string;
+    ceremonyVenueNameEn: string;
+    ceremonyVenueNamePl: string;
+    ceremonyDescription: string;
+    ceremonyDate: string;
+    ceremonyTime: string;
+    ceremonyLocation: string;
+    ceremonyMapUrl: string;
+    ceremonyAdditionalDetails: string;
+    ceremonyImage: string;
+    heroSectionLabels: {
+      coupleNames: string;
+      eventDateAndTime: string;
+      customMessage: string;
+      backgroundImage: string;
+    };
+  };
+
+  // Section Visibility
+  sectionVisibility: {
+    title: string;
+    subtitle: string;
+    controlWhichSections: string;
+    eventInformation: string;
+    eventTitle: string;
+    coupleNames: string;
+    pageSections: string;
+    toggleDescription: string;
+    contentEditingDescription: string;
+    visible: string;
+    hidden: string;
+    savingChanges: string;
+    previewEventPage: string;
+    openEventPageEditContent: string;
+    viewEventPage: string;
+    sections: {
+      heroSection: string;
+      heroSectionDescription: string;
+      timelineSection: string;
+      timelineSectionDescription: string;
+      ceremonySection: string;
+      ceremonySectionDescription: string;
+      ceremonyVenueSection: string;
+      ceremonyVenueSectionDescription: string;
+      seatingChartSection: string;
+      seatingChartSectionDescription: string;
+      menuSection: string;
+      menuSectionDescription: string;
+      wishesAndGiftsSection: string;
+      wishesAndGiftsSectionDescription: string;
+      teamSection: string;
+      teamSectionDescription: string;
+      accommodationSection: string;
+      accommodationSectionDescription: string;
+      transportationSection: string;
+      transportationSectionDescription: string;
+      additionalInfoSection: string;
+      additionalInfoSectionDescription: string;
+    };
+  };
+  }
 
 export const translations: Record<Language, Translations> = {
   en: {
@@ -515,7 +621,7 @@ export const translations: Record<Language, Translations> = {
       seconds: 'SECONDS',
     },
     rsvp: {
-      title: 'RSVP',
+      title: 'Invitation',
       subtitle: 'We hope you can join us on our special day',
       yourName: 'Your Name',
       emailAddress: 'Email Address',
@@ -525,10 +631,10 @@ export const translations: Record<Language, Translations> = {
       declineWithRegret: 'Decline with regret',
       leaveMessage: 'Leave us a message (optional)',
       dietaryRestrictions: 'Any dietary restrictions or special requests?',
-      submitRsvp: 'Submit RSVP',
+      submitRsvp: 'Submit Invitation',
       sending: 'Sending...',
       thankYou: 'Thank You!',
-      receivedRsvp: "We've received your RSVP. We look forward to celebrating with you!",
+      receivedRsvp: "We've received your invitation response. We look forward to celebrating with you!",
       guest: 'Guest',
       guests: 'Guests',
     },
@@ -644,10 +750,12 @@ export const translations: Record<Language, Translations> = {
       uploadPhotosVideos: 'UPLOAD PHOTOS/VIDEOS',
       uploadedBy: 'Uploaded By',
       toggleDescription: 'You can on and off this section on website.',
+      signaturePlaceholder: 'Your name',
+      signatureHint: 'If you wish, you can sign your name before submitting your photo/video.',
     },
     invitation: {
       welcome: 'Welcome',
-      rsvp: 'RSVP',
+      rsvp: 'Invitation',
       attendance: 'Will Attend',
       decline: "Can't Attend",
       foodSelection: 'Food Selection',
@@ -693,7 +801,7 @@ export const translations: Record<Language, Translations> = {
       writeMessage: 'Write your message here...',
       allSet: 'All Set! Here\'s what we sent',
       heresWhatWeSent: 'Lucas & Mia.',
-      yourRsvpResponse: 'Your RSVP Response',
+      yourRsvpResponse: 'Your Invitation Response',
       weddingAfterDayParty: 'Wedding After Day Party',
       noGuestsAttending: 'No guests attending',
       addPlusOnes: 'Add Plus Ones or Household',
@@ -704,7 +812,7 @@ export const translations: Record<Language, Translations> = {
       surname: 'Surname',
       age: 'Age',
       respondingFor: 'If you\'re responding for you and a guest (or your family),',
-      entireGroup: 'you\'ll be able to RSVP for your entire group.',
+      entireGroup: 'you\'ll be able to respond to the invitation for your entire group.',
     },
     event: {
       title: 'Event',
@@ -714,7 +822,7 @@ export const translations: Record<Language, Translations> = {
       location: 'Location',
       address: 'Address',
       directions: 'Directions',
-      rsvp: 'RSVP',
+      rsvp: 'Invitation',
       gallery: 'Gallery',
       timeline: 'Timeline',
       menu: 'Menu',
@@ -767,7 +875,8 @@ export const translations: Record<Language, Translations> = {
       home: 'Home',
       events: 'Events',
       gallery: 'Gallery',
-      rsvp: 'RSVP',
+      rsvp: 'Invitation',
+      invitation: 'Invitation',
       dashboard: 'Dashboard',
       login: 'Login',
       logout: 'Logout',
@@ -793,7 +902,7 @@ export const translations: Record<Language, Translations> = {
       logout: 'Logout',
       analytics: 'Analytics',
       activeEvents: 'Active Events',
-      pending: 'Pending RSVPs',
+      pending: 'Pending Invitations',
       eventDashboard: 'Event Dashboard',
       manageEvent: 'Manage your assigned event',
       changePassword: 'Change Password',
@@ -806,7 +915,7 @@ export const translations: Record<Language, Translations> = {
       downloadQR: 'Download QR Code',
       availableFeatures: 'Available Features',
       gallery: 'Gallery',
-      rsvp: 'RSVP',
+      rsvp: 'Invitation',
       enabled: 'Enabled',
       disabled: 'Disabled',
       required: 'required',
@@ -814,7 +923,7 @@ export const translations: Record<Language, Translations> = {
       generalInfo: 'EVENT\'S GENERAL INFO',
       dayDetails: 'EVENT\'S DAY DETAILS MANAGEMENT',
       galleryManagement: 'GALLERY MANAGEMENT',
-      rsvpManagement: 'RSVP MANAGEMENT',
+      rsvpManagement: 'Invitation Management',
       eventSettings: 'EVENT SETTINGS',
       manageSubscription: 'MANAGE SUBSCRIPTION',
       billingHistory: 'BILLING HISTORY',
@@ -868,6 +977,103 @@ export const translations: Record<Language, Translations> = {
       tryAgain: 'Try Again',
       refresh: 'Refresh',
       notAvailable: 'Not Available',
+    },
+    editModals: {
+      heroSection: 'Edit Hero Section',
+      timelineSection: 'Edit Wedding Timeline',
+      ceremonySection: 'Edit Ceremony Details',
+      venueSection: 'Edit Wedding Venue',
+      seatingChartSection: 'Edit Seating Chart',
+      menuSection: 'Edit Wedding Menu',
+      wishesAndGiftsSection: 'Edit Wishes & Gifts',
+      teamSection: 'Edit Wedding Team',
+      accommodationSection: 'Edit Accommodation',
+      transportationSection: 'Edit Transportation',
+      additionalInfoSection: 'Edit Additional Information',
+      coupleNames: 'Couple Names',
+      eventDateAndTime: 'Event Date & Time',
+      customMessage: 'Custom Message',
+      backgroundImage: 'Background Image',
+      backgroundImageOptional: 'Background Image (Optional)',
+      cancel: 'Cancel',
+      saveChanges: 'Save Changes',
+      saving: 'Saving...',
+      ceremonyVenueNameEn: 'Wedding Ceremony Venue Name',
+      ceremonyVenueNamePl: 'Nazwa miejsca ceremonii.',
+      ceremonyDescription: 'Description',
+      ceremonyDate: 'Date',
+      ceremonyTime: 'Time (24-hour format)',
+      ceremonyLocation: 'Location',
+      ceremonyMapUrl: 'Google Maps Link (Optional)',
+      ceremonyAdditionalDetails: 'Additional Details',
+      ceremonyImage: 'Ceremony Image',
+      heroSectionLabels: {
+        coupleNames: 'Couple Names',
+        eventDateAndTime: 'Event Date & Time',
+        customMessage: 'Custom Message',
+        backgroundImage: 'Background Image (Optional)',
+      },
+    },
+    galleryContentEdit: {
+      title: 'Edit Gallery Content',
+      subtitle: 'Edit Gallery Content',
+      editing: 'Editing',
+      galleryVisibility: 'Gallery Visibility',
+      galleryVisibilityDescription: 'Show or hide the gallery section',
+      welcomeText: 'Welcome Text',
+      coupleNames: 'Couple Names',
+      uploadButtonText: 'Upload Button Text',
+      viewGalleryButtonText: 'View Gallery Button Text',
+      missionTitle: 'Mission Title',
+      missionText: 'Mission Text',
+      goalText: 'Goal Text',
+      countMeInButtonText: 'Count Me In Button Text',
+      back: 'Back',
+      switchEvent: 'Switch Event',
+      saveChanges: 'Save Changes',
+      saving: 'Saving...',
+      livePreview: 'Live Preview',
+    },
+    sectionVisibility: {
+      title: 'Section Visibility',
+      subtitle: 'Section Visibility',
+      controlWhichSections: 'Control which sections appear on your event page',
+      eventInformation: 'Event Information',
+      eventTitle: 'Event Title',
+      coupleNames: 'Couple Names',
+      pageSections: 'Page Sections',
+      toggleDescription: 'Toggle sections on/off to control what your guests see. Content editing is done directly on the event page using the inline editor.',
+      contentEditingDescription: 'To edit the actual content of each section (text, images, details), visit your event page and use the inline editor.',
+      visible: 'Visible',
+      hidden: 'Hidden',
+      savingChanges: 'Saving changes...',
+      previewEventPage: 'Preview Event Page',
+      openEventPageEditContent: 'Open Event Page & Edit Content',
+      viewEventPage: 'View how your event page looks to guests with the current section settings.',
+      sections: {
+        heroSection: 'Hero Section',
+        heroSectionDescription: 'Main banner with couple names and countdown timer',
+        timelineSection: 'Wedding Timeline',
+        timelineSectionDescription: 'Schedule of events for the wedding day',
+        ceremonySection: 'Ceremony Details',
+        ceremonySectionDescription: 'Information about the wedding ceremony',
+        ceremonyVenueSection: 'Ceremony Venue',
+        ceremonyVenueSectionDescription: 'Details about the ceremony location',
+        seatingChartSection: 'Seating Chart',
+        seatingChartSectionDescription: 'Guest seating arrangements',
+        menuSection: 'Menu',
+        menuSectionDescription: 'Food and beverage options',
+        wishesAndGiftsSection: 'Wishes & Gifts',
+        wishesAndGiftsSectionDescription: 'Gift registry and well wishes',
+        teamSection: 'Wedding Team',
+        teamSectionDescription: 'Bridal party and wedding team',
+        accommodationSection: 'Accommodation',
+        accommodationSectionDescription: 'Hotel and lodging information',
+        transportationSection: 'Transportation',
+        transportationSectionDescription: 'Travel and parking details',
+        additionalInfoSection: 'Additional Information',
+        additionalInfoSectionDescription: 'Extra details and special notes',
+      },
     },
     // Timeline Section
     timeline: {
@@ -961,7 +1167,7 @@ export const translations: Record<Language, Translations> = {
       seconds: 'SEKUNDY',
     },
     rsvp: {
-      title: 'RSVP',
+      title: 'Zaproszenie',
       subtitle: 'Mamy nadzieję, że dołączycie do nas w tym wyjątkowym dniu',
       yourName: 'Twoje Imię',
       emailAddress: 'Adres Email',
@@ -971,16 +1177,16 @@ export const translations: Record<Language, Translations> = {
       declineWithRegret: 'Odmawiamy z żalem',
       leaveMessage: 'Zostaw nam wiadomość (opcjonalnie)',
       dietaryRestrictions: 'Jakieś ograniczenia żywieniowe lub specjalne prośby?',
-      submitRsvp: 'Wyślij RSVP',
+      submitRsvp: 'Wyślij Zaproszenie',
       sending: 'Wysyłanie...',
       thankYou: 'Dziękujemy!',
-      receivedRsvp: 'Otrzymaliśmy Wasze RSVP. Nie możemy się doczekać świętowania z Wami!',
+      receivedRsvp: 'Otrzymaliśmy Wasze Zaproszenie. Nie możemy się doczekać świętowania z Wami!',
       guest: 'Gość',
       guests: 'Gości',
     },
     timeline: {
-      title: 'Harmonogram Dnia Ślubu',
-      subtitle: 'Harmonogram Dnia Ślubu',
+      title: 'Harmonogram Dnia',
+      subtitle: 'Harmonogram Dnia',
       welcomeToast: 'TOAST POWITALNY',
       ceremony: 'CEREMONIA',
       weddingLunch: 'OBIAD ŚLUBNY',
@@ -989,7 +1195,7 @@ export const translations: Record<Language, Translations> = {
       cocktailHour: 'GODZINA KOKTAJLI',
     },
     ceremony: {
-      title: 'Ceremonia',
+      title: 'Ceremonia Ślubu',
       subtitle: 'Dołączcie do nas na ceremonii ślubnej',
       date: 'Data',
       time: 'Godzina',
@@ -999,7 +1205,7 @@ export const translations: Record<Language, Translations> = {
       viewOnMap: 'Zobacz na mapie',
     },
     venue: {
-      title: 'Miejsce Ślubu',
+      title: 'Wesele',
       subtitle: 'Gdzie dzieje się magia',
       address: 'Adres',
       directions: 'Jak dojechać',
@@ -1012,7 +1218,7 @@ export const translations: Record<Language, Translations> = {
       subtitle: 'Znajdźcie swoje miejsce na naszym święcie',
     },
     menu: {
-      title: 'Menu Ślubne',
+      title: 'Menu Weselne',
       subtitle: 'Nasze Wesele',
       appetizers: 'Przystawki',
       mainCourse: 'Danie Główne',
@@ -1042,7 +1248,7 @@ export const translations: Record<Language, Translations> = {
       gratitudeMessage: 'Jesteśmy tak wdzięczni za waszą miłość i wsparcie!',
     },
     team: {
-      title: 'Zespół Ślubny',
+      title: 'Nasza Ekipa Weselna',
       subtitle: 'Nasze Wesele',
       bridesmaids: 'Druhny',
       groomsmen: 'Drużbowie',
@@ -1142,10 +1348,12 @@ export const translations: Record<Language, Translations> = {
       uploadPhotosVideos: 'PRZEŚLIJ ZDJĘCIA/FILMY',
       uploadedBy: 'Przesłane Przez',
       toggleDescription: 'Możesz włączyć i wyłączyć tę sekcję na stronie.',
+      signaturePlaceholder: 'Twoje imię',
+      signatureHint: 'Jeśli chcesz, możesz podpisać swoje zdjęcie przed wysłaniem.',
     },
     invitation: {
       welcome: 'Witamy',
-      rsvp: 'RSVP',
+      rsvp: 'Zaproszenie',
       attendance: 'Będę',
       decline: 'Nie Mogę',
       foodSelection: 'Wybór Jedzenia',
@@ -1191,7 +1399,7 @@ export const translations: Record<Language, Translations> = {
       writeMessage: 'Napisz swoją wiadomość tutaj...',
       allSet: 'Wszystko Gotowe! Oto co wysłaliśmy',
       heresWhatWeSent: 'Lucas & Mia.',
-      yourRsvpResponse: 'Twoja Odpowiedź RSVP',
+      yourRsvpResponse: 'Twoja Odpowiedź Zaproszenie',
       weddingAfterDayParty: 'After Party Ślubny',
       noGuestsAttending: 'Brak gości uczestniczących',
       addPlusOnes: 'Dodaj Osobę towarzyszącą lub Rodzinę',
@@ -1212,7 +1420,7 @@ export const translations: Record<Language, Translations> = {
       location: 'Miejsce',
       address: 'Adres',
       directions: 'Jak dojechać',
-      rsvp: 'RSVP',
+      rsvp: 'Zaproszenie',
       gallery: 'Galeria',
       timeline: 'Harmonogram',
       menu: 'Menu',
@@ -1265,7 +1473,8 @@ export const translations: Record<Language, Translations> = {
       home: 'Strona Główna',
       events: 'Wydarzenia',
       gallery: 'Galeria',
-      rsvp: 'RSVP',
+      rsvp: 'Zaproszenie',
+      invitation: 'Zaproszenie',
       dashboard: 'Panel',
       login: 'Zaloguj',
       logout: 'Wyloguj',
@@ -1291,7 +1500,7 @@ export const translations: Record<Language, Translations> = {
       logout: 'Wyloguj',
       analytics: 'Analityka',
       activeEvents: 'Aktywne Wydarzenia',
-      pending: 'Oczekujące RSVP',
+      pending: 'Oczekujące Zaproszenia',
       eventDashboard: 'Panel Wydarzenia',
       manageEvent: 'Zarządzaj przypisanym wydarzeniem',
       changePassword: 'Zmień Hasło',
@@ -1304,7 +1513,7 @@ export const translations: Record<Language, Translations> = {
       downloadQR: 'Pobierz Kod QR',
       availableFeatures: 'Dostępne Funkcje',
       gallery: 'Galeria',
-      rsvp: 'RSVP',
+      rsvp: 'Zaproszenie',
       enabled: 'Włączone',
       disabled: 'Wyłączone',
       required: 'wymagane',
@@ -1312,7 +1521,7 @@ export const translations: Record<Language, Translations> = {
       generalInfo: 'OGÓLNE INFORMACJE O WYDARZENIU',
       dayDetails: 'ZARZĄDZANIE SZCZEGÓŁAMI DNIA WYDARZENIA',
       galleryManagement: 'ZARZĄDZANIE GALERIĄ',
-      rsvpManagement: 'ZARZĄDZANIE RSVP',
+      rsvpManagement: 'Zarządzanie Zaproszeniami',
       eventSettings: 'USTAWIENIA WYDARZENIA',
       manageSubscription: 'ZARZĄDZAJ SUBSKRYPCJĄ',
       billingHistory: 'HISTORIA PŁATNOŚCI',
@@ -1367,11 +1576,108 @@ export const translations: Record<Language, Translations> = {
       refresh: 'Odśwież',
       notAvailable: 'Niedostępne',
     },
+    editModals: {
+      heroSection: 'Edytuj Sekcję Hero',
+      timelineSection: 'Edytuj Harmonogram Ślubu',
+      ceremonySection: 'Edytuj Szczegóły Ceremonii',
+      venueSection: 'Edytuj Miejsce Ślubu',
+      seatingChartSection: 'Edytuj Plan Stołów',
+      menuSection: 'Edytuj Menu Ślubne',
+      wishesAndGiftsSection: 'Edytuj Życzenia i Prezenty',
+      teamSection: 'Edytuj Zespół Ślubny',
+      accommodationSection: 'Edytuj Nocleg',
+      transportationSection: 'Edytuj Transport',
+      additionalInfoSection: 'Edytuj Dodatkowe Informacje',
+      coupleNames: 'Imiona Pary',
+      eventDateAndTime: 'Data i Godzina Wydarzenia',
+      customMessage: 'Niestandardowa Wiadomość',
+      backgroundImage: 'Obraz Tła',
+      backgroundImageOptional: 'Obraz Tła (Opcjonalnie)',
+      cancel: 'Anuluj',
+      saveChanges: 'Zapisz Zmiany',
+      saving: 'Zapisywanie...',
+      ceremonyVenueNameEn: 'Nazwa miejsca ceremonii ślubnej',
+      ceremonyVenueNamePl: 'Nazwa miejsca ceremonii.',
+      ceremonyDescription: 'Opis',
+      ceremonyDate: 'Data',
+      ceremonyTime: 'Godzina (format 24-godzinny)',
+      ceremonyLocation: 'Lokalizacja',
+      ceremonyMapUrl: 'Link do Map Google (Opcjonalnie)',
+      ceremonyAdditionalDetails: 'Dodatkowe Szczegóły',
+      ceremonyImage: 'Obraz Ceremonii',
+      heroSectionLabels: {
+        coupleNames: 'Imiona Pary',
+        eventDateAndTime: 'Data i Godzina Wydarzenia',
+        customMessage: 'Niestandardowa Wiadomość',
+        backgroundImage: 'Obraz Tła (Opcjonalnie)',
+      },
+    },
+    galleryContentEdit: {
+      title: 'Edytuj Treść Galerii',
+      subtitle: 'Edytuj Treść Galerii',
+      editing: 'Edytowanie',
+      galleryVisibility: 'Widoczność Galerii',
+      galleryVisibilityDescription: 'Pokaż lub ukryj sekcję galerii',
+      welcomeText: 'Tekst Powitalny',
+      coupleNames: 'Imiona Pary',
+      uploadButtonText: 'Tekst Przycisku Przesyłania',
+      viewGalleryButtonText: 'Tekst Przycisku Zobacz Galerię',
+      missionTitle: 'Tytuł Misji',
+      missionText: 'Tekst Misji',
+      goalText: 'Tekst Celu',
+      countMeInButtonText: 'Tekst Przycisku Policz Mnie',
+      back: 'Wstecz',
+      switchEvent: 'Przełącz Wydarzenie',
+      saveChanges: 'Zapisz Zmiany',
+      saving: 'Zapisywanie...',
+      livePreview: 'Podgląd Na Żywo',
+    },
+    sectionVisibility: {
+      title: 'Widoczność Sekcji',
+      subtitle: 'Widoczność Sekcji',
+      controlWhichSections: 'Kontroluj, które sekcje pojawiają się na stronie wydarzenia',
+      eventInformation: 'Informacje O Wydarzeniu',
+      eventTitle: 'Tytuł Wydarzenia',
+      coupleNames: 'Imiona Pary',
+      pageSections: 'Sekcje Strony',
+      toggleDescription: 'Przełącz sekcje włącz/wyłącz, aby kontrolować, co widzą Twoi goście. Edycja treści odbywa się bezpośrednio na stronie wydarzenia za pomocą edytora inline.',
+      contentEditingDescription: 'Aby edytować rzeczywistą treść każdej sekcji (tekst, obrazy, szczegóły), odwiedź stronę wydarzenia i użyj edytora inline.',
+      visible: 'Widoczne',
+      hidden: 'Ukryte',
+      savingChanges: 'Zapisywanie zmian...',
+      previewEventPage: 'Podgląd Strony Wydarzenia',
+      openEventPageEditContent: 'Otwórz Stronę Wydarzenia i Edytuj Treść',
+      viewEventPage: 'Zobacz, jak Twoja strona wydarzenia wygląda dla gości z aktualnymi ustawieniami sekcji.',
+      sections: {
+        heroSection: 'Sekcja Hero',
+        heroSectionDescription: 'Główny baner z imionami pary i odliczaniem',
+        timelineSection: 'Harmonogram Dnia',
+        timelineSectionDescription: 'Harmonogram wydarzeń na dzień ślubu',
+        ceremonySection: 'Szczegóły Ceremonii',
+        ceremonySectionDescription: 'Informacje o ceremonii ślubnej',
+        ceremonyVenueSection: 'Miejsce Ceremonii',
+        ceremonyVenueSectionDescription: 'Szczegóły dotyczące miejsca ceremonii',
+        seatingChartSection: 'Plan Stołów',
+        seatingChartSectionDescription: 'Układy miejsc dla gości',
+        menuSection: 'Menu',
+        menuSectionDescription: 'Opcje jedzenia i napojów',
+        wishesAndGiftsSection: 'Życzenia i Prezenty',
+        wishesAndGiftsSectionDescription: 'Lista prezentów i życzenia',
+        teamSection: 'Nasza Ekipa Weselna',
+        teamSectionDescription: 'Drużyna ślubna i zespół',
+        accommodationSection: 'Nocleg',
+        accommodationSectionDescription: 'Informacje o hotelu i zakwaterowaniu',
+        transportationSection: 'Transport',
+        transportationSectionDescription: 'Szczegóły dotyczące podróży i parkingu',
+        additionalInfoSection: 'Dodatkowe Informacje',
+        additionalInfoSectionDescription: 'Dodatkowe szczegóły i specjalne uwagi',
+      },
+    },
     // Seating Chart Section
     seatingChart: {
       title: 'Plan Stołów',
       description: 'Znajdź swoje miejsce na przyjęciu.',
-      welcome: 'Witamy',
+      welcome: 'Witaj',
       table: 'Stół',
     },
   },

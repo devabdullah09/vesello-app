@@ -24,19 +24,34 @@ interface AlbumFile {
   uploadedAt?: string;
 }
 
-const albums = [
+const DEFAULT_ALBUM_STYLES: Record<string, { overlayColor: string; image: string }> = {
+  'wedding-day': {
+    overlayColor: '#E5B574',
+    image: '/images/Gallery/maingallery.jpg'
+  },
+  'party-day': {
+    overlayColor: '#C18037',
+    image: '/images/Gallery/maingallery.jpg'
+  }
+};
+
+const FALLBACK_DEFAULT_ALBUMS = [
   {
-    id: "wedding-day",
-    title: "Wedding Day",
-    type: "photos" as const,
-    overlayColor: "#E5B574",
+    id: 'wedding-day',
+    albumType: 'default',
+    isDefault: true,
+    name: 'Wedding Day',
+    isHidden: false,
+    isDeleted: false
   },
   {
-    id: "party-day", 
-    title: "Party Day",
-    type: "photos" as const,
-    overlayColor: "#C18037",
-  },
+    id: 'party-day',
+    albumType: 'default',
+    isDefault: true,
+    name: 'Party Day',
+    isHidden: false,
+    isDeleted: false
+  }
 ];
 
 export default function AlbumsManagementPage() {
@@ -54,6 +69,7 @@ export default function AlbumsManagementPage() {
   const [error, setError] = useState<string | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [showCreateAlbumModal, setShowCreateAlbumModal] = useState(false);
+  const [defaultAlbums, setDefaultAlbums] = useState<any[]>([]);
   const [customAlbums, setCustomAlbums] = useState<any[]>([]);
   const [showDetailsDropdown, setShowDetailsDropdown] = useState<string | null>(null);
   const [showRenameModal, setShowRenameModal] = useState(false);
@@ -80,6 +96,84 @@ export default function AlbumsManagementPage() {
   const [showPhotoViewer, setShowPhotoViewer] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [viewingPhoto, setViewingPhoto] = useState<AlbumFile | null>(null);
+
+  const isDefaultAlbumItem = (album: any) => {
+    if (!album) return false;
+    return album.albumType === 'default' || album.isDefault || album.id === 'wedding-day' || album.id === 'party-day';
+  };
+
+  const getAlbumKey = (album: any) => {
+    if (!album) return '';
+    return isDefaultAlbumItem(album) ? (album.defaultKey || album.id) : album.id;
+  };
+
+  const getDropdownKey = (album: any) => {
+    const key = getAlbumKey(album);
+    return isDefaultAlbumItem(album) ? `default-${key}` : `custom-${key}`;
+  };
+
+  const updateAlbumDetails = async (album: any, payload: Record<string, any>, successMessage?: string) => {
+    if (!contextEvent) return false;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert('Not authenticated');
+        return false;
+      }
+
+      const requestBody: Record<string, any> = { ...payload };
+      if (isDefaultAlbumItem(album)) {
+        requestBody.eventId = contextEvent.id;
+      }
+
+      const response = await fetch(`/api/dashboard/gallery/albums/${getAlbumKey(album)}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (response.ok) {
+        if (contextEvent) {
+          await fetchCustomAlbums(contextEvent.id);
+        }
+        if (successMessage) {
+          alert(successMessage);
+        }
+        return true;
+      }
+
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Album update failed:', errorData);
+      if (errorData?.instructions) {
+        alert(`${errorData.error || 'Operation failed'}\n\n${errorData.instructions}`);
+      } else {
+        throw new Error(errorData?.error || 'Failed to update album');
+      }
+    } catch (err) {
+      console.error('Error updating album:', err);
+      alert(err instanceof Error ? err.message : 'Failed to update album');
+      return false;
+    }
+    return false;
+  };
+
+  const toggleAlbumVisibility = async (album: any, hidden: boolean) => {
+    const success = await updateAlbumDetails(album, { isHidden: hidden }, hidden ? 'Album hidden from guests!' : 'Album is visible to guests!');
+    if (success) {
+      setShowDetailsDropdown(null);
+    }
+  };
+
+  const restoreDefaultAlbum = async (album: any) => {
+    const success = await updateAlbumDetails(album, { isDeleted: false, isHidden: false }, 'Album restored successfully!');
+    if (success) {
+      setShowDetailsDropdown(null);
+    }
+  };
   
   // Image status tracking
   const [imageStatuses, setImageStatuses] = useState<Record<string, {
@@ -164,8 +258,15 @@ export default function AlbumsManagementPage() {
       if (response.ok) {
         const result = await response.json();
         console.log('API response data:', result);
-        setCustomAlbums(result.data || []);
-        console.log('Custom albums set:', result.data || []);
+        const albumsData = Array.isArray(result.data) ? result.data : [];
+        const defaults = albumsData.filter((album: any) => (album.albumType || album.album_type) === 'default' || album.isDefault || album.id === 'wedding-day' || album.id === 'party-day');
+        const customs = albumsData.filter((album: any) => !((album.albumType || album.album_type) === 'default' || album.isDefault || album.id === 'wedding-day' || album.id === 'party-day'));
+
+        setDefaultAlbums(defaults.length > 0 ? defaults : FALLBACK_DEFAULT_ALBUMS);
+        setCustomAlbums(customs);
+
+        console.log('Default albums set:', defaults);
+        console.log('Custom albums set:', customs);
       } else {
         console.error('API response not ok:', response.status, await response.text());
       }
@@ -348,14 +449,18 @@ export default function AlbumsManagementPage() {
   const handleUploadToAlbum = (album: any) => {
     setShowDetailsDropdown(null);
     // Navigate to album management with upload focus
-    handleAlbumSelect(album.id.startsWith('custom-') ? album.id : `custom-${album.id}`);
+    if (!album) return;
+    const key = getAlbumKey(album);
+    const routeId = isDefaultAlbumItem(album) ? key : `custom-${key}`;
+    handleAlbumSelect(routeId);
   };
 
   // Handle set cover photo navigation
   const handleSetCoverPhotoNavigation = (album: any) => {
     setShowDetailsDropdown(null);
     // Navigate to album management with set cover photo mode
-    const albumId = album.id.startsWith('custom-') ? album.id : `custom-${album.id}`;
+    const key = getAlbumKey(album);
+    const albumId = isDefaultAlbumItem(album) ? key : `custom-${key}`;
     router.push(`/dashboard/events-edition/gallery/albums?wwwId=${wwwId}&album=${albumId}&mode=set-cover`);
   };
 
@@ -364,31 +469,11 @@ export default function AlbumsManagementPage() {
     if (!editingAlbum || !newAlbumName.trim()) return;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('No session found');
-      }
-
-      const response = await fetch(`/api/dashboard/gallery/albums/${editingAlbum.id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ name: newAlbumName.trim() })
-      });
-
-      if (response.ok) {
-        // Refresh custom albums
-        if (contextEvent) {
-          await fetchCustomAlbums(contextEvent.id);
-        }
+      const success = await updateAlbumDetails(editingAlbum, { name: newAlbumName.trim() }, 'Album renamed successfully!');
+      if (success) {
         setShowRenameModal(false);
         setEditingAlbum(null);
         setNewAlbumName('');
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to rename album');
       }
     } catch (error) {
       console.error('Error renaming album:', error);
@@ -406,12 +491,18 @@ export default function AlbumsManagementPage() {
         throw new Error('No session found');
       }
 
-      const response = await fetch(`/api/dashboard/gallery/albums/${albumToDelete.id}`, {
+      const requestBody: Record<string, any> = {};
+      if (isDefaultAlbumItem(albumToDelete) && contextEvent) {
+        requestBody.eventId = contextEvent.id;
+      }
+
+      const response = await fetch(`/api/dashboard/gallery/albums/${getAlbumKey(albumToDelete)}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        body: Object.keys(requestBody).length > 0 ? JSON.stringify(requestBody) : undefined
       });
 
       if (response.ok) {
@@ -421,9 +512,15 @@ export default function AlbumsManagementPage() {
         }
         setShowDeleteConfirm(false);
         setAlbumToDelete(null);
+        const message = isDefaultAlbumItem(albumToDelete) ? 'Album hidden successfully!' : 'Album deleted successfully!';
+        alert(message);
       } else {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete album');
+        if (errorData?.instructions) {
+          alert(`${errorData.error || 'Failed to delete album'}\n\n${errorData.instructions}`);
+        } else {
+          throw new Error(errorData.error || 'Failed to delete album');
+        }
       }
     } catch (error) {
       console.error('Error deleting album:', error);
@@ -847,7 +944,7 @@ export default function AlbumsManagementPage() {
         alert('Hide functionality for custom albums will be implemented soon.');
       } else {
         // For default albums, we can't hide individual files
-        alert('Hide functionality is not available for default albums.');
+        alert('Bulk hide is not available yet. Please use the album actions to hide or show content.');
       }
       
       // Clear selection
@@ -1122,94 +1219,128 @@ export default function AlbumsManagementPage() {
             </button>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {albums.map((album) => (
-              <div key={album.id} className="flex flex-col items-center relative">
-                <div 
-                  className="relative w-[270px] h-[220px] md:w-[370px] md:h-[260px] mb-2 group block cursor-pointer" 
-                  onClick={() => handleAlbumSelect(album.id)}
-                >
-                  <Image 
-                    src="/images/Gallery/maingallery.jpg" 
-                    alt={album.title} 
-                    fill 
-                    style={{ objectFit: 'cover', borderRadius: '0 0 180px 180px/0 0 220px 0' }} 
-                    className="shadow-lg" 
-                  />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {defaultAlbums.map((album: any) => {
+              const albumKey = getAlbumKey(album);
+              const dropdownKey = getDropdownKey(album);
+              const ui = DEFAULT_ALBUM_STYLES[albumKey] || { overlayColor: '#E5B574', image: '/images/Gallery/maingallery.jpg' };
+              const isHidden = Boolean(album.isHidden) || Boolean(album.isDeleted);
+              const displayName = album.name || (albumKey === 'party-day' ? 'Party Day' : 'Wedding Day');
+
+              return (
+                <div key={dropdownKey} className={`flex flex-col items-center relative ${album.isDeleted ? 'opacity-60' : ''}`}>
                   <div 
-                    className="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-300" 
-                    style={{ background: `${album.overlayColor}B3`, borderRadius: '0 0 180px 180px/0 0 220px 0px' }}
+                    className="relative w-[270px] h-[220px] md:w-[370px] md:h-[260px] mb-2 group block cursor-pointer" 
+                    onClick={() => handleAlbumSelect(albumKey)}
                   >
-                    <div className="text-white text-center font-semibold mb-2" style={{ fontFamily: 'Montserrat', fontWeight: 400, fontSize: '16px', color: '#fff', letterSpacing: '0.01em', lineHeight: 1.4 }}>
-                      Manage Album<br />Photos & Videos
+                    <Image 
+                      src={ui.image} 
+                      alt={displayName} 
+                      fill 
+                      style={{ objectFit: 'cover', borderRadius: '0 0 180px 180px/0 0 220px 0' }} 
+                      className="shadow-lg" 
+                    />
+                    <div 
+                      className="absolute inset-0 flex flex-col items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-300" 
+                      style={{ background: `${ui.overlayColor}B3`, borderRadius: '0 0 180px 180px/0 0 220px 0px' }}
+                    >
+                      <div className="text-white text-center font-semibold mb-2" style={{ fontFamily: 'Montserrat', fontWeight: 400, fontSize: '16px', color: '#fff', letterSpacing: '0.01em', lineHeight: 1.4 }}>
+                        Manage Album<br />Photos & Videos
+                      </div>
+                      <button className="border border-white text-white rounded px-6 py-1 bg-transparent hover:bg-white hover:text-[#C18037] transition" style={{ fontFamily: 'Montserrat', fontWeight: 600, fontSize: '16px', letterSpacing: '0.01em', lineHeight: 1.4 }}>
+                        Manage
+                      </button>
                     </div>
-                    <button className="border border-white text-white rounded px-6 py-1 bg-transparent hover:bg-white hover:text-[#C18037] transition" style={{ fontFamily: 'Montserrat', fontWeight: 600, fontSize: '16px', letterSpacing: '0.01em', lineHeight: 1.4 }}>
-                      Manage
+                    
+                    {/* Details Button */}
+                    <button
+                      className="absolute top-2 right-2 w-8 h-8 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full flex items-center justify-center transition-all duration-200 z-10"
+                      onClick={(e) => handleDetailsClick(dropdownKey, e)}
+                      title="Album Details"
+                    >
+                      <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                      </svg>
                     </button>
+
+                    {/* Details Dropdown */}
+                    {showDetailsDropdown === dropdownKey && (
+                      <div className="absolute top-12 right-2 bg-gray-800 text-white rounded-lg shadow-lg py-2 min-w-[220px] z-20">
+                        <button
+                          className="w-full px-4 py-2 text-left hover:bg-gray-700 flex items-center gap-3"
+                          onClick={() => handleRenameAlbum(album)}
+                        >
+                          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                          </svg>
+                          Rename Album
+                        </button>
+                        <button
+                          className="w-full px-4 py-2 text-left hover:bg-gray-700 flex items-center gap-3"
+                          onClick={() => handleUploadToAlbum(album)}
+                        >
+                          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                          </svg>
+                          Upload Photos & Videos
+                        </button>
+                        <button
+                          className="w-full px-4 py-2 text-left hover:bg-gray-700 flex items-center gap-3"
+                          onClick={() => handleSetCoverPhotoNavigation(album)}
+                        >
+                          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
+                          </svg>
+                          Set Cover Photo
+                        </button>
+                        <button
+                          className="w-full px-4 py-2 text-left hover:bg-gray-700 flex items-center gap-3"
+                          onClick={() => toggleAlbumVisibility(album, !isHidden)}
+                        >
+                          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 4.5C7.305 4.5 3.135 7.364 1 12c2.135 4.636 6.305 7.5 11 7.5s8.865-2.864 11-7.5C20.865 7.364 16.695 4.5 12 4.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/>
+                          </svg>
+                          {isHidden ? 'Show Album to Guests' : 'Hide Album from Guests'}
+                        </button>
+                        {album.isDeleted ? (
+                          <button
+                            className="w-full px-4 py-2 text-left hover:bg-gray-700 flex items-center gap-3 text-green-300"
+                            onClick={() => restoreDefaultAlbum(album)}
+                          >
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12 5V1L7 6l5 5V7c3.309 0 6 2.691 6 6 0 1.078-.289 2.088-.795 2.963l1.518 1.316C19.533 15.688 20 14.385 20 13c0-4.411-3.589-8-8-8zM6 7.721C4.466 9.312 4 10.615 4 12c0 4.411 3.589 8 8 8v4l5-5-5-5v4c-3.309 0-6-2.691-6-6 0-1.078.289-2.088.795-2.963L6 7.721z" />
+                            </svg>
+                            Restore Album
+                          </button>
+                        ) : (
+                          <button
+                            className="w-full px-4 py-2 text-left hover:bg-red-600 flex items-center gap-3 text-red-300"
+                            onClick={() => handleDeleteAlbum(album)}
+                          >
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/>
+                            </svg>
+                            Delete Album
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  
-                  {/* Details Button */}
-                  <button
-                    className="absolute top-2 right-2 w-8 h-8 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full flex items-center justify-center transition-all duration-200 z-10"
-                    onClick={(e) => handleDetailsClick(album.id, e)}
-                    title="Album Details"
-                  >
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-                    </svg>
-                  </button>
-
-                  {/* Details Dropdown */}
-                  {showDetailsDropdown === album.id && (
-                    <div className="absolute top-12 right-2 bg-gray-800 text-white rounded-lg shadow-lg py-2 min-w-[200px] z-20">
-                      <button
-                        className="w-full px-4 py-2 text-left hover:bg-gray-700 flex items-center gap-3 opacity-50 cursor-not-allowed"
-                        disabled
-                        title="Default albums cannot be renamed"
-                      >
-                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                        </svg>
-                        Rename Album
-                      </button>
-                      <button
-                        className="w-full px-4 py-2 text-left hover:bg-gray-700 flex items-center gap-3"
-                        onClick={() => handleUploadToAlbum(album)}
-                      >
-                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
-                        </svg>
-                        Upload Photos & Videos
-                      </button>
-                      <button
-                        className="w-full px-4 py-2 text-left hover:bg-gray-700 flex items-center gap-3"
-                        onClick={() => handleSetCoverPhotoNavigation(album)}
-                      >
-                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
-                        </svg>
-                        Set Cover Photo
-                      </button>
-                      <button
-                        className="w-full px-4 py-2 text-left hover:bg-gray-700 flex items-center gap-3 opacity-50 cursor-not-allowed"
-                        disabled
-                        title="Default albums cannot be deleted"
-                      >
-                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/>
-                        </svg>
-                        Delete Album
-                      </button>
-                    </div>
-                  )}
+                  <div className="text-center mt-2" style={{ fontFamily: 'Montserrat', fontWeight: 400, fontSize: '16px', color: '#08080A', letterSpacing: '0.01em', lineHeight: 1.4 }}>
+                    {displayName}
+                    {isHidden && (
+                      <div className="text-xs text-red-500 mt-1">
+                        {album.isDeleted ? 'Deleted for guests' : 'Hidden from guests'}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="text-center mt-2" style={{ fontFamily: 'Montserrat', fontWeight: 400, fontSize: '16px', color: '#08080A', letterSpacing: '0.01em', lineHeight: 1.4 }}>
-                  {album.title}
-                </div>
-              </div>
-            ))}
+              );
+            })}
 
-            {customAlbums.map((album) => (
+            {customAlbums.map((album) => {
+              const dropdownKey = getDropdownKey(album);
+              return (
               <div key={album.id} className="flex flex-col items-center relative">
                 <div 
                   className="relative w-[270px] h-[220px] md:w-[370px] md:h-[260px] mb-2 group block cursor-pointer" 
@@ -1237,7 +1368,7 @@ export default function AlbumsManagementPage() {
                   {/* Details Button */}
                   <button
                     className="absolute top-2 right-2 w-8 h-8 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full flex items-center justify-center transition-all duration-200 z-10"
-                    onClick={(e) => handleDetailsClick(`custom-${album.id}`, e)}
+                    onClick={(e) => handleDetailsClick(dropdownKey, e)}
                     title="Album Details"
                   >
                     <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
@@ -1246,7 +1377,7 @@ export default function AlbumsManagementPage() {
                   </button>
 
                   {/* Details Dropdown */}
-                  {showDetailsDropdown === `custom-${album.id}` && (
+                  {showDetailsDropdown === dropdownKey && (
                     <div className="absolute top-12 right-2 bg-gray-800 text-white rounded-lg shadow-lg py-2 min-w-[200px] z-20">
                       <button
                         className="w-full px-4 py-2 text-left hover:bg-gray-700 flex items-center gap-3"
@@ -1276,6 +1407,18 @@ export default function AlbumsManagementPage() {
                         Set Cover Photo
                       </button>
                       <button
+                        className="w-full px-4 py-2 text-left hover:bg-gray-700 flex items-center gap-3"
+                        onClick={() => {
+                          const currentlyHidden = album.isHidden ?? album.is_public === false;
+                          toggleAlbumVisibility(album, !currentlyHidden);
+                        }}
+                      >
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 4.5C7.305 4.5 3.135 7.364 1 12c2.135 4.636 6.305 7.5 11 7.5s8.865-2.864 11-7.5C20.865 7.364 16.695 4.5 12 4.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/>
+                        </svg>
+                        {(album.isHidden || album.is_public === false) ? 'Show Album to Guests' : 'Hide Album from Guests'}
+                      </button>
+                      <button
                         className="w-full px-4 py-2 text-left hover:bg-red-600 flex items-center gap-3 text-red-300"
                         onClick={() => handleDeleteAlbum(album)}
                       >
@@ -1296,7 +1439,7 @@ export default function AlbumsManagementPage() {
                   </div>
                 )}
               </div>
-            ))}
+            )})}
           </div>
         </div>
 
@@ -1443,7 +1586,7 @@ export default function AlbumsManagementPage() {
         Managing: <span className="font-semibold">{contextEvent?.title}</span> - {contextEvent?.coupleNames} - {
           albumId?.startsWith('custom-') 
             ? customAlbums.find(a => a.id === albumId.replace('custom-', ''))?.name || 'Custom Album'
-            : albums.find(a => a.id === albumId)?.title || 'Album'
+            : defaultAlbums.find(a => (a.defaultKey || a.id) === albumId)?.name || 'Album'
         }
       </p>
 
@@ -2029,11 +2172,14 @@ export default function AlbumsManagementPage() {
                 </label>
                 <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                   <option value="">Choose an album...</option>
-                  {albums.map(album => (
-                    <option key={album.id} value={album.id}>
-                      {album.title}
-                    </option>
-                  ))}
+                  {defaultAlbums.map(album => {
+                    const key = getAlbumKey(album);
+                    return (
+                      <option key={key} value={key}>
+                        {album.name || (key === 'party-day' ? 'Party Day' : 'Wedding Day')}
+                      </option>
+                    );
+                  })}
                   {customAlbums.map(album => (
                     <option key={album.id} value={album.id}>
                       {album.name}

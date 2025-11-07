@@ -24,10 +24,29 @@ export async function GET(
 
     // Get albums for this event
     const albums = await getEventAlbums(event.id)
+    const defaultAlbumStates = albums
+      .filter(album => album.albumType === 'default')
+      .map(album => ({
+        key: album.defaultKey || album.id,
+        name: album.name,
+        isHidden: Boolean(album.isHidden),
+        isDeleted: Boolean(album.isDeleted),
+        tableMissing: Boolean(album.tableMissing)
+      }))
+
+    const publicAlbums = albums.filter(album => {
+      if (album.albumType === 'default') {
+        return !album.isHidden && !album.isDeleted
+      }
+      return album.isPublic !== false
+    })
 
     return NextResponse.json({
       success: true,
-      data: albums
+      data: publicAlbums,
+      meta: {
+        defaultAlbums: defaultAlbumStates
+      }
     })
   } catch (error) {
     console.error('Error getting albums:', error)

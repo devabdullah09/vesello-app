@@ -58,12 +58,15 @@ export const createEvent = async (eventData: CreateEventData, userId: string): P
       },
       ceremonySection: {
         title: 'Ceremony Details',
+        venueNameEn: eventData.venue || '',
+        venueNamePl: '',
         description: 'Join us as we exchange vows in a beautiful ceremony.',
         date: eventData.eventDate || '',
         time: '12:00 PM',
         location: eventData.venue || '',
         details: '',
-        mapUrl: ''
+        mapUrl: '',
+        imageUrl: ''
       },
       ceremonyVenueSection: {
         title: 'Ceremony Venue',
@@ -639,12 +642,15 @@ const mapEventFromDB = (dbEvent: any): Event => {
       },
       ceremonySection: {
         title: 'Ceremony Details',
+        venueNameEn: dbEvent.venue || '',
+        venueNamePl: '',
         description: 'Join us as we exchange vows in a beautiful ceremony.',
         date: dbEvent.event_date || dbEvent.date || '',
         time: '12:00 PM',
         location: dbEvent.venue || '',
         details: '',
-        mapUrl: ''
+        mapUrl: '',
+        imageUrl: ''
       },
       ceremonyVenueSection: {
         title: 'Ceremony Venue',

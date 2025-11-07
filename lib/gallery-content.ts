@@ -3,6 +3,7 @@
 export interface GalleryContent {
   welcomeText: string;
   coupleNames: string;
+  weddingText: string;
   uploadButtonText: string;
   viewGalleryButtonText: string;
   missionTitle: string;
@@ -15,6 +16,7 @@ export interface GalleryContent {
 export const defaultGalleryContent: GalleryContent = {
   welcomeText: "Welcome To",
   coupleNames: "",
+  weddingText: "Wedding",
   uploadButtonText: "Add Your Photos & Videos Now",
   viewGalleryButtonText: "View Gallery",
   missionTitle: "Dear Guests - We Have An Important Mission For You:",

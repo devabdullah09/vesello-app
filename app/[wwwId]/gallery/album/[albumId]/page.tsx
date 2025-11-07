@@ -7,6 +7,7 @@ import { useRouter, useParams } from 'next/navigation';
 import EventHeader from '@/components/layout/EventHeader';
 import EventFooter from '@/components/layout/EventFooter';
 import { useLanguage } from '@/components/language-context';
+import { useEvent } from '@/components/event-context';
 import { uploadFiles, fetchGalleryFiles, getInitialImages, getInitialVideos, GalleryFile } from '@/lib/gallery';
 
 const downloadIcon = (
@@ -19,17 +20,19 @@ export default function DynamicAlbumGallery() {
   const params = useParams();
   const router = useRouter();
   const { t } = useLanguage();
+  const { setCoupleNames } = useEvent();
   const wwwId = params.wwwId as string;
   const albumId = params.albumId as string;
   
   const [tab, setTab] = useState<'photos' | 'videos'>('photos');
   const [eventData, setEventData] = useState<{galleryEnabled: boolean, rsvpEnabled: boolean, coupleNames: string} | null>(null);
   const [albumData, setAlbumData] = useState<{name: string, description?: string} | null>(null);
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<Array<{url: string, signature?: string | null}>>([]);
   const [videos, setVideos] = useState<{ src: string; thumb: string }[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isAlbumHidden, setIsAlbumHidden] = useState(false);
 
   // Overlay state
   const [uploading, setUploading] = useState(false);
@@ -48,22 +51,27 @@ export default function DynamicAlbumGallery() {
   const [currentMediaType, setCurrentMediaType] = useState<'photos' | 'videos'>('photos');
   const [totalImages, setTotalImages] = useState(0);
   const [totalVideos, setTotalVideos] = useState(0);
+  const [signature, setSignature] = useState<string>('');
 
   // Load event data and album data
   useEffect(() => {
     const loadData = async () => {
       try {
         // Load event data
-        const eventResponse = await fetch(`/api/${wwwId}`);
+        const eventResponse = await fetch(`/api/${wwwId}/gallery-content`);
         if (eventResponse.ok) {
           const eventResult = await eventResponse.json();
           setEventData({
-            galleryEnabled: eventResult.data.galleryEnabled,
-            rsvpEnabled: eventResult.data.rsvpEnabled,
-            coupleNames: eventResult.data.coupleNames
+            galleryEnabled: eventResult.eventData.galleryEnabled,
+            rsvpEnabled: eventResult.eventData.rsvpEnabled,
+            coupleNames: eventResult.eventData.coupleNames
           });
+          if (eventResult.eventData.coupleNames) {
+            setCoupleNames(eventResult.eventData.coupleNames);
+          }
 
           // Load album data if it's a custom album
+          let canLoadGallery = true;
           if (albumId.startsWith('custom-')) {
             const actualAlbumId = albumId.replace('custom-', '');
             try {
@@ -76,21 +84,58 @@ export default function DynamicAlbumGallery() {
                     name: album.name,
                     description: album.description
                   });
+                  setIsAlbumHidden(false);
                 }
               }
             } catch (error) {
               console.error('Error loading album data:', error);
             }
           } else {
-            // Default albums
-            setAlbumData({
-              name: albumId === 'wedding-day' ? 'Wedding Day' : 'Party Day',
-              description: albumId === 'wedding-day' ? 'Wedding ceremony photos' : 'Party and celebration photos'
-            });
+            try {
+              const albumsResponse = await fetch(`/api/${wwwId}/gallery/albums`);
+              if (albumsResponse.ok) {
+                const albumsResult = await albumsResponse.json();
+                const defaultStates = Array.isArray(albumsResult.meta?.defaultAlbums)
+                  ? albumsResult.meta.defaultAlbums
+                  : [];
+                const currentState = defaultStates.find((album: any) => album.key === albumId);
+
+                if (currentState) {
+                  setAlbumData({
+                    name: currentState.name || (albumId === 'wedding-day' ? 'Wedding Day' : 'Party Day'),
+                    description: currentState.isHidden ? 'This album is currently hidden.' : (albumId === 'wedding-day' ? 'Wedding ceremony photos' : 'Party and celebration photos')
+                  });
+                  const hidden = Boolean(currentState.isHidden) || Boolean(currentState.isDeleted);
+                  setIsAlbumHidden(hidden);
+                  if (hidden) {
+                    canLoadGallery = false;
+                  }
+                } else {
+                  setAlbumData({
+                    name: albumId === 'wedding-day' ? 'Wedding Day' : 'Party Day',
+                    description: albumId === 'wedding-day' ? 'Wedding ceremony photos' : 'Party and celebration photos'
+                  });
+                  setIsAlbumHidden(false);
+                }
+              } else {
+                setAlbumData({
+                  name: albumId === 'wedding-day' ? 'Wedding Day' : 'Party Day',
+                  description: albumId === 'wedding-day' ? 'Wedding ceremony photos' : 'Party and celebration photos'
+                });
+              }
+            } catch (error) {
+              console.error('Error loading default album metadata:', error);
+              setAlbumData({
+                name: albumId === 'wedding-day' ? 'Wedding Day' : 'Party Day',
+                description: albumId === 'wedding-day' ? 'Wedding ceremony photos' : 'Party and celebration photos'
+              });
+            }
           }
 
           // Load gallery files
-          await loadGalleryFiles();
+          if (canLoadGallery) {
+            await loadGalleryFiles();
+          }
         }
       } catch (error) {
         console.error('Error loading data:', error);
@@ -99,6 +144,28 @@ export default function DynamicAlbumGallery() {
 
     loadData();
   }, [wwwId, albumId]);
+
+  if (isAlbumHidden) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <EventHeader 
+          eventId={wwwId}
+          galleryEnabled={eventData?.galleryEnabled || false}
+          rsvpEnabled={eventData?.rsvpEnabled || false}
+          currentPage="gallery"
+        />
+        <div className="flex-1 flex items-center justify-center bg-white px-4">
+          <div className="max-w-xl text-center bg-white border border-[#C7B299] rounded-lg p-8 shadow-sm">
+            <h1 className="text-2xl font-semibold text-[#08080A] mb-4">This album is currently hidden</h1>
+            <p className="text-gray-600">
+              The event organizer has hidden this album from guests. Please check back later or contact the couple if you believe this is a mistake.
+            </p>
+          </div>
+        </div>
+        <EventFooter />
+      </div>
+    );
+  }
 
   const loadGalleryFiles = async () => {
     try {
@@ -125,45 +192,64 @@ export default function DynamicAlbumGallery() {
             console.log('Photos found:', photos);
             console.log('Videos found:', videos);
             
-            const imageUrls = photos.map((file: any) => file.image_url);
+            const imageData = photos.map((file: any) => {
+              const signature = file.metadata?.signature ? String(file.metadata.signature).trim() : null;
+              return {
+                url: file.image_url,
+                signature: signature && signature.length > 0 ? signature : null
+              };
+            });
+            console.log('Loaded custom album images with signatures:', imageData);
             const videoData = videos.map((file: any) => ({
               src: file.image_url,
               thumb: file.thumbnail_url || file.image_url
             }));
             
-            console.log('Setting images:', imageUrls);
+            console.log('Setting images:', imageData);
             console.log('Setting videos:', videoData);
             
-            setImages(imageUrls);
+            setImages(imageData);
             setVideos(videoData);
           }
         }
       } else {
-        // For default albums, use existing logic
-        // Load photos
-        const photosResponse = await fetch(`/api/${wwwId}/gallery/files?album=${albumId}&type=photos`);
+        // For default albums, use filtered API
+        const photosResponse = await fetch(`/api/${wwwId}/gallery?albumType=${albumId}&mediaType=photos`);
         console.log('Photos response status:', photosResponse.status);
         if (photosResponse.ok) {
           const photosResult = await photosResponse.json();
           console.log('Photos result:', photosResult);
           if (photosResult.success) {
-            const photoUrls = photosResult.files.map((file: any) => file.url || file.cdnUrl);
-            console.log('Setting photos:', photoUrls);
-            setImages(photoUrls);
+            const records = photosResult.data || photosResult.files || [];
+            const photoData = records.map((file: any) => {
+              const signature = file.signature ? String(file.signature).trim() : null;
+              const url = file.url || file.image_url || file.cdnUrl || file.src || '';
+              return {
+                url,
+                signature: signature && signature.length > 0 ? signature : null
+              };
+            }).filter((file: any) => file.url && file.url.length > 0);
+            console.log('Loaded default album images with signatures:', photoData);
+            console.log('Setting photos:', photoData);
+            setImages(photoData);
           }
         }
 
-        // Load videos
-        const videosResponse = await fetch(`/api/${wwwId}/gallery/files?album=${albumId}&type=videos`);
+        const videosResponse = await fetch(`/api/${wwwId}/gallery?albumType=${albumId}&mediaType=videos`);
         console.log('Videos response status:', videosResponse.status);
         if (videosResponse.ok) {
           const videosResult = await videosResponse.json();
           console.log('Videos result:', videosResult);
           if (videosResult.success) {
-            const videoData = videosResult.files.map((file: any) => ({
-              src: file.url || file.cdnUrl,
-              thumb: file.thumbnailUrl || file.url || file.cdnUrl
-            }));
+            const records = videosResult.data || videosResult.files || [];
+            const videoData = records.map((file: any) => {
+              const src = file.url || file.image_url || file.cdnUrl || file.src || '';
+              const thumb = file.thumbnailUrl || file.thumbnail_url || src;
+              return {
+                src,
+                thumb
+              };
+            }).filter((video: any) => video.src && video.src.length > 0);
             console.log('Setting videos:', videoData);
             setVideos(videoData);
           }
@@ -195,6 +281,7 @@ export default function DynamicAlbumGallery() {
       if (imageFiles.length > 0) {
         setCurrentMediaType('photos');
         const photoFileList = imageFiles as any as FileList;
+        console.log('Uploading photos with signature:', signature);
         const response = await uploadFiles(
           photoFileList, 
           albumId, 
@@ -206,7 +293,8 @@ export default function DynamicAlbumGallery() {
             setCurrentPercent(displayPercent);
             // Don't update overall progress until server confirms completion
           },
-          wwwId
+          wwwId,
+          signature ? signature.trim() : undefined
         );
 
         if (response.success) {
@@ -220,6 +308,7 @@ export default function DynamicAlbumGallery() {
       if (videoFiles.length > 0) {
         setCurrentMediaType('videos');
         const videoFileList = videoFiles as any as FileList;
+        console.log('Uploading videos with signature:', signature);
         const response = await uploadFiles(
           videoFileList, 
           albumId, 
@@ -231,7 +320,8 @@ export default function DynamicAlbumGallery() {
             setCurrentPercent(displayPercent);
             // Don't update overall progress until server confirms completion
           },
-          wwwId
+          wwwId,
+          signature ? signature.trim() : undefined
         );
 
         if (response.success) {
@@ -246,6 +336,9 @@ export default function DynamicAlbumGallery() {
       
       setShowSuccessOverlay(true);
       setTimeout(() => setShowSuccessOverlay(false), 3000);
+      
+      // Clear signature after successful upload
+      setSignature('');
       
       // Give a moment to show 100% completion before hiding overlay
       setTimeout(() => {
@@ -398,27 +491,49 @@ export default function DynamicAlbumGallery() {
           </div>
         </div>
 
+        {/* Signature Input */}
+        <div className="mb-6">
+          <input
+            type="text"
+            value={signature}
+            onChange={(e) => setSignature(e.target.value)}
+            placeholder={t.gallery.signaturePlaceholder || "Your name"}
+            className="w-full max-w-md border border-[#C7B299] rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#E5B574] mx-auto block"
+            style={{ fontFamily: 'Montserrat', fontWeight: 400 }}
+          />
+          <p className="text-xs text-gray-600 mt-2 text-center" style={{ fontFamily: 'Montserrat', fontWeight: 400 }}>
+            {t.gallery.signatureHint || "If you wish, you can sign your name before submitting your photo/video."}
+          </p>
+        </div>
+
         {/* Gallery Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {tab === 'photos' ? (
-            images.map((imageUrl, index) => (
-              <div key={index} className="group relative cursor-pointer" onClick={() => openPreview('image', index)}>
-                <div className="aspect-square relative overflow-hidden rounded-lg bg-gray-200">
-                  <CdnImage
-                    src={imageUrl}
-                    alt={`${t.gallery.photos} ${index + 1}`}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
-                  />
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <svg width="24" height="24" fill="white" viewBox="0 0 24 24" className="w-8 h-8">
-                        <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-                      </svg>
+            images.map((img, index) => (
+              <div key={index} className="flex flex-col">
+                <div className="group relative cursor-pointer" onClick={() => openPreview('image', index)}>
+                  <div className="aspect-square relative overflow-hidden rounded-lg bg-gray-200">
+                    <CdnImage
+                      src={img.url}
+                      alt={`${t.gallery.photos} ${index + 1}`}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <svg width="24" height="24" fill="white" viewBox="0 0 24 24" className="w-8 h-8">
+                          <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                        </svg>
+                      </div>
                     </div>
                   </div>
                 </div>
+                {img.signature && img.signature.trim() && (
+                  <div className="text-xs text-center text-gray-600 mt-2" style={{ fontFamily: 'Montserrat', fontWeight: 400 }}>
+                    {img.signature}
+                  </div>
+                )}
               </div>
             ))
           ) : (
@@ -533,7 +648,7 @@ export default function DynamicAlbumGallery() {
             <div className="max-w-full max-h-full flex items-center justify-center">
               {previewType === 'image' ? (
                 <CdnImage
-                  src={images[previewIndex]}
+                  src={images[previewIndex]?.url ?? ''}
                   alt={`Preview ${previewIndex + 1}`}
                   width={1200}
                   height={800}

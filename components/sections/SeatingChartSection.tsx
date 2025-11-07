@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import CollapsibleSection from '../CollapsibleSection';
 import { useLanguage } from '@/components/language-context';
 
@@ -24,16 +23,23 @@ export default function SeatingChartSection({
   
   return (
     <CollapsibleSection title={t.seatingChart.title}>
-      {/* Welcome Image (centered, wide, gold) */}
+      {/* Welcome Text (centered, wide, gold) */}
       <div className="flex justify-center my-2">
-        <Image
-          src="/images/welcome.png"
-          alt="Welcome"
-          width={900}
-          height={120}
-          className="h-auto w-full max-w-3xl object-contain img-responsive"
-          priority
-        />
+        <span
+          style={{
+            fontFamily: 'Great Vibes, cursive',
+            fontWeight: 500,
+            fontSize: 'clamp(3rem, 10vw, 5rem)',
+            background: 'linear-gradient(90deg, #E5B574 0%, #D59C58 43%, #C18037 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            display: 'inline-block',
+            letterSpacing: '2px',
+            lineHeight: 1.1,
+          }}
+        >
+          {t.seatingChart.welcome}
+        </span>
       </div>
 
       {/* Description */}

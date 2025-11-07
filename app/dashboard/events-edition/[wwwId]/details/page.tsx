@@ -26,6 +26,7 @@ interface EventDetails {
       coupleNames: string;
       eventDate: string;
       venue: string;
+      backgroundImage?: string;
       customMessage: string;
     };
     timelineSection?: {

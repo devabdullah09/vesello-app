@@ -20,6 +20,7 @@ export async function POST(
     const files = formData.getAll('files') as File[];
     const albumType = formData.get('albumType') as string || 'wedding-day';
     const mediaType = formData.get('mediaType') as string || 'photos';
+    const signature = formData.get('signature') as string || '';
 
     if (!wwwId) {
       return NextResponse.json({ error: 'Event ID is required' }, { status: 400 });
@@ -50,7 +51,8 @@ export async function POST(
         files,
         albumType, // This is the custom album UUID
         wwwId,
-        mediaType as 'photos' | 'videos'
+        mediaType as 'photos' | 'videos',
+        signature
       );
 
       return NextResponse.json({

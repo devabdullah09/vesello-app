@@ -46,6 +46,8 @@ export interface Event {
     };
     ceremonySection: {
       title: string;
+      venueNameEn?: string;
+      venueNamePl?: string;
       description: string;
       date: string;
       time: string;
@@ -186,6 +188,12 @@ export interface GalleryAlbum {
   isPublic: boolean;
   createdAt: string;
   updatedAt: string;
+  albumType?: 'default' | 'custom';
+  defaultKey?: string;
+  isHidden?: boolean;
+  isDeleted?: boolean;
+  isDefault?: boolean;
+  tableMissing?: boolean;
 }
 
 export interface CreateGalleryAlbumData {

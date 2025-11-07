@@ -67,6 +67,7 @@ interface EventData {
       coupleNames: string;
       eventDate: string;
       venue?: string;
+      backgroundImage?: string;
       customMessage?: string;
     };
     timelineSection: {
@@ -81,6 +82,8 @@ interface EventData {
     };
     ceremonySection: {
       title: string;
+      venueNameEn?: string;
+      venueNamePl?: string;
       description: string;
       date: string;
       time: string;
@@ -526,13 +529,15 @@ export default function PublicEventPage() {
         sectionName="Hero Section"
         className="relative w-full overflow-hidden bg-white pt-16"
       >
-        <div className="flex flex-col md:flex-row h-full min-h-[420px] md:min-h-[420px]">
+        {/* Google Fonts - Great Vibes */}
+        <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+        <div className="flex flex-col md:flex-row h-full min-h-[420px] md:min-h-[500px] items-stretch">
           {/* Left side content */}
-          <div className="flex-1 flex flex-col justify-center items-center px-4 sm:px-8 md:px-16 py-6 sm:py-8 md:py-8 z-20">
+          <div className="flex-1 flex flex-col justify-center items-center px-4 sm:px-8 md:px-16 py-6 sm:py-8 md:py-8 z-20" id="hero-text-content">
             {/* Names in elegant box */}
             <div className="border border-black px-4 sm:px-6 md:px-8 py-2 sm:py-3 mb-4 sm:mb-6 inline-block" 
                  style={{ 
-                   fontFamily: 'Sail', 
+                   fontFamily: "'Great Vibes', cursive", 
                    fontSize: 'clamp(1.5rem, 5vw, 2.2rem)', 
                    letterSpacing: '0.02em' 
                  }}>
@@ -544,7 +549,7 @@ export default function PublicEventPage() {
               <h2
                 className="font-normal mb-1"
                 style={{
-                  fontFamily: 'Sail',
+                  fontFamily: "'Great Vibes', cursive",
                   background: 'linear-gradient(90deg, #E5B574 0%, #C18037 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
@@ -603,13 +608,20 @@ export default function PublicEventPage() {
           </div>
 
           {/* Right side image */}
-          <div className="flex-2 flex items-center justify-center">
-            <img
-              src="/images/herosection.png"
-              alt="Wedding couple"
-              className="w-full h-full object-cover object-center max-h-[420px] img-responsive"
-              style={{ maxWidth: '100%' }}
-            />
+          <div className="flex-1 md:flex-1 flex items-center justify-center p-4 md:p-8 overflow-hidden">
+            <div className="w-full aspect-[4/3] relative" style={{ maxWidth: '100%', maxHeight: '100%' }}>
+              <img
+                src={eventData.sectionContent?.heroSection?.backgroundImage || "/images/herosection.png"}
+                alt="Wedding couple"
+                className="w-full h-full object-cover object-center rounded-lg"
+                style={{ 
+                  aspectRatio: '4/3',
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
+              />
+            </div>
           </div>
         </div>
       </EditableSection>
@@ -632,10 +644,11 @@ export default function PublicEventPage() {
           sectionName="Ceremony Section"
         >
           <DynamicCeremonySection 
-            title={eventData.sectionContent?.ceremonySection?.title || 'Wedding Ceremony'}
+            venueNameEn={eventData.sectionContent?.ceremonySection?.venueNameEn}
+            venueNamePl={eventData.sectionContent?.ceremonySection?.venueNamePl}
             description={eventData.sectionContent?.ceremonySection?.description || 'We Invite You To Join Us For Our'}
             date={eventData.sectionContent?.ceremonySection?.date || eventData.eventDate}
-            time={eventData.sectionContent?.ceremonySection?.time || '12:00 PM'}
+            time={eventData.sectionContent?.ceremonySection?.time || '12:00'}
             location={eventData.sectionContent?.ceremonySection?.location || eventData.venue || 'Wedding Venue'}
             details={eventData.sectionContent?.ceremonySection?.details}
             mapUrl={eventData.sectionContent?.ceremonySection?.mapUrl}
@@ -772,7 +785,20 @@ export default function PublicEventPage() {
       <CeremonySectionEditor
         isOpen={ceremonyEditorOpen}
         onClose={() => setCeremonyEditorOpen(false)}
-        data={eventData?.sectionContent?.ceremonySection}
+        data={{
+          ...eventData?.sectionContent?.ceremonySection,
+          // Handle backward compatibility - if title exists, use it as venueNameEn
+          venueNameEn: eventData?.sectionContent?.ceremonySection?.venueNameEn || 
+                      (eventData?.sectionContent?.ceremonySection as any)?.title || '',
+          venueNamePl: eventData?.sectionContent?.ceremonySection?.venueNamePl || '',
+          description: eventData?.sectionContent?.ceremonySection?.description || '',
+          date: eventData?.sectionContent?.ceremonySection?.date || '',
+          time: eventData?.sectionContent?.ceremonySection?.time || '12:00',
+          location: eventData?.sectionContent?.ceremonySection?.location || '',
+          details: eventData?.sectionContent?.ceremonySection?.details,
+          mapUrl: eventData?.sectionContent?.ceremonySection?.mapUrl,
+          imageUrl: eventData?.sectionContent?.ceremonySection?.imageUrl,
+        }}
         onSave={saveCeremonySection}
       />
 

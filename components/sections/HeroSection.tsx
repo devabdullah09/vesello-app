@@ -31,17 +31,17 @@ export default function HeroSection() {
 
   return (
     <>
-      {/* Google Fonts */}
-      <link href="https://fonts.googleapis.com/css2?family=Sail&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+      {/* Google Fonts - Great Vibes */}
+      <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       
       <div className="relative w-full overflow-hidden bg-white">
-        <div className="flex flex-col md:flex-row h-full min-h-[420px] md:min-h-[420px]">
+        <div className="flex flex-col md:flex-row h-full min-h-[420px] md:min-h-[500px] items-stretch">
           {/* Left side content */}
           <div className="flex-1 flex flex-col justify-center items-center px-4 sm:px-8 md:px-16 py-6 sm:py-8 md:py-8 z-20">
             {/* Names in elegant box */}
             <div className="border border-black px-4 sm:px-6 md:px-8 py-2 sm:py-3 mb-4 sm:mb-6 inline-block" 
                  style={{ 
-                   fontFamily: 'Sail', 
+                   fontFamily: "'Great Vibes', cursive", 
                    fontSize: 'clamp(1.5rem, 5vw, 2.2rem)', 
                    letterSpacing: '0.02em' 
                  }}>
@@ -53,7 +53,7 @@ export default function HeroSection() {
               <h2
                 className="font-normal mb-1"
                 style={{
-                  fontFamily: 'Sail',
+                  fontFamily: "'Great Vibes', cursive",
                   background: 'linear-gradient(90deg, #E5B574 0%, #C18037 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
@@ -112,13 +112,20 @@ export default function HeroSection() {
           </div>
 
           {/* Right side image */}
-          <div className="flex-2 flex items-center justify-center">
-            <img
-              src="/images/herosection.png"
-              alt="Wedding couple"
-              className="w-full h-full object-cover object-center max-h-[420px] img-responsive"
-              style={{ maxWidth: '100%' }}
-            />
+          <div className="flex-1 md:flex-1 flex items-center justify-center p-4 md:p-8 overflow-hidden">
+            <div className="w-full aspect-[4/3] relative" style={{ maxWidth: '100%', maxHeight: '100%' }}>
+              <img
+                src="/images/herosection.png"
+                alt="Wedding couple"
+                className="w-full h-full object-cover object-center rounded-lg"
+                style={{ 
+                  aspectRatio: '4/3',
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>

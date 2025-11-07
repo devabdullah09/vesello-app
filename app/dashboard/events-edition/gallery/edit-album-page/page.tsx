@@ -20,6 +20,7 @@ interface Event {
 interface GalleryContent {
   welcomeText: string;
   coupleNames: string;
+  weddingText: string;
   uploadButtonText: string;
   viewGalleryButtonText: string;
   missionTitle: string;
@@ -37,6 +38,7 @@ export default function EditAlbumPage() {
   const [galleryContent, setGalleryContent] = useState<GalleryContent>({
     welcomeText: "Welcome To",
     coupleNames: "",
+    weddingText: "Wedding",
     uploadButtonText: "Add Your Photos & Videos Now",
     viewGalleryButtonText: "View Gallery",
     missionTitle: "Dear Guests - We Have An Important Mission For You:",
@@ -213,34 +215,34 @@ export default function EditAlbumPage() {
             onClick={handleBack}
             className="bg-black text-white px-4 md:px-6 py-2 rounded font-semibold hover:bg-gray-800 transition-colors text-sm md:text-base"
           >
-            Back
+            {t.galleryContentEdit.back}
           </button>
           <div className="flex gap-3">
             <button
               onClick={handleSwitchEvent}
               className="bg-gray-200 text-black px-4 py-2 rounded font-semibold hover:bg-gray-300 transition-colors text-sm"
             >
-              Switch Event
+              {t.galleryContentEdit.switchEvent}
             </button>
             <button
               onClick={handleSave}
               disabled={saving}
               className="bg-[#E5B574] text-white px-4 md:px-6 py-2 rounded font-semibold hover:bg-[#D59C58] transition-colors disabled:opacity-50 text-sm md:text-base"
             >
-              {saving ? 'Saving...' : 'Save Changes'}
+              {saving ? t.galleryContentEdit.saving : t.galleryContentEdit.saveChanges}
             </button>
           </div>
         </div>
 
-        <h1 className="text-xl md:text-2xl font-bold text-black mb-4 md:mb-6">Edit Gallery Content</h1>
-        <p className="text-gray-600 mb-4 md:mb-6 text-sm md:text-base">Editing: <span className="font-semibold">{contextEvent.title}</span></p>
+        <h1 className="text-xl md:text-2xl font-bold text-black mb-4 md:mb-6">{t.galleryContentEdit.title}</h1>
+        <p className="text-gray-600 mb-4 md:mb-6 text-sm md:text-base">{t.galleryContentEdit.editing}: <span className="font-semibold">{contextEvent.title}</span></p>
 
         <div className="space-y-6">
           {/* Visibility Toggle */}
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
             <div>
-              <label className="text-sm font-medium text-gray-700">Gallery Visibility</label>
-              <p className="text-xs text-gray-500">Show or hide the gallery section</p>
+              <label className="text-sm font-medium text-gray-700">{t.galleryContentEdit.galleryVisibility}</label>
+              <p className="text-xs text-gray-500">{t.galleryContentEdit.galleryVisibilityDescription}</p>
             </div>
             <button
               className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors duration-300 focus:outline-none ${galleryContent.visible ? 'bg-[#E5B574]' : 'bg-gray-300'}`}
@@ -254,7 +256,7 @@ export default function EditAlbumPage() {
 
           {/* Welcome Text */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Welcome Text</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t.galleryContentEdit.welcomeText}</label>
             <input
               type="text"
               value={galleryContent.welcomeText}
@@ -265,7 +267,7 @@ export default function EditAlbumPage() {
 
           {/* Couple Names */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Couple Names</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t.galleryContentEdit.coupleNames}</label>
             <input
               type="text"
               value={galleryContent.coupleNames}
@@ -275,9 +277,21 @@ export default function EditAlbumPage() {
             />
           </div>
 
+          {/* Wedding Text */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Wedding Text (e.g., "Wedding", "Wesele")</label>
+            <input
+              type="text"
+              value={galleryContent.weddingText || 'Wedding'}
+              onChange={(e) => handleContentChange('weddingText', e.target.value)}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#E5B574]"
+              placeholder="Wedding"
+            />
+          </div>
+
           {/* Upload Button Text */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Upload Button Text</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t.galleryContentEdit.uploadButtonText}</label>
             <input
               type="text"
               value={galleryContent.uploadButtonText}
@@ -288,7 +302,7 @@ export default function EditAlbumPage() {
 
           {/* View Gallery Button Text */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">View Gallery Button Text</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t.galleryContentEdit.viewGalleryButtonText}</label>
             <input
               type="text"
               value={galleryContent.viewGalleryButtonText}
@@ -299,7 +313,7 @@ export default function EditAlbumPage() {
 
           {/* Mission Title */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Mission Title</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t.galleryContentEdit.missionTitle}</label>
             <input
               type="text"
               value={galleryContent.missionTitle}
@@ -310,7 +324,7 @@ export default function EditAlbumPage() {
 
           {/* Mission Text */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Mission Text</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t.galleryContentEdit.missionText}</label>
             <textarea
               value={galleryContent.missionText}
               onChange={(e) => handleContentChange('missionText', e.target.value)}
@@ -321,7 +335,7 @@ export default function EditAlbumPage() {
 
           {/* Goal Text */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Goal Text</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t.galleryContentEdit.goalText}</label>
             <input
               type="text"
               value={galleryContent.goalText}
@@ -332,7 +346,7 @@ export default function EditAlbumPage() {
 
           {/* Count Me In Button Text */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Count Me In Button Text</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t.galleryContentEdit.countMeInButtonText}</label>
             <input
               type="text"
               value={galleryContent.countMeInButtonText}
@@ -345,7 +359,7 @@ export default function EditAlbumPage() {
 
       {/* Preview Panel */}
       <div className="w-full lg:w-1/2 p-4 md:p-8 bg-gray-50 border-t lg:border-t-0 lg:border-l">
-        <h2 className="text-lg md:text-xl font-semibold text-black mb-4 md:mb-6">Live Preview</h2>
+        <h2 className="text-lg md:text-xl font-semibold text-black mb-4 md:mb-6">{t.galleryContentEdit.livePreview}</h2>
         
         {/* Preview of gallery page */}
         <div className="bg-white rounded-lg shadow-lg p-4 md:p-6 max-w-md mx-auto" style={{ transformOrigin: 'top' }}>
@@ -357,7 +371,7 @@ export default function EditAlbumPage() {
                   {galleryContent.coupleNames || contextEvent.coupleNames}
                 </div>
                 <div className="text-base md:text-lg font-sail" style={{ background: 'linear-gradient(90deg, #E5B574 0%, #C18037 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginTop: -4, fontWeight: 400, letterSpacing: '0.5px', lineHeight: 1.1 }}>
-                  Wedding
+                  {galleryContent.weddingText || 'Wedding'}
                 </div>
               </div>
 

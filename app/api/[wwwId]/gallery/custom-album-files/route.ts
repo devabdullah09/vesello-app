@@ -47,10 +47,27 @@ export async function GET(
     console.log('Fetched custom album files:', files);
     console.log('Files count:', files?.length || 0);
 
+    // Parse metadata for each file if needed
+    const parsedFiles = (files || []).map((file: any) => {
+      // Parse metadata if it's a string
+      let metadata = file.metadata;
+      if (typeof metadata === 'string') {
+        try {
+          metadata = JSON.parse(metadata);
+        } catch (e) {
+          metadata = {};
+        }
+      }
+      return {
+        ...file,
+        metadata: metadata || {}
+      };
+    });
+
     return NextResponse.json({
       success: true,
-      files: files || [],
-      count: files?.length || 0
+      files: parsedFiles,
+      count: parsedFiles.length
     });
 
   } catch (error) {

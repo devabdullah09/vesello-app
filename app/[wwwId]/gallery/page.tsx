@@ -7,6 +7,7 @@ import EventHeader from '@/components/layout/EventHeader';
 import EventFooter from '@/components/layout/EventFooter';
 import { fetchGalleryContent, GalleryContent, defaultGalleryContent } from '@/lib/gallery-content';
 import { useEvent } from '@/components/event-context';
+import { useLanguage } from '@/components/language-context';
 
 function isAdmin() {
   if (typeof window === 'undefined') return false;
@@ -17,9 +18,10 @@ export default function DynamicGalleryPage() {
   const params = useParams();
   const wwwId = params?.wwwId as string;
   const { setCoupleNames } = useEvent();
+  const { t, language } = useLanguage();
   const [visible, setVisible] = useState(true);
   const [admin, setAdmin] = useState(false);
-  const [eventData, setEventData] = useState<{coupleNames: string, galleryEnabled: boolean, rsvpEnabled: boolean} | null>(null);
+  const [eventData, setEventData] = useState<{coupleNames: string, eventDate: string, galleryEnabled: boolean, rsvpEnabled: boolean} | null>(null);
   const [galleryContent, setGalleryContent] = useState<GalleryContent>(defaultGalleryContent);
 
   // On mount, check admin and load toggle state
@@ -41,6 +43,7 @@ export default function DynamicGalleryPage() {
         const result = await response.json();
         setEventData({
           coupleNames: result.eventData.coupleNames,
+          eventDate: result.eventData.eventDate,
           galleryEnabled: result.eventData.galleryEnabled,
           rsvpEnabled: result.eventData.rsvpEnabled
         });
@@ -71,16 +74,16 @@ export default function DynamicGalleryPage() {
   }, [visible, wwwId]);
 
   return (
-    <>
+    <div className="flex flex-col min-h-screen bg-white" style={{ fontFamily: 'Montserrat, Arial, Helvetica, sans-serif' }}>
       <EventHeader 
         eventId={wwwId}
         galleryEnabled={eventData?.galleryEnabled || false}
         rsvpEnabled={eventData?.rsvpEnabled || false}
         currentPage="gallery"
       />
-      <div className="min-h-screen bg-white py-10 px-2 md:px-0 relative overflow-x-hidden pt-20" style={{ fontFamily: 'Montserrat, Arial, Helvetica, sans-serif' }}>
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
-        <div className="relative w-full max-w-3xl bg-white rounded-2xl border border-[#C7B299] p-8 md:p-16 shadow-md mx-auto z-10" style={{ minHeight: 700 }}>
+      <div className="flex-1 py-10 px-2 md:px-0 relative overflow-x-hidden pt-20">
+        <div className="flex flex-col items-center justify-center">
+          <div className="relative w-full max-w-3xl bg-white rounded-2xl border border-[#C7B299] p-8 md:p-16 shadow-md mx-auto z-10" style={{ minHeight: 700 }}>
         {/* Admin Toggle */}
         {admin && (
           <div className="flex items-center mb-6 justify-end">
@@ -101,20 +104,28 @@ export default function DynamicGalleryPage() {
         {(galleryContent.visible && visible) || admin ? (
           <div className="flex flex-col items-center justify-center relative z-10">
             <div className="text-center mt-2 mb-8">
-              <div className="text-base md:text-lg" style={{ fontFamily: 'Montserrat', fontWeight: 400 }}>{galleryContent.welcomeText}</div>
-              <div className="text-4xl md:text-5xl font-sail" style={{ fontWeight: 400, marginTop: 4, marginBottom: 0, letterSpacing: '0.5px', lineHeight: 1.1 }}>
+              <div className="text-2xl md:text-3xl font-sail" style={{ background: 'linear-gradient(90deg, #E5B574 0%, #C18037 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 400, letterSpacing: '0.5px', lineHeight: 1.1, marginBottom: 8 }}>
+                {galleryContent.weddingText || (language === 'en' ? t.gallery.wedding : 'Wedding')}
+              </div>
+              <div className="text-4xl md:text-5xl font-sail" style={{ fontWeight: 400, marginTop: 4, marginBottom: 0, letterSpacing: '0.5px', lineHeight: 1.1, color: '#08080A' }}>
                 {galleryContent.coupleNames || eventData?.coupleNames || 'Loading...'}
               </div>
-              <div className="text-2xl md:text-3xl font-sail" style={{ background: 'linear-gradient(90deg, #E5B574 0%, #C18037 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginTop: -8, fontWeight: 400, letterSpacing: '0.5px', lineHeight: 1.1 }}>
-                Wedding
-              </div>
+              {eventData?.eventDate && (
+                <div className="text-2xl md:text-3xl font-sail" style={{ background: 'linear-gradient(90deg, #E5B574 0%, #C18037 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginTop: 4, fontWeight: 400, letterSpacing: '0.5px', lineHeight: 1.1 }}>
+                  {new Date(eventData.eventDate).toLocaleDateString('en-US', { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: 'numeric' 
+                  }).replace(/\//g, '.')}
+                </div>
+              )}
             </div>
 
             {/* Upload Box */}
             <Link href={`/${wwwId}/gallery/upload`} className="w-200 border border-[#E5B574] rounded-md py-10 px-4 flex flex-col items-center mb-8 bg-white hover:shadow-lg transition cursor-pointer" style={{ minHeight: 180, textDecoration: 'none' }}>
               <Image src="/images/Gallery/photo_icon.png" alt="Add Photos" width={50} height={50} className="mb-3" />
               <div className="text-base text-[#08080A] mt-2" style={{ fontFamily: 'Montserrat', fontWeight: 500 }}>
-                {galleryContent.uploadButtonText}
+                {language === 'en' ? t.gallery.uploadPhotos : galleryContent.uploadButtonText}
               </div>
             </Link>
 
@@ -122,22 +133,32 @@ export default function DynamicGalleryPage() {
             <Link href={`/${wwwId}/gallery/main`}>
               <button className="bg-gradient-to-r from-[#E5B574] to-[#C18037] text-white font-semibold rounded-md px-8 py-2 mb-10 shadow hover:opacity-90 transition" 
                style={{ fontFamily: 'Montserrat', fontWeight: 600, fontSize: '1rem', minWidth: 160 }}>
-                {galleryContent.viewGalleryButtonText}
+                {language === 'en' ? t.gallery.title : galleryContent.viewGalleryButtonText}
               </button>
             </Link>
 
             {/* Mission Statement */}
             <div className="text-center text-[#08080A] mb-10 max-w-xl mx-auto" style={{ fontFamily: 'Montserrat', fontWeight: 400, fontSize: '1rem', lineHeight: 1.6 }}>
-              <div className="mb-2">{galleryContent.missionTitle}</div>
-              <div className="mb-2">{galleryContent.missionText}</div>
-              <div className="mb-2"><span className="font-bold">{galleryContent.goalText}</span></div>
-              <div>Because Good Energy Always Comes Back!</div>
+              <div className="mb-2">
+                {language === 'en' ? 'Dear Guests - We Have An Important Mission For You:' : galleryContent.missionTitle}
+              </div>
+              <div className="mb-2">
+                {language === 'en' ? 'Like, Follow, And Tag The Amazing Team Behind Today\'s Magic. Every Click Is A Like A Loud \'Thank You!\' To Them!' : galleryContent.missionText}
+              </div>
+              <div className="mb-2">
+                <span className="font-bold">
+                  {language === 'en' ? 'Our Goal: 50 New Followers!' : galleryContent.goalText}
+                </span>
+              </div>
+              <div>
+                {language === 'en' ? 'Because Good Energy Always Comes Back!' : 'Because Good Energy Always Comes Back!'}
+              </div>
             </div>
 
             {/* Count Me In Button */}
             <Link href={`/${wwwId}#team-section`}>
               <button className="bg-black text-white font-bold rounded px-8 py-2 shadow hover:bg-gray-800 transition" style={{ fontFamily: 'Montserrat', fontWeight: 700, fontSize: '1rem', minWidth: 180 }}>
-                {galleryContent.countMeInButtonText}
+                {language === 'en' ? 'COUNT ME IN!' : galleryContent.countMeInButtonText}
               </button>
             </Link>
           </div>
@@ -154,12 +175,12 @@ export default function DynamicGalleryPage() {
         <Image src="/images/Gallery/bottom-right-sparkle.png" alt="bottom right sparkle" width={202} height={32} className="absolute right-4 bottom-4 z-0" />
         <Image src="/images/Gallery/middle-right-sparkle.png" alt="middle right sparkle" width={280} height={42} className="absolute right-5 top-1/4 z-0" />
         <Image src="/images/Gallery/over-leaf-sparkle.png" alt="over leaf sparkle" width={252} height={32} className="absolute left-5 top-20 z-0" />
+          </div>
         </div>
       </div>
       
       {/* Event Footer */}
       <EventFooter />
     </div>
-    </>
   );
 }
