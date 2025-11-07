@@ -1,11 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
+import { DefaultAlbumKey, updateDefaultAlbumSettings, softDeleteDefaultAlbum } from '@/lib/gallery-service'
+
+const DEFAULT_ALBUM_SQL_INSTRUCTIONS = `Please create the gallery_default_album_settings table in Supabase:
+
+CREATE TABLE IF NOT EXISTS gallery_default_album_settings (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  album_type TEXT NOT NULL,
+  custom_name TEXT,
+  description TEXT,
+  cover_image_url TEXT,
+  is_hidden BOOLEAN DEFAULT FALSE,
+  is_deleted BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(event_id, album_type)
+);
+
+CREATE INDEX IF NOT EXISTS idx_gallery_default_album_settings_event_id ON gallery_default_album_settings(event_id);
+
+-- Optionally add RLS policies similar to gallery_albums if you use RLS.`
 
 // PUT /api/dashboard/gallery/albums/[id] - Update an album
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const supabase = createServerClient();
+    const isDefaultAlbum = id === 'wedding-day' || id === 'party-day';
     
     // Get the authorization header
     const authHeader = request.headers.get('authorization');
@@ -22,7 +44,40 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const body = await request.json();
-    const { name, description, coverImageUrl } = body;
+    const { name, description, coverImageUrl, isHidden, isDeleted, eventId } = body;
+
+    if (isDefaultAlbum) {
+      if (!eventId) {
+        return NextResponse.json({ error: 'eventId is required for default albums' }, { status: 400 });
+      }
+
+      try {
+        const updatedAlbum = await updateDefaultAlbumSettings(eventId, id as DefaultAlbumKey, {
+          name,
+          description,
+          coverImageUrl,
+          isHidden,
+          isDeleted
+        });
+
+        return NextResponse.json({
+          success: true,
+          data: updatedAlbum
+        });
+      } catch (error) {
+        if (error instanceof Error && error.name === 'MissingDefaultAlbumTableError') {
+          return NextResponse.json(
+            {
+              error: 'Default album settings table is missing',
+              instructions: DEFAULT_ALBUM_SQL_INSTRUCTIONS
+            },
+            { status: 500 }
+          );
+        }
+        console.error('Error updating default album settings:', error);
+        return NextResponse.json({ error: 'Failed to update default album settings' }, { status: 500 });
+      }
+    }
 
     // Build update object
     const updateData: any = {
@@ -42,6 +97,15 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     if (coverImageUrl !== undefined) {
       updateData.cover_image_url = coverImageUrl;
+    }
+
+    if (isHidden !== undefined) {
+      updateData.is_public = !isHidden;
+    }
+
+    if (isDeleted !== undefined) {
+      // Treat delete flag same as hidden for custom albums
+      updateData.is_public = !isDeleted;
     }
 
     // Update the album
@@ -81,6 +145,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   try {
     const { id } = await params;
     const supabase = createServerClient();
+    const isDefaultAlbum = id === 'wedding-day' || id === 'party-day';
     
     // Get the authorization header
     const authHeader = request.headers.get('authorization');
@@ -96,7 +161,37 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Delete the album (this will cascade delete associated images due to foreign key constraint)
+    if (isDefaultAlbum) {
+      const body = await request.json().catch(() => ({}));
+      const { eventId } = body || {};
+
+      if (!eventId) {
+        return NextResponse.json({ error: 'eventId is required to delete default albums' }, { status: 400 });
+      }
+
+      try {
+        const deletedAlbum = await softDeleteDefaultAlbum(eventId, id as DefaultAlbumKey);
+        return NextResponse.json({
+          success: true,
+          data: deletedAlbum,
+          message: 'Album hidden from guests'
+        });
+      } catch (error) {
+        if (error instanceof Error && error.name === 'MissingDefaultAlbumTableError') {
+          return NextResponse.json(
+            {
+              error: 'Default album settings table is missing',
+              instructions: DEFAULT_ALBUM_SQL_INSTRUCTIONS
+            },
+            { status: 500 }
+          );
+        }
+        console.error('Error deleting default album:', error);
+        return NextResponse.json({ error: 'Failed to delete default album' }, { status: 500 });
+      }
+    }
+
+    // Delete custom album (this will cascade delete associated images due to foreign key constraint)
     const { error } = await supabase
       .from('gallery_albums')
       .delete()

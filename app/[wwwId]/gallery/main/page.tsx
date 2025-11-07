@@ -16,6 +16,7 @@ export default function DynamicMainGalleryPage() {
   const [weddingDayCount, setWeddingDayCount] = useState(0);
   const [partyDayCount, setPartyDayCount] = useState(0);
   const [customAlbums, setCustomAlbums] = useState<any[]>([]);
+  const [defaultAlbumMap, setDefaultAlbumMap] = useState<Record<string, any>>({});
   const [eventData, setEventData] = useState<{coupleNames: string, eventDate: string, galleryEnabled: boolean, rsvpEnabled: boolean} | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -59,8 +60,23 @@ export default function DynamicMainGalleryPage() {
               const albumsResponse = await fetch(`/api/${wwwId}/gallery/albums`);
               if (albumsResponse.ok) {
                 const albumsResult = await albumsResponse.json();
-                setCustomAlbums(albumsResult.data || []);
-                console.log('Custom albums loaded:', albumsResult.data);
+                const albumsData = Array.isArray(albumsResult.data) ? albumsResult.data : [];
+                const defaultStates = Array.isArray(albumsResult.meta?.defaultAlbums)
+                  ? albumsResult.meta.defaultAlbums
+                  : [];
+
+                const defaultMap = defaultStates.reduce((acc: Record<string, any>, album: any) => {
+                  if (album?.key) {
+                    acc[album.key] = album;
+                  }
+                  return acc;
+                }, {});
+
+                setDefaultAlbumMap(defaultMap);
+
+                const customs = albumsData.filter((album: any) => !(album.albumType === 'default'));
+                setCustomAlbums(customs);
+                console.log('Custom albums loaded:', customs);
               } else {
                 console.error('Failed to fetch albums:', albumsResponse.status);
               }
@@ -83,6 +99,11 @@ export default function DynamicMainGalleryPage() {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, []);
+
+  const weddingAlbum = defaultAlbumMap['wedding-day'];
+  const partyAlbum = defaultAlbumMap['party-day'];
+  const showWeddingAlbum = weddingAlbum ? !(weddingAlbum.isHidden || weddingAlbum.isDeleted) : true;
+  const showPartyAlbum = partyAlbum ? !(partyAlbum.isHidden || partyAlbum.isDeleted) : true;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -125,45 +146,49 @@ export default function DynamicMainGalleryPage() {
               {/* Two Gallery Sections */}
               <div className="flex flex-col md:flex-row gap-8 justify-center items-center w-full mb-8">
                 {/* Wedding Day */}
-                <div className="flex flex-col items-center">
-                  <Link href={`/${wwwId}/gallery/album/wedding-day`} className="relative w-[270px] h-[220px] md:w-[370px] md:h-[260px] mb-2 group block">
-                    <Image src="/images/Gallery/maingallery.jpg" alt="Wedding Day" fill 
-                    style={{ objectFit: 'cover', borderRadius: '0 0 180px 180px/0 0 220px 0' }} className="shadow-lg" />
-                    <div className="absolute inset-0 bg-[#E5B574]/70 flex flex-col items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-300" 
-                    style={{ borderRadius: '0 0 180px 180px/0 0 220px 0px' }}>
-                      <div className="text-white text-center font-semibold mb-2" style={{ fontFamily: 'Montserrat', fontWeight: 400, fontSize: '16px', color: '#fff', letterSpacing: '0.01em', lineHeight: 1.4 }}>{t.gallery.gotPhotos}<br />{t.gallery.addThemNow}</div>
-                      <button className="border border-white text-white rounded px-6 py-1 bg-transparent hover:bg-white hover:text-[#C18037] transition" style={{ fontFamily: 'Montserrat', fontWeight: 600, fontSize: '16px', letterSpacing: '0.01em', lineHeight: 1.4 }}>{t.gallery.upload}</button>
-                    </div>
-                  </Link>
-                  <div className="text-center mt-2" style={{ fontFamily: 'Montserrat', fontWeight: 400, fontSize: '16px', color: '#08080A', letterSpacing: '0.01em', lineHeight: 1.4 }}>
-                    {t.gallery.weddingDay}
-                    {weddingDayCount > 0 && (
-                      <div className="text-sm text-[#C18037] mt-1">
-                        {weddingDayCount} {t.gallery.photosUploaded}
+                {showWeddingAlbum && (
+                  <div className="flex flex-col items-center">
+                    <Link href={`/${wwwId}/gallery/album/wedding-day`} className="relative w-[270px] h-[220px] md:w-[370px] md:h-[260px] mb-2 group block">
+                      <Image src="/images/Gallery/maingallery.jpg" alt="Wedding Day" fill 
+                      style={{ objectFit: 'cover', borderRadius: '0 0 180px 180px/0 0 220px 0' }} className="shadow-lg" />
+                      <div className="absolute inset-0 bg-[#E5B574]/70 flex flex-col items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-300" 
+                      style={{ borderRadius: '0 0 180px 180px/0 0 220px 0px' }}>
+                        <div className="text-white text-center font-semibold mb-2" style={{ fontFamily: 'Montserrat', fontWeight: 400, fontSize: '16px', color: '#fff', letterSpacing: '0.01em', lineHeight: 1.4 }}>{t.gallery.gotPhotos}<br />{t.gallery.addThemNow}</div>
+                        <button className="border border-white text-white rounded px-6 py-1 bg-transparent hover:bg-white hover:text-[#C18037] transition" style={{ fontFamily: 'Montserrat', fontWeight: 600, fontSize: '16px', letterSpacing: '0.01em', lineHeight: 1.4 }}>{t.gallery.upload}</button>
                       </div>
-                    )}
+                    </Link>
+                    <div className="text-center mt-2" style={{ fontFamily: 'Montserrat', fontWeight: 400, fontSize: '16px', color: '#08080A', letterSpacing: '0.01em', lineHeight: 1.4 }}>
+                      {weddingAlbum?.name || t.gallery.weddingDay}
+                      {weddingDayCount > 0 && (
+                        <div className="text-sm text-[#C18037] mt-1">
+                          {weddingDayCount} {t.gallery.photosUploaded}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
                 {/* Party Day */}
-                <div className="flex flex-col items-center">
-                  <Link href={`/${wwwId}/gallery/album/party-day`} className="relative w-[270px] h-[220px] md:w-[370px] md:h-[260px] mb-2 group block">
-                    <Image src="/images/Gallery/maingallery.jpg" alt="Party Day" fill style={{ objectFit: 'cover', borderRadius: '0 0 180px 180px/0 0 220px 0px' }} className="shadow-lg" />
-                    <div className="absolute inset-0 bg-[#C18037]/70 flex flex-col items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-300" style={{ borderRadius: '0 0 180px 180px/0 0 220px 0px' }}>
-                      <div className="text-white text-center font-semibold mb-2" style={{ fontFamily: 'Montserrat', fontWeight: 400, fontSize: '16px', color: '#fff', letterSpacing: '0.01em', lineHeight: 1.4 }}>{t.gallery.gotPhotos}<br />{t.gallery.addThemNow}</div>
-                      <button className="border border-white text-white rounded px-6 py-1 bg-transparent hover:bg-white hover:text-[#C18037] transition" 
-                      style={{ fontFamily: 'Montserrat', fontWeight: 600, fontSize: '16px', letterSpacing: '0.01em', lineHeight: 1.4 }}>
-                        {t.gallery.upload}</button>
-                    </div>
-                  </Link>
-                  <div className="text-center mt-2" style={{ fontFamily: 'Montserrat', fontWeight: 400, fontSize: '16px', color: '#08080A', letterSpacing: '0.01em', lineHeight: 1.4 }}>
-                    {t.gallery.partyDay}
-                    {partyDayCount > 0 && (
-                      <div className="text-sm text-[#C18037] mt-1">
-                        {partyDayCount} {t.gallery.photosUploaded}
+                {showPartyAlbum && (
+                  <div className="flex flex-col items-center">
+                    <Link href={`/${wwwId}/gallery/album/party-day`} className="relative w-[270px] h-[220px] md:w-[370px] md:h-[260px] mb-2 group block">
+                      <Image src="/images/Gallery/maingallery.jpg" alt="Party Day" fill style={{ objectFit: 'cover', borderRadius: '0 0 180px 180px/0 0 220px 0px' }} className="shadow-lg" />
+                      <div className="absolute inset-0 bg-[#C18037]/70 flex flex-col items-center justify-center opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-300" style={{ borderRadius: '0 0 180px 180px/0 0 220px 0px' }}>
+                        <div className="text-white text-center font-semibold mb-2" style={{ fontFamily: 'Montserrat', fontWeight: 400, fontSize: '16px', color: '#fff', letterSpacing: '0.01em', lineHeight: 1.4 }}>{t.gallery.gotPhotos}<br />{t.gallery.addThemNow}</div>
+                        <button className="border border-white text-white rounded px-6 py-1 bg-transparent hover:bg-white hover:text-[#C18037] transition" 
+                        style={{ fontFamily: 'Montserrat', fontWeight: 600, fontSize: '16px', letterSpacing: '0.01em', lineHeight: 1.4 }}>
+                          {t.gallery.upload}</button>
                       </div>
-                    )}
+                    </Link>
+                    <div className="text-center mt-2" style={{ fontFamily: 'Montserrat', fontWeight: 400, fontSize: '16px', color: '#08080A', letterSpacing: '0.01em', lineHeight: 1.4 }}>
+                      {partyAlbum?.name || t.gallery.partyDay}
+                      {partyDayCount > 0 && (
+                        <div className="text-sm text-[#C18037] mt-1">
+                          {partyDayCount} {t.gallery.photosUploaded}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Custom Albums Section */}

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
+import { useLanguage } from '@/components/language-context';
 
 interface EditModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ export default function EditModal({
   onSave,
   saving = false,
 }: EditModalProps) {
+  const { t } = useLanguage();
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -71,7 +73,7 @@ export default function EditModal({
               className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
               disabled={saving}
             >
-              Cancel
+              {t.editModals.cancel}
             </button>
             <button
               onClick={onSave}
@@ -81,7 +83,7 @@ export default function EditModal({
               {saving && (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               )}
-              <span>{saving ? 'Saving...' : 'Save Changes'}</span>
+              <span>{saving ? t.editModals.saving : t.editModals.saveChanges}</span>
             </button>
           </div>
         </div>

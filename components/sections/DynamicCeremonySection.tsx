@@ -4,7 +4,8 @@ import CollapsibleSection from '../CollapsibleSection';
 import { useLanguage } from '@/components/language-context';
 
 interface DynamicCeremonySectionProps {
-  title: string;
+  venueNameEn?: string;
+  venueNamePl?: string;
   description: string;
   date: string;
   time: string;
@@ -15,7 +16,8 @@ interface DynamicCeremonySectionProps {
 }
 
 export default function DynamicCeremonySection({ 
-  title, 
+  venueNameEn, 
+  venueNamePl, 
   description, 
   date, 
   time, 
@@ -24,16 +26,26 @@ export default function DynamicCeremonySection({
   mapUrl,
   imageUrl 
 }: DynamicCeremonySectionProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      }).toUpperCase();
+      if (language === 'pl') {
+        return date.toLocaleDateString('pl-PL', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }).replace(/^./, (char) => char.toUpperCase());
+      } else {
+        return date.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }).toUpperCase();
+      }
     } catch {
       return dateString;
     }
@@ -42,17 +54,26 @@ export default function DynamicCeremonySection({
   const formatTime = (timeString: string) => {
     try {
       const [hours, minutes] = timeString.split(':');
-      const date = new Date();
-      date.setHours(parseInt(hours), parseInt(minutes));
-      return date.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-      }).toUpperCase();
+      if (language === 'pl') {
+        // 24-hour format for Polish
+        return `${hours}:${minutes || '00'}`;
+      } else {
+        // 12-hour format for English
+        const date = new Date();
+        date.setHours(parseInt(hours), parseInt(minutes || '0'));
+        return date.toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        }).toUpperCase();
+      }
     } catch {
       return timeString;
     }
   };
+
+  // Get venue name based on language
+  const venueName = language === 'pl' ? (venueNamePl || venueNameEn || '') : (venueNameEn || venueNamePl || '');
 
   return (
     <CollapsibleSection title={t.ceremony.title}>
@@ -68,26 +89,28 @@ export default function DynamicCeremonySection({
               letterSpacing: '0.01em', 
               lineHeight: 1.4 
             }}>
-              {t.ceremony.description}
+              {description || t.ceremony.description}
             </span>
           </div>
-          <div className="mb-4 sm:mb-5">
-            <span
-              style={{
-                fontFamily: 'Great Vibes, cursive',
-                fontWeight: 500,
-                fontSize: 'clamp(1.5rem, 5vw, 2.2rem)',
-                background: 'linear-gradient(90deg, #E5B574 0%, #D59C58 43%, #C18037 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                display: 'inline-block',
-                letterSpacing: '1px',
-                lineHeight: 1.1,
-              }}
-            >
-              {t.ceremony.details}
-            </span>
-          </div>
+          {venueName && (
+            <div className="mb-4 sm:mb-5">
+              <span
+                style={{
+                  fontFamily: 'Great Vibes, cursive',
+                  fontWeight: 500,
+                  fontSize: 'clamp(1.5rem, 5vw, 2.2rem)',
+                  background: 'linear-gradient(90deg, #E5B574 0%, #D59C58 43%, #C18037 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  display: 'inline-block',
+                  letterSpacing: '1px',
+                  lineHeight: 1.1,
+                }}
+              >
+                {venueName}
+              </span>
+            </div>
+          )}
           <div className="space-y-1 mb-3">
             <div className="font-bold text-[#08080A]" 
                  style={{

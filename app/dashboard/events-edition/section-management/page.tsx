@@ -3,6 +3,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from '@/components/supabase-auth-provider';
 import supabase from '@/lib/supabase';
+import { useLanguage } from '@/components/language-context';
 
 interface EventData {
   id: string;
@@ -43,6 +44,8 @@ interface EventData {
     };
     ceremonySection: {
       title: string;
+      venueNameEn?: string;
+      venueNamePl?: string;
       description: string;
       date: string;
       time: string;
@@ -84,21 +87,10 @@ interface EventData {
   };
 }
 
-const sectionConfig = [
-  { key: 'heroSection', name: 'Hero Section', description: 'Main banner with couple names and countdown timer' },
-  { key: 'timelineSection', name: 'Wedding Timeline', description: 'Schedule of events for the wedding day' },
-  { key: 'ceremonySection', name: 'Ceremony Details', description: 'Information about the wedding ceremony' },
-  { key: 'ceremonyVenueSection', name: 'Ceremony Venue', description: 'Details about the ceremony location' },
-  { key: 'seatingChartSection', name: 'Seating Chart', description: 'Guest seating arrangements' },
-  { key: 'menuSection', name: 'Menu', description: 'Food and beverage options' },
-  { key: 'wishesAndGiftsSection', name: 'Wishes & Gifts', description: 'Gift registry and well wishes' },
-  { key: 'teamSection', name: 'Wedding Team', description: 'Bridal party and wedding team' },
-  { key: 'accommodationSection', name: 'Accommodation', description: 'Hotel and lodging information' },
-  { key: 'transportationSection', name: 'Transportation', description: 'Travel and parking details' },
-  { key: 'additionalInfoSection', name: 'Additional Information', description: 'Extra details and special notes' },
-];
+// Section config will be created dynamically using translations
 
 export default function SectionManagementPage() {
+  const { t } = useLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
@@ -106,6 +98,20 @@ export default function SectionManagementPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  const sectionConfig = [
+    { key: 'heroSection', name: t.sectionVisibility.sections.heroSection, description: t.sectionVisibility.sections.heroSectionDescription },
+    { key: 'timelineSection', name: t.sectionVisibility.sections.timelineSection, description: t.sectionVisibility.sections.timelineSectionDescription },
+    { key: 'ceremonySection', name: t.sectionVisibility.sections.ceremonySection, description: t.sectionVisibility.sections.ceremonySectionDescription },
+    { key: 'ceremonyVenueSection', name: t.sectionVisibility.sections.ceremonyVenueSection, description: t.sectionVisibility.sections.ceremonyVenueSectionDescription },
+    { key: 'seatingChartSection', name: t.sectionVisibility.sections.seatingChartSection, description: t.sectionVisibility.sections.seatingChartSectionDescription },
+    { key: 'menuSection', name: t.sectionVisibility.sections.menuSection, description: t.sectionVisibility.sections.menuSectionDescription },
+    { key: 'wishesAndGiftsSection', name: t.sectionVisibility.sections.wishesAndGiftsSection, description: t.sectionVisibility.sections.wishesAndGiftsSectionDescription },
+    { key: 'teamSection', name: t.sectionVisibility.sections.teamSection, description: t.sectionVisibility.sections.teamSectionDescription },
+    { key: 'accommodationSection', name: t.sectionVisibility.sections.accommodationSection, description: t.sectionVisibility.sections.accommodationSectionDescription },
+    { key: 'transportationSection', name: t.sectionVisibility.sections.transportationSection, description: t.sectionVisibility.sections.transportationSectionDescription },
+    { key: 'additionalInfoSection', name: t.sectionVisibility.sections.additionalInfoSection, description: t.sectionVisibility.sections.additionalInfoSectionDescription },
+  ];
 
   const wwwId = searchParams.get('wwwId');
 
@@ -231,24 +237,24 @@ export default function SectionManagementPage() {
           onClick={handleBack}
           className="bg-black text-white px-6 py-2 rounded font-semibold hover:bg-gray-800 transition-colors"
         >
-          Back
+          {t.common.back}
         </button>
         <div className="text-right">
-          <h1 className="text-3xl font-bold text-black">Section Management</h1>
-          <p className="text-gray-600 mt-2">Customize which sections appear on your event page</p>
+          <h1 className="text-3xl font-bold text-black">{t.sectionVisibility.title}</h1>
+          <p className="text-gray-600 mt-2">{t.sectionVisibility.controlWhichSections}</p>
         </div>
       </div>
 
       {/* Event Info */}
       <div className="bg-white p-6 rounded-lg shadow-sm mb-8">
-        <h2 className="text-xl font-semibold text-black mb-4">Event Information</h2>
+        <h2 className="text-xl font-semibold text-black mb-4">{t.sectionVisibility.eventInformation}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-sm text-gray-600">Event Title</label>
+            <label className="text-sm text-gray-600">{t.sectionVisibility.eventTitle}</label>
             <p className="text-lg font-medium text-black">{eventData.title}</p>
           </div>
           <div>
-            <label className="text-sm text-gray-600">Couple Names</label>
+            <label className="text-sm text-gray-600">{t.sectionVisibility.coupleNames}</label>
             <p className="text-lg font-medium text-black">{eventData.coupleNames}</p>
           </div>
         </div>
@@ -256,9 +262,9 @@ export default function SectionManagementPage() {
 
       {/* Section Toggles */}
       <div className="bg-white rounded-lg shadow-sm p-6">
-        <h2 className="text-xl font-semibold text-black mb-6">Page Sections</h2>
+        <h2 className="text-xl font-semibold text-black mb-6">{t.sectionVisibility.pageSections}</h2>
         <p className="text-gray-600 mb-6">
-          Toggle sections on/off to customize what your guests see on the event page.
+          {t.sectionVisibility.toggleDescription}
         </p>
 
         <div className="space-y-4">
@@ -270,7 +276,7 @@ export default function SectionManagementPage() {
               </div>
               <div className="flex items-center space-x-3">
                 <span className={`text-sm font-medium ${eventData.sectionVisibility[section.key as keyof typeof eventData.sectionVisibility] ? 'text-green-600' : 'text-gray-400'}`}>
-                  {eventData.sectionVisibility[section.key as keyof typeof eventData.sectionVisibility] ? 'Visible' : 'Hidden'}
+                  {eventData.sectionVisibility[section.key as keyof typeof eventData.sectionVisibility] ? t.sectionVisibility.visible : t.sectionVisibility.hidden}
                 </span>
                 <button
                   onClick={() => handleSectionToggle(section.key, !eventData.sectionVisibility[section.key as keyof typeof eventData.sectionVisibility])}
@@ -298,7 +304,7 @@ export default function SectionManagementPage() {
           <div className="mt-6 text-center">
             <div className="inline-flex items-center space-x-2 text-[#E5B574]">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#E5B574]"></div>
-              <span>Saving changes...</span>
+              <span>{t.sectionVisibility.savingChanges}</span>
             </div>
           </div>
         )}
@@ -306,9 +312,9 @@ export default function SectionManagementPage() {
 
       {/* Preview Link */}
       <div className="mt-8 bg-white rounded-lg shadow-sm p-6">
-        <h3 className="text-lg font-semibold text-black mb-4">Preview Your Event Page</h3>
+        <h3 className="text-lg font-semibold text-black mb-4">{t.sectionVisibility.previewEventPage}</h3>
         <p className="text-gray-600 mb-4">
-          View how your event page looks to guests with the current section settings.
+          {t.sectionVisibility.viewEventPage}
         </p>
         <a
           href={`/${wwwId}`}
@@ -316,7 +322,7 @@ export default function SectionManagementPage() {
           rel="noopener noreferrer"
           className="inline-flex items-center space-x-2 bg-[#E5B574] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#D59C58] transition-colors"
         >
-          <span>Preview Event Page</span>
+          <span>{t.sectionVisibility.previewEventPage}</span>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
           </svg>
